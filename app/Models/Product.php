@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     use HasFactory;
+
+    public function productDescription()
+    {
+        return $this->belongsTo(ProductDescription::class, 'product_description_id');
+    }
 }
