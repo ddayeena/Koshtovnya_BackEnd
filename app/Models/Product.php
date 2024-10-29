@@ -13,4 +13,9 @@ class Product extends Model
     {
         return $this->belongsTo(ProductDescription::class, 'product_description_id');
     }
+
+    public function orderProducts()
+    {
+        return $this->hasMany(OrderProduct::class, 'product_id');
+    }
 }

@@ -16,11 +16,31 @@ class ProductController extends Controller
 
     public function index()
     {
-
+        return ProductResource::collection(Product::all());
     }
 
-    public function popular(){
-        $products = Product::with('productDescription')->take(6)->get();
+    //display popular products
+    public function popular() {
+        $products = Product::with('productDescription')
+            ->withCount('orderProducts')
+            ->orderBy('order_products_count', 'desc') 
+            ->take(6) 
+            ->get(); 
+    
+        return ProductResource::collection($products);
+    }
+
+    //display products by category 
+    public function productByCategory($id)
+    {
+        $products = ProductDescription::where('category_id', $id)->get();
+        return response()->json($products);
+    }
+
+    //display products by name
+    public function search($name)
+    {
+        $products = Product::where('name', 'LIKE', "%{$name}%")->get();
         return ProductResource::collection($products);
     }
     /**
