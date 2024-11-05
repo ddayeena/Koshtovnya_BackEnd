@@ -13,15 +13,21 @@ return new class extends Migration
     {
         Schema::create('product_descriptions', function (Blueprint $table) {
             $table->id();  
-            $table->string('material', 255);  // Матеріал товару
-            $table->decimal('weight', 10, 2);  // Вага товару
-            $table->string('bead_manufacturer', 255);  // Виробник бісеру
+            $table->unsignedBigInteger('bead_producer_id');  
+            $table->decimal('weight', 10, 2); 
+            // $table->string('bead_manufacturer', 255);  // Виробник бісеру
             $table->string('country_of_manufacture', 100);  // Країна виробник
-            $table->unsignedBigInteger('category_id');  // Зовнішній ключ на таблицю категорій
+            $table->enum('type_of_bead', ['Матовий', 'Не матовий'])->default('Не матовий');
+            $table->unsignedBigInteger('category_id');  
 
             $table->foreign('category_id')
                   ->references('id')
                   ->on('categories')
+                  ->onDelete('cascade');
+
+            $table->foreign('bead_producer_id')
+                  ->references('id')
+                  ->on('bead_producers')
                   ->onDelete('cascade');
 
             $table->timestamps();  

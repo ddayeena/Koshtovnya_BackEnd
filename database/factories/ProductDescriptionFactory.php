@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\BeadProducer;
 use App\Models\Category;
 use App\Models\ProductDescription;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,10 +22,12 @@ class ProductDescriptionFactory extends Factory
     public function definition(): array
     {
         return [
-            'material' => $this->faker->word(),
+            // 'material' => $this->faker->word(),
             'weight' => $this->faker->randomFloat(2, 0, 100), 
-            'bead_manufacturer' => $this->faker->company(),
+            // 'bead_manufacturer' => $this->faker->company(),
+            'bead_producer_id' => BeadProducer::get()->random()->id,
             'country_of_manufacture' => $this->faker->country(),
+            'type_of_bead' => $this->faker->randomElement(['Матовий', 'Не матовий']),
             'category_id' => Category::get()->random()->id 
         ];
     }

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('card_number',16);
             $table->string('expire_date',5);
             $table->enum('payment_method',['Післяоплата', 'Оплата картою', 'Передплата']); 
-
+            $table->string('transaction_number')->nullable();
             $table->foreign('user_id')
                   ->references('id')
                   ->on('users')

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Models\BeadProducer;
 use App\Models\Category;
 use App\Models\Color;
 use App\Models\Product;
@@ -41,11 +42,19 @@ class DatabaseSeeder extends Seeder
 
 
         $categories = Category::factory(6)->create();
+        DB::table('bead_producers')->insertOrIgnore([
+            ['name' => 'Японський бісер', 'origin_country' => 'Японія', 'cost_per_gram' => '1.5'],
+            ['name' => 'Китайський бісер', 'origin_country' => 'Китай', 'cost_per_gram' => '0.5'],
+            ['name' => 'Чешський бісер', 'origin_country' => 'Чехія', 'cost_per_gram' => '2.8'],
+            ['name' => 'Український бісер', 'origin_country' => 'Укрїана', 'cost_per_gram' => '0.7'],
+        ]);
+        $beadProducers = DB::table('bead_producers')->get();
 
-        // Створюємо описи продуктів із випадковими категоріями
-        $productDescriptions = collect(range(1, 10))->map(function () use ($categories) {
+        // Створюємо описи продуктів із випадковими категоріями та виробниками бісеру
+        $productDescriptions = collect(range(1, 10))->map(function () use ($categories, $beadProducers) {
             return ProductDescription::factory()->create([
                 'category_id' => $categories->random()->id,
+                'bead_producer_id' => $beadProducers->random()->id, 
             ]);
         });
         
@@ -67,7 +76,6 @@ class DatabaseSeeder extends Seeder
                 'size_id' => $sizes->random()->id,
             ]);
         }
-        
         // Генеруємо product_colors з унікальними комбінаціями
         foreach ($productDescriptions as $productDescription) {
             ProductColor::factory()->create([
@@ -75,6 +83,7 @@ class DatabaseSeeder extends Seeder
                 'color_id' => $colors->random()->id,
             ]);
         }
+
         User::factory()->count(10)->create()->each(function ($user) use ($productDescriptions) {
             // Створення списків бажань для кожного користувача
             $wishlist = WishList::factory()->create(['user_id' => $user->id]);
@@ -88,7 +97,6 @@ class DatabaseSeeder extends Seeder
         
             // Створення доставок для кожного користувача
             $delivery = Delivery::factory()->create(['user_id' => $user->id]);
-        
             // Створення платежів для кожного користувача
             $payment = Payment::factory()->create(['user_id' => $user->id]);
         
@@ -109,14 +117,43 @@ class DatabaseSeeder extends Seeder
                 ]);
             });
         
-            // Додавання початкових налаштувань сайту
-            DB::table('site_settings')->insertOrIgnore([
-                ['setting_key' => 'site_logo', 'setting_value' => 'logo.png'],
-                ['setting_key' => 'footer_email_info', 'setting_value' => 'koshtovnya@gmail.com'],
-                ['setting_key' => 'footer_address_info', 'setting_value' => 'вул. Степана Бандери 22, Коломия'],
-                ['setting_key' => 'footer_phone_number', 'setting_value' => '+380123456789'],
-            ]);
+          
         });
-        
+
+          // Додавання початкових налаштувань сайту
+          DB::table('site_settings')->insertOrIgnore([
+            ['setting_key' => 'site_logo', 'setting_value' => 'logo.png'],
+            ['setting_key' => 'footer_email_info', 'setting_value' => 'koshtovnya@gmail.com'],
+            ['setting_key' => 'footer_address_info', 'setting_value' => 'вул. Степана Бандери 22, Коломия'],
+            ['setting_key' => 'footer_phone_number', 'setting_value' => '+380123456789'],
+        ]);
+
+        DB::table('fittings')->insertOrIgnore([
+            ['name' => 'Застібка',  'cost_per_unit' => '30'],
+            ['name' => 'Кільця', 'cost_per_unit' => '10'],
+            ['name' => 'Роздільники', 'cost_per_unit' => '25'],
+        ]);
+
+        $productIds = Product::all()->pluck('id');
+        $fittingIds = DB::table('fittings')->pluck('id');
+        // Додаємо записи до таблиці product_fittings
+        foreach ($productIds as $productId) {
+            // Вибираємо випадкову кількість фурнітури (від 1 до 3) для кожного продукту
+            $randomFittings = $fittingIds->random(rand(1, 3));
+            
+            foreach ($randomFittings as $fittingId) {
+                DB::table('product_fittings')->insert([
+                    'product_id' => $productId,
+                    'fitting_id' => $fittingId,
+                    'quantity' => rand(1, 5) // Випадкове значення для quantity
+                ]);
+            }
+        }
+
+
+        DB::table('expenses')->insertOrIgnore([
+            ['type_of_expense' => 'Упаковка', 'description' => 'Коробки та пакети', 'cost' => '1500'],
+            ['type_of_expense' => 'Інструменти', 'description' => 'Нитки та голки', 'cost' => '500'],
+        ]);
     }
 }

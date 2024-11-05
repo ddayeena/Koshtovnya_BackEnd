@@ -31,14 +31,18 @@ class ProductController extends Controller
     }
 
     //display products by category 
-    public function productByCategory($id)
+    public function productByCategory(int $id)
     {
-        $products = ProductDescription::where('category_id', $id)->get();
-        return response()->json($products);
+        // Отримуємо id описів продуктів для заданої категорії
+        $productDescriptionIds = ProductDescription::where('category_id', $id)->pluck('id');
+        
+        // Знаходимо продукти, які мають ці описи
+        $products = Product::whereIn('product_description_id', $productDescriptionIds)->get();
+        return ProductResource::collection($products);
     }
 
     //display products by name
-    public function search($name)
+    public function search(string $name)
     {
         $products = Product::where('name', 'LIKE', "%{$name}%")->get();
         return ProductResource::collection($products);
