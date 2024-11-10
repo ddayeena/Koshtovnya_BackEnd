@@ -19,13 +19,12 @@ class PaymentFactory extends Factory
     protected $model = Payment::class;
     public function definition(): array
     {
-        $user = User::inRandomOrder()->first(); // Вибір випадкового користувача
-
         return [
-            'user_id' => $user ? $user->id : User::factory(), // Якщо користувач існує, беремо його id, інакше створюємо нового
-            'card_number' => $this->faker->creditCardNumber, // Генерація випадкового номера картки
-            'expire_date' => $this->faker->creditCardExpirationDateString, // Генерація випадкової дати закінчення дії картки
-            'payment_method' => $this->faker->randomElement(['Післяоплата', 'Оплата картою', 'Передплата']), // Випадковий метод оплати
+            'card_number' => $this->faker->creditCardNumber,
+            'expire_date' => $this->faker->creditCardExpirationDateString, 
+            'payment_method' => $this->faker->randomElement(['Післяоплата', 'Оплата картою', 'Передплата']), 
+            'transaction_number' => $this->faker->uuid()
+            
         ];
     }
 }

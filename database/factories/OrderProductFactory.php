@@ -21,8 +21,7 @@ class OrderProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'order_id' => Order::inRandomOrder()->first()->id, // Випадковий ідентифікатор замовлення
-            'product_id' => Product::inRandomOrder()->first()->id, // Випадковий ідентифікатор продукту
+            'quantity' => $this->faker->numberBetween(0,30),
         ];
     }
 }

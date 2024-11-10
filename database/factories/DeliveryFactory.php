@@ -22,11 +22,10 @@ class DeliveryFactory extends Factory
         $user = User::inRandomOrder()->first(); // Вибір випадкового користувача
 
         return [
-            'user_id' => $user ? $user->id : User::factory(), // Якщо користувач існує, беремо його id, інакше створюємо нового
-            'city' => $this->faker->city, // Генерація випадкового міста
-            'post_service' => $this->faker->randomElement(['Укрпошта', 'Нова Пошта']), // Випадкова служба доставки
-            'post_office' => $this->faker->word(10), // Генерація випадкового номера поштового відділення
-            'phone_number' => $this->faker->phoneNumber, // Генерація випадкового номера телефону
+            'city' => $this->faker->city, 
+            'post_service' => $this->faker->randomElement(['Укрпошта', 'Нова Пошта']), 
+            'post_office' => $this->faker->word(10), 
+            'phone_number' => $this->faker->phoneNumber, 
         ];
     }
 }

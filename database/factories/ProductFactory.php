@@ -22,9 +22,10 @@ class ProductFactory extends Factory
     {
         return [
             'name' => $this->faker->word() . ' ' . $this->faker->word(), 
-            'price' => $this->faker->randomFloat(2, 1, 1000), 
+            'price' => $this->faker->numberBetween(200, 2000), 
             'image_url' => $this->faker->imageUrl(640, 480, 'products', true), 
-            'product_description_id' => ProductDescription::get()->random()->id,
+            'quantity' => $this->faker->numberBetween(0,30),
+            'product_description_id' => ProductDescription::factory()->create(),
         ];
     }
 }

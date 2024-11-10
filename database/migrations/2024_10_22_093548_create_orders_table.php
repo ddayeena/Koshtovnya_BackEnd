@@ -16,11 +16,9 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id'); 
             $table->dateTime('order_date');
             $table->unsignedBigInteger('payment_id'); 
-            $table->unsignedBigInteger('delivery_address_id'); 
+            $table->unsignedBigInteger('delivery_id'); 
             $table->enum('status',['В очікуванні', 'Відправлено', 'Доставлено']); 
             $table->decimal('total_amount', 8, 2);
-
-
             
             $table->foreign('user_id')
             ->references('id')
@@ -32,7 +30,7 @@ return new class extends Migration
                   ->on('payments')
                   ->onDelete('cascade');
 
-            $table->foreign('delivery_address_id')
+            $table->foreign('delivery_id')
                   ->references('id')
                   ->on('deliveries')
                   ->onDelete('cascade');

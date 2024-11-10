@@ -21,8 +21,7 @@ class WishlistProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'wishlist_id' => WishList::all()->random()->id, // Вибираємо випадковий wishlist_id
-            'product_id' => Product::all()->random()->id,   // Вибираємо випадковий product_id
+            'quantity' => $this->faker->numberBetween(0,30),
         ];
     }
 }

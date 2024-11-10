@@ -19,7 +19,7 @@ class SizeFactory extends Factory
     public function definition(): array
     {
         return [
-            'size_value' => $this->faker->unique()->randomFloat(2, 0, 100), 
+            'size_value' => $this->faker->unique()->numberBetween(2, 200), 
         ];
     }
 }

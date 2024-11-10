@@ -22,13 +22,11 @@ class ProductDescriptionFactory extends Factory
     public function definition(): array
     {
         return [
-            // 'material' => $this->faker->word(),
-            'weight' => $this->faker->randomFloat(2, 0, 100), 
-            // 'bead_manufacturer' => $this->faker->company(),
-            'bead_producer_id' => BeadProducer::get()->random()->id,
+            'weight' => $this->faker->numberBetween(5, 400), 
+            'bead_producer_id' => BeadProducer::inRandomOrder()->first()->id,
             'country_of_manufacture' => $this->faker->country(),
             'type_of_bead' => $this->faker->randomElement(['Матовий', 'Не матовий']),
-            'category_id' => Category::get()->random()->id 
+            'category_id' => Category::inRandomOrder()->first()->id
         ];
     }
 }

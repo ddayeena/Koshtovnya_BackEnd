@@ -31,7 +31,8 @@ class UserFactory extends Factory
             'role' => $this->faker->randomElement(['superadmin', 'admin', 'user','manager']),
             'email' => $this->faker->unique()->safeEmail(),
             'phone_number' => $this->faker->unique()->phoneNumber(),
-            'password' => bcrypt('password')
+            'password' => bcrypt('password'),
+            'access' =>$this->faker->boolean(),
         ];
     }
 

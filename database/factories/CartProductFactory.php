@@ -21,8 +21,8 @@ class CartProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'cart_id' => Cart::inRandomOrder()->first()->id, // Вибираємо випадковий cart_id
-            'product_id' => Product::inRandomOrder()->first()->id, // Вибираємо випадковий product_id
+            'quantity' => $this->faker->numberBetween(0,30),
+
         ];
     }
 }

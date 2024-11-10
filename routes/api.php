@@ -23,9 +23,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/products/search/{name}',[ProductController::class,'search']);
 Route::get('/popular-products', [ProductController::class,'popular']);
+Route::get('/new-arrivals', [ProductController::class,'newArrivals']);
+
 Route::get('/categories', [CategoryController::class,'index']);
 Route::get('/site-settings',[SiteSettingController::class,'index']);
 
-Route::get('/categories/{id}/products',[ProductController::class,'productByCategory']);
+Route::get('/categories/{id}/products',[ProductController::class,'productsByCategory']);
 Route::get('/products',[ProductController::class,'index']);
-
+Route::get('/products/{id}',[ProductController::class,'show']);

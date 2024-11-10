@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Products;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\ProductDescriptionResource;
 use App\Models\Product;
 use App\Models\ProductDescription;
 use Illuminate\Http\Request;
@@ -30,13 +31,20 @@ class ProductController extends Controller
         return ProductResource::collection($products);
     }
 
+    public function newArrivals() {
+        $products = Product::with('productDescription')
+            ->withCount('orderProducts')
+            ->orderBy('created_at', 'desc') 
+            ->take(6) 
+            ->get(); 
+        return ProductResource::collection($products);
+    }
+
     //display products by category 
-    public function productByCategory(int $id)
+    public function productsByCategory(int $id)
     {
-        // Отримуємо id описів продуктів для заданої категорії
+        //отримуємо id описів продуктів для заданої категорії
         $productDescriptionIds = ProductDescription::where('category_id', $id)->pluck('id');
-        
-        // Знаходимо продукти, які мають ці описи
         $products = Product::whereIn('product_description_id', $productDescriptionIds)->get();
         return ProductResource::collection($products);
     }
@@ -60,7 +68,10 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        //
+        //знаходимо продукт за його ID
+        $product = Product::findOrFail($id);
+        $productDescription = $product->productDescription;
+        return new ProductDescriptionResource($productDescription);
     }
 
     /**

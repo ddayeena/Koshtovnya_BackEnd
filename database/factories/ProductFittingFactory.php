@@ -2,15 +2,15 @@
 
 namespace Database\Factories;
 
-use App\Models\Color;
+use App\Models\Fitting;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Color>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ProductFitting>
  */
-class ColorFactory extends Factory
+class ProductFittingFactory extends Factory
 {
-    protected $model = Color::class;
     /**
      * Define the model's default state.
      *
@@ -18,8 +18,8 @@ class ColorFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'color_name' => $this->faker->unique()->colorName(), 
+        return [   
+            'quantity' => $this->faker->numberBetween(1,50),
         ];
     }
 }

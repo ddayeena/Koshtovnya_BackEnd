@@ -19,8 +19,8 @@ class ReviewFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::inRandomOrder()->first()->id, // Вибираємо випадковий cart_id
-            'product_id' => Product::inRandomOrder()->first()->id, // Вибираємо випадковий product_id
+            'user_id' => User::inRandomOrder()->first()->id, 
+            'product_id' => Product::inRandomOrder()->first()->id, 
             'comment' => $this->faker->paragraph(),
             'rating' => $this->faker->numberBetween(1, 5),
         ];
