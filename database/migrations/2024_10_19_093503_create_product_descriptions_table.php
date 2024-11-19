@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();  
             $table->unsignedBigInteger('bead_producer_id');  
             $table->decimal('weight', 10, 2); 
-            // $table->string('bead_manufacturer', 255);  // Виробник бісеру
             $table->string('country_of_manufacture', 100);  // Країна виробник
             $table->enum('type_of_bead', ['Матовий', 'Не матовий'])->default('Не матовий');
             $table->unsignedBigInteger('category_id');  

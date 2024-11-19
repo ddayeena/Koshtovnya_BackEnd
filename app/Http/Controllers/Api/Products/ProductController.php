@@ -17,16 +17,18 @@ class ProductController extends Controller
 
     public function index()
     {
-        return ProductResource::collection(Product::all());
+        $products = Product::paginate(15); 
+        return ProductResource::collection($products);
     }
 
     //display popular products
-    public function popular() {
+    public function popular()
+    {
         $products = Product::with('productDescription')
-            ->withCount('orderProducts')
-            ->orderBy('order_products_count', 'desc') 
-            ->take(6) 
-            ->get(); 
+            ->withCount('orders')  
+            ->orderBy('orders_count', 'desc')  
+            ->take(6)
+            ->get();
     
         return ProductResource::collection($products);
     }
@@ -43,7 +45,6 @@ class ProductController extends Controller
     //display products by category 
     public function productsByCategory(int $id)
     {
-        //отримуємо id описів продуктів для заданої категорії
         $productDescriptionIds = ProductDescription::where('category_id', $id)->pluck('id');
         $products = Product::whereIn('product_description_id', $productDescriptionIds)->get();
         return ProductResource::collection($products);
@@ -68,10 +69,8 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        //знаходимо продукт за його ID
         $product = Product::findOrFail($id);
-        $productDescription = $product->productDescription;
-        return new ProductDescriptionResource($productDescription);
+        return ProductDescriptionResource::make($product->productDescription);
     }
 
     /**

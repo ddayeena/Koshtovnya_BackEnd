@@ -4,15 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Cart;
 use App\Models\CartProduct;
-use App\Models\Delivery;
-use App\Models\Order;
-use App\Models\OrderProduct;
-use App\Models\Payment;
 use App\Models\Product;
-use App\Models\Review;
+use App\Models\ProductWishList;
 use App\Models\User;
 use App\Models\WishList;
-use App\Models\WishlistProduct;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -31,7 +26,7 @@ class UserSeeder extends Seeder
             // Створення списку бажаного для кожного користувача
             $wishlist = WishList::create(['user_id' => $user->id]);
             foreach ($products as $product) {
-                WishlistProduct::create([
+                ProductWishList::firstOrCreate([
                     'wishlist_id' => $wishlist->id,
                     'product_id' => $product->id, 
                 ]);
@@ -40,10 +35,22 @@ class UserSeeder extends Seeder
             // Створення кошика для кожного користувача
             $cart = Cart::create(['user_id' => $user->id]);
             foreach ($products as $product) {
-                CartProduct::factory()->count(2)->create([
-                    'cart_id' => $cart->id,
-                    'product_id' => $product->id, 
-                ]);
+                // Перевірка на наявність продукту в кошику, якщо є — збільшення кількості
+                $cartProduct = CartProduct::where('cart_id', $cart->id)
+                                          ->where('product_id', $product->id)
+                                          ->first();
+                
+                if ($cartProduct) {
+                    // Якщо запис є, збільшуємо кількість
+                    $cartProduct->increment('quantity', 2);  // Збільшуємо кількість на 2
+                } else {
+                    // Якщо запису немає, створюємо новий
+                    CartProduct::create([
+                        'cart_id' => $cart->id,
+                        'product_id' => $product->id,
+                        'quantity' => 2,
+                    ]);
+                }
             }
         }
     }

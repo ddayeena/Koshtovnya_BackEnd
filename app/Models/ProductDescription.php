@@ -7,36 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductDescription extends Model
 {
+    protected $table = 'product_descriptions';
+
     use HasFactory;
+    protected $guarded = false;
 
     public function beadProducer()
     {
-        return $this->belongsTo(BeadProducer::class, 'bead_producer_id');
+        return $this->belongsTo(BeadProducer::class);
     }
 
     public function product()
     {
-        return $this->hasOne(Product::class, 'id');
+        return $this->hasOne(Product::class);
     }
 
     public function category()
     {
-        return $this->belongsTo(Category::class, 'category_id');
+        return $this->belongsTo(Category::class);
     }
-
-    public function fitting(){
-        return $this->belongsToMany(Fitting::class, 'product_fittings', 'product_id', 'fitting_id');
-    }
-
-    public function sizes()
-    {
-        return $this->belongsToMany(Size::class, 'product_sizes', 'product_description_id', 'size_id');
-    }
-
-    public function colors()
-    {
-        return $this->belongsToMany(Color::class, 'product_colors', 'product_description_id', 'color_id');
-    }
-
 }
 

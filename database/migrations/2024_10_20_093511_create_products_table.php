@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255);
+            $table->string('name');
             $table->decimal('price', 10, 2);
             $table->string('image_url', 255)->nullable();
+            $table->unsignedInteger('quantity')->default(1);
             $table->unsignedBigInteger('product_description_id');
 
             $table->foreign('product_description_id')

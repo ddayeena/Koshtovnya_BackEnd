@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Products\CategoryController;
 use App\Http\Controllers\Api\Products\ProductController;
+use App\Http\Controllers\Api\Products\ReviewController;
 use App\Http\Controllers\Api\SiteSettingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,8 +27,12 @@ Route::get('/popular-products', [ProductController::class,'popular']);
 Route::get('/new-arrivals', [ProductController::class,'newArrivals']);
 
 Route::get('/categories', [CategoryController::class,'index']);
-Route::get('/site-settings',[SiteSettingController::class,'index']);
-
 Route::get('/categories/{id}/products',[ProductController::class,'productsByCategory']);
+
 Route::get('/products',[ProductController::class,'index']);
 Route::get('/products/{id}',[ProductController::class,'show']);
+Route::get('/products/{id}/reviews',[ReviewController::class,'getReviewsByProduct']);
+
+Route::get('/site-settings',[SiteSettingController::class,'index']);
+
+

@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_sizes', function (Blueprint $table) {
-            $table->unsignedBigInteger('product_description_id');  
+        Schema::create('product_size', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('product_id');  
             $table->unsignedBigInteger('size_id');   
 
-            $table->primary(['product_description_id', 'size_id']);  
-
-            $table->foreign('product_description_id')
+            $table->foreign('product_id')
                   ->references('id')
-                  ->on('product_descriptions')
+                  ->on('products')
                   ->onDelete('cascade');
 
             $table->foreign('size_id')
@@ -28,6 +27,8 @@ return new class extends Migration
                   ->onDelete('cascade');
 
             $table->timestamps();  
+            $table->unique(['product_id', 'size_id']);
+
         });
     }
 

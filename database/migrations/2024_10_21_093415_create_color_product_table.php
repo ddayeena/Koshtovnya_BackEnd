@@ -11,22 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_colors', function (Blueprint $table) {
-            $table->unsignedBigInteger('product_description_id'); 
+        Schema::create('color_product', function (Blueprint $table) {
+            $table->id();
+
+            $table->unsignedBigInteger('product_id'); 
             $table->unsignedBigInteger('color_id');   
 
-            $table->primary(['product_description_id', 'color_id']); 
-
-            $table->foreign('product_description_id')
+            $table->foreign('product_id')
                   ->references('id')
-                  ->on('product_descriptions')
+                  ->on('products')
                   ->onDelete('cascade');
 
             $table->foreign('color_id')
                   ->references('id')
                   ->on('colors')
                   ->onDelete('cascade');
+                  
             $table->timestamps();  
+            $table->unique(['product_id', 'color_id']);
         });
     }
 

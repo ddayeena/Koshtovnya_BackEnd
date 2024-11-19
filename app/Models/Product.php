@@ -7,15 +7,31 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    protected $table = 'products';
     use HasFactory;
 
     public function productDescription()
     {
-        return $this->belongsTo(ProductDescription::class, 'product_description_id');
+        return $this->belongsTo(ProductDescription::class);
+    }
+    
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class);
     }
 
-    public function orderProducts()
+    public function fitting()
     {
-        return $this->hasMany(OrderProduct::class, 'product_id');
+        return $this->belongsToMany(Fitting::class);
+    }
+    
+    public function sizes()
+    {
+        return $this->belongsToMany(Size::class);
+    }
+
+    public function colors()
+    {
+        return $this->belongsToMany(Color::class);
     }
 }

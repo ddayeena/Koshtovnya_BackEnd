@@ -3,12 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\Fitting;
+use App\Models\FittingProduct;
 use App\Models\Product;
-use App\Models\ProductFitting;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class ProductFittingSeeder extends Seeder
+class FittingProductSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -23,7 +23,7 @@ class ProductFittingSeeder extends Seeder
             $uniqueProducts = $products->random(2); 
 
             foreach ($uniqueProducts as $product) {
-                ProductFitting::factory()->create([
+                FittingProduct::factory()->create([
                     'fitting_id' => $fitting->id,
                     'product_id' => $product->id,
                 ]);
