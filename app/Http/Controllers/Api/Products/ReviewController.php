@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Products;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ReviewResource;
+use App\Models\Product;
 use App\Models\Review;
 use Illuminate\Http\Request;
 
@@ -50,7 +52,8 @@ class ReviewController extends Controller
 
     public function getReviewsByProduct($productId)
     {
-        $reviews = Review::where('product_id', $productId)->paginate(3);
-        return response()->json($reviews);
+        $product = Product::findOrFail($productId);
+        $reviews = $product->reviews()->paginate(3);
+        return ReviewResource::collection($reviews);
     }
 }

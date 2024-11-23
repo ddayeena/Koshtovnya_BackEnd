@@ -10,4 +10,9 @@ class Category extends Model
     protected $table = 'categories';
     use HasFactory;
 
+    public function productDescriptions()
+    {
+        return $this->hasMany(ProductDescription::class);
+    }
+
 }

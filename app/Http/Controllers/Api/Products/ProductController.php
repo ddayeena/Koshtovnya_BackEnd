@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Products;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductDescriptionResource;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductDescription;
 use Illuminate\Http\Request;
@@ -33,9 +34,10 @@ class ProductController extends Controller
         return ProductResource::collection($products);
     }
 
-    public function newArrivals() {
+    public function newArrivals() 
+    {
         $products = Product::with('productDescription')
-            ->withCount('orderProducts')
+            ->withCount('orders')
             ->orderBy('created_at', 'desc') 
             ->take(6) 
             ->get(); 
@@ -45,8 +47,9 @@ class ProductController extends Controller
     //display products by category 
     public function productsByCategory(int $id)
     {
-        $productDescriptionIds = ProductDescription::where('category_id', $id)->pluck('id');
-        $products = Product::whereIn('product_description_id', $productDescriptionIds)->get();
+        $category = Category::findOrFail($id);
+        $productDescriptionIds = $category->productDescriptions->pluck('id');
+        $products = Product::whereIn('product_description_id', $productDescriptionIds)->paginate(15);
         return ProductResource::collection($products);
     }
 

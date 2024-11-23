@@ -2,11 +2,10 @@
 
 namespace App\Http\Resources;
 
-use App\Models\ProductDescription;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ProductResource extends JsonResource
+class ReviewResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -17,10 +16,11 @@ class ProductResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'price' => $this->price,
-            'image_url' => $this->image_url,
-            'bead_producer_name' => optional($this->productDescription->beadProducer)->name,
+            'user_first_name' => optional($this->user)->first_name,
+            'user_last_name' => optional($this->user)->last_name,
+            'comment' => $this->comment,
+            'rating' => $this->rating,
+            'date' => $this->created_at->translatedFormat('d F Y, H:i'),
         ];
     }
 }
