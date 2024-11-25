@@ -22,6 +22,7 @@ class ProductResource extends JsonResource
             'image_url' => $this->image_url,
             'bead_producer_name' => optional($this->productDescription->beadProducer)->name,
             'is_in_wishlist' => $this->is_in_wishlist ?? false,
+            'is_in_cart' => $this->is_in_cart ?? false,
         ];
     }
 }
