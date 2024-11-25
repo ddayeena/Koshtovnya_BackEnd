@@ -9,6 +9,8 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductDescription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class ProductController extends Controller
 {
@@ -16,11 +18,39 @@ class ProductController extends Controller
      * Display a listing of the resource.
      */
 
-    public function index()
-    {
-        $products = Product::paginate(15); 
-        return ProductResource::collection($products);
-    }
+     public function index(Request $request)
+     {
+         // Get token
+         $token = $request->bearerToken();
+         Log::info("Token: " . $token); 
+         
+         $user = null;  // By default, the user is not authenticated
+
+         if ($token) {
+             // If the token exists, validate it
+             $accessToken = PersonalAccessToken::findToken($token);
+             if ($accessToken) {
+                 // If the token is valid, get the user
+                 $user = $accessToken->tokenable;
+             }
+         }
+         
+         $products = Product::paginate(15);
+         
+         // Add information about whether the product is in the wishlist
+         $products->getCollection()->transform(function ($product) use ($user) {
+             if ($user) {
+                 // Check if the product is in the wishlist
+                 $product->is_in_wishlist = $user->wishlist->products->contains($product->id);
+             } else {
+                 // If the user is not authenticated or the token is invalid, set it to false
+                 $product->is_in_wishlist = false;
+             }
+             return $product;
+         });
+         
+         return ProductResource::collection($products);         
+     }
 
     //display popular products
     public function popular()

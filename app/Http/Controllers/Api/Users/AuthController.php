@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Api\Users;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\RegisterRequest;
+use App\Models\Cart;
 use App\Models\User;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -21,7 +24,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        // Перевіряємо, чи користувач існує і чи правильний пароль
+        // Check if the user exists and if the password is correct
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid email or password'], 401);
         }
@@ -35,40 +38,22 @@ class AuthController extends Controller
         ]);
     }
 
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        // Перевірка вхідних даних
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8', 
-        ],[
-            'first_name.required' => 'Ім’я є обов’язковим.',
-            'first_name.string' => 'Ім’я має бути текстом.',
-            'first_name.max' => 'Ім’я не може містити більше ніж 255 символів.',
-        
-            'last_name.required' => 'Прізвище є обов’язковим.',
-            'last_name.string' => 'Прізвище має бути текстом.',
-            'last_name.max' => 'Прізвище не може містити більше ніж 255 символів.',
-        
-            'email.required' => 'Електронна пошта є обов’язковою',
-            'email.max' => 'Електронна пошта не може містити більше ніж 255 символів.',
-            'email.unique' => 'Ця електронна пошта вже використовується.',
-            'email.email' => 'Невірний формат електронної пошти.',
-        
-            'password.required' => 'Пароль є обов’язковим.',
-            'password.string' => 'Пароль має бути текстом.',
-            'password.min' => 'Пароль повинен містити щонайменше 8 символів.',
-        ]);
+        //Check data
+        $request->validated();
 
-        // Створення нового користувача
+        // Create new user
         $user = User::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
             'password' => Hash::make($request->password), 
         ]);
+
+        // Create cart and wishlist for user
+        Wishlist::create(['user_id'=>$user->id]);
+        Cart::create(['user_id'=>$user->id]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

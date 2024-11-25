@@ -2,11 +2,10 @@
 
 namespace App\Http\Resources;
 
-use App\Models\ProductDescription;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ProductResource extends JsonResource
+class WishlistProductResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -20,8 +19,6 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'price' => $this->price,
             'image_url' => $this->image_url,
-            'bead_producer_name' => optional($this->productDescription->beadProducer)->name,
-            'is_in_wishlist' => $this->is_in_wishlist ?? false,
         ];
     }
 }
