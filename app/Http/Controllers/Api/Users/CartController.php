@@ -40,6 +40,7 @@ class CartController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            
             return response()->json(['message' => 'Product added to cart']);
         }
         return response()->json(['message' => 'Product already in cart']);
@@ -58,7 +59,36 @@ class CartController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $cart = $request->user()->cart()->firstOrCreate([]);
+        if (!$cart) {
+            return response()->json(['message' => 'Cart not found'], 404);
+        }
+
+        $product = $cart->products()->where('products.id',$id)->first();
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $operation = $request->input('operation');
+        if($operation == 'increase'){
+            $product->pivot->quantity++;
+        }
+        elseif($operation == 'decrease'){
+            if($product->pivot->quantity > 1){
+                $product->pivot->quantity--;
+            }
+            else{
+                return response()->json(['message'=>'Cannot decrease quantity below 1'],400);
+            }
+        }
+        else{
+            return response()->json(['message'=>'Invalid operation'],400);
+        }
+
+        $product->pivot->save();
+
+        return response()->json(['message'=>'Quantity updates successfully'],200);
+
     }
 
     /**
@@ -82,4 +112,16 @@ class CartController extends Controller
         $cart->products()->detach($id);
         return response()->json(['message' => 'Product removed from cart'], 200);
     }
+    
+    public function getCartCount(Request $request)
+    {
+        $cart = $request->user()->cart()->firstOrCreate([]);
+        if ($cart) {
+            $itemCount = $cart->products->count();
+            return response()->json(['cart_count'=> $itemCount]);
+        }
+        return response()->json(['cart_count'=> 0]);
+
+    }
+
 }

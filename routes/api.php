@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Products\ReviewController;
 use App\Http\Controllers\Api\SiteSettingController;
 use App\Http\Controllers\Api\Users\AuthController;
 use App\Http\Controllers\Api\Users\CartController;
+use App\Http\Controllers\Api\Users\UserController;
 use App\Http\Controllers\Api\Users\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [ProfileController::class, 'index']);
+
+    Route::patch('/change-password',[UserController::class,'changePassword']);
     
     // Wishlist Routes
     Route::prefix('wishlist')->group(function () {
@@ -40,6 +43,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [CartController::class, 'index']); // Get user's cart
         Route::post('/', [CartController::class, 'store']); // Add product to cart
         Route::delete('{id}', [CartController::class, 'destroy']); // Remove product from cart
+        Route::patch('/{id}',[CartController::class,'update']); // Update product's quantity
+        Route::get('/cart-count',[CartController::class, 'getCartCount']); //Get item's count of user's cart
     });
 });
 Route::post('/login', [AuthController::class, 'login']);
