@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Users\ProfileController;
 use App\Http\Controllers\Api\Products\ReviewController;
 use App\Http\Controllers\Api\SiteSettingController;
 use App\Http\Controllers\Api\Users\AuthController;
+use App\Http\Controllers\Api\Users\CartController;
 use App\Http\Controllers\Api\Users\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [WishlistController::class, 'index']); // Get user's wishlist
         Route::post('/', [WishlistController::class, 'store']); // Add product to wishlist
         Route::delete('{id}', [WishlistController::class, 'destroy']); // Remove product from wishlist
+    });
+
+        // Cart Routes
+    Route::prefix('cart')->group(function () {
+        Route::get('/', [CartController::class, 'index']); // Get user's cart
+        Route::post('/', [CartController::class, 'store']); // Add product to cart
+        Route::delete('{id}', [CartController::class, 'destroy']); // Remove product from cart
     });
 });
 Route::post('/login', [AuthController::class, 'login']);

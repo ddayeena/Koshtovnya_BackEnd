@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class WishlistProductResource extends JsonResource
+class CartProductResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -18,8 +18,8 @@ class WishlistProductResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'price' => $this->price,
+            'quantity' => $this->pivot->quantity,
             'image_url' => $this->image_url,
-            'is_in_cart' => $this->is_in_cart ?? false,
         ];
     }
 }

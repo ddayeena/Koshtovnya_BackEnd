@@ -45,4 +45,11 @@ class Product extends Model
         return $this->belongsToMany(Wishlist::class);
     }
 
+    public function carts()
+    {
+        return $this->belongsToMany(Cart::class)->withPivot('quantity');
+    }
+    protected $casts = [
+        'price' => 'float',
+    ];
 }

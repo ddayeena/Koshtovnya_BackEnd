@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Api\Users;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\BaseController;
 use App\Http\Resources\WishlistProductResource;
-use App\Models\Product;
 use Illuminate\Http\Request;
 
-class WishlistController extends Controller
+class WishlistController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -16,12 +15,10 @@ class WishlistController extends Controller
     {
         //Get wishlist for authenticated user
         $wishlist = $request->user()->wishlist;
-
         if (!$wishlist) {
-            return response()->json(['message' => 'Wishlist not found for this user.',], 404);
+            return response()->json(['message' => 'Wishlist not found'], 404);
         }
-
-        $products = $wishlist->products;
+        $products = $this->service->attachCartInfo($wishlist->products, $request->user());
         return response()->json([
             'message' => 'Wishlist products retrieved successfully.',
             'products' => WishlistProductResource::collection($products),
@@ -36,7 +33,6 @@ class WishlistController extends Controller
         //Get product's ID
         $productId = $request->input('product_id');
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
-
         //Add product to wishlist
         if (!$wishlist->products()->where('products.id', $productId)->exists()) {
             $wishlist->products()->attach($productId, [
@@ -73,7 +69,7 @@ class WishlistController extends Controller
         //Get wishlist for authenticated user
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
         if (!$wishlist) {
-            return response()->json(['message' => 'Wishlist not found or access denied'], 404);
+            return response()->json(['message' => 'Wishlist not found'], 404);
         }
 
         //Get product, then need to be destroyed

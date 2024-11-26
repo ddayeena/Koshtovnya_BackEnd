@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api\Products;
 
+use App\Http\Controllers\Api\BaseController;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductDescriptionResource;
-use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 

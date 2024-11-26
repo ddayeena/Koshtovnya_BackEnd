@@ -31,12 +31,14 @@ class ProductService
 
     public function attachWishlistInfo($products, $user)
     {
+        //if the user is authenticated, check all product if they are in the wishlist
         if ($user) {
             $wishlistProducts = $user->wishlist->products->pluck('id')->toArray();
             foreach ($products as $product) {
                 $product->is_in_wishlist = in_array($product->id, $wishlistProducts);
             }
         } else {
+            // If the user is not authenticated, mark all products as not in the wishlist
             foreach ($products as $product) {
                 $product->is_in_wishlist = false;
             }
@@ -47,11 +49,13 @@ class ProductService
     public function attachCartInfo($products, $user)
     {
         if ($user) {
+            //if the user is authenticated, check all product if they are in the cart
             $cartProducts = $user->cart->products->pluck('id')->toArray();
             foreach ($products as $product) {
                 $product->is_in_cart = in_array($product->id, $cartProducts);
             }
         } else {
+            // If the user is not authenticated, mark all products as not in the cart
             foreach ($products as $product) {
                 $product->is_in_cart = false;
             }
@@ -61,6 +65,7 @@ class ProductService
 
     public function getProductsByCategory(int $categoryId)
     {
+        //Return products by category with description
         $category = Category::findOrFail($categoryId);
         $productDescriptionIds = $category->productDescriptions->pluck('id');
         return Product::whereIn('product_description_id', $productDescriptionIds)->paginate(15);
