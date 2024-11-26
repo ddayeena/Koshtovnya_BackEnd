@@ -8,13 +8,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-//
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-//
-
 class User extends Authenticatable
 {
+    protected $table = 'users';
+
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
@@ -22,11 +19,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $guarded = false;
 
     /**
      * The attributes that should be hidden for serialization.
@@ -48,5 +41,13 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    public function wishlist()
+    {
+        return $this->hasOne(Wishlist::class);
+    }
 
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
+    }
 }
