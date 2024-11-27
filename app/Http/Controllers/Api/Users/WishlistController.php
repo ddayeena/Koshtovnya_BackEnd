@@ -14,11 +14,9 @@ class WishlistController extends BaseController
     public function index(Request $request)
     {
         //Get wishlist for authenticated user
-        $wishlist = $request->user()->wishlist;
-        if (!$wishlist) {
-            return response()->json(['message' => 'Wishlist not found'], 404);
-        }
+        $wishlist = $request->user()->wishlist()->firstOrCreate([]);
         $products = $this->service->attachCartInfo($wishlist->products, $request->user());
+        
         return response()->json([
             'message' => 'Wishlist products retrieved successfully.',
             'products' => WishlistProductResource::collection($products),
@@ -41,7 +39,6 @@ class WishlistController extends BaseController
             ]);
             return response()->json(['message' => 'Product added to wishlist']);
         }
-
         return response()->json(['message' => 'Product already in wishlist']);
     }
 
@@ -68,13 +65,9 @@ class WishlistController extends BaseController
     {
         //Get wishlist for authenticated user
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
-        if (!$wishlist) {
-            return response()->json(['message' => 'Wishlist not found'], 404);
-        }
 
-        //Get product, then need to be destroyed
-        $product = $wishlist->products()->where('products.id',$id)->first();
-        if (!$product) {
+        //Check if the product exists in the wishlist
+        if (!$wishlist->products()->where('products.id',$id)->exists()) {
             return response()->json(['message' => 'Product not found'], 404);
         }
     

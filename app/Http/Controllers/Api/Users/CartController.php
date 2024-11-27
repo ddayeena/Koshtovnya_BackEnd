@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api\Users;
 
+use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartProductResource;
 use Illuminate\Http\Request;
 
-class CartController extends Controller
+class CartController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -14,11 +15,9 @@ class CartController extends Controller
     public function index(Request $request)
     {
         //Get wishlist for authenticated user
-        $cart = $request->user()->cart;
-        if (!$cart) {
-            return response()->json(['message' => 'Cart not found'], 404);
-        }
+        $cart = $request->user()->cart()->firstOrCreate([]);
         $products = $cart->products;
+
         return response()->json([
             'message' => 'Cart products retrieved successfully.',
             'products' => CartProductResource::collection($products),
@@ -33,6 +32,7 @@ class CartController extends Controller
         //Get product's ID
         $productId = $request->input('product_id');
         $cart = $request->user()->cart()->firstOrCreate([]);
+        
         //Add product to wishlist
         if (!$cart->products()->where('products.id', $productId)->exists()) {
             $cart->products()->attach($productId, [
@@ -40,7 +40,6 @@ class CartController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            
             return response()->json(['message' => 'Product added to cart']);
         }
         return response()->json(['message' => 'Product already in cart']);
@@ -59,36 +58,14 @@ class CartController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        //Get cart and operation
         $cart = $request->user()->cart()->firstOrCreate([]);
-        if (!$cart) {
-            return response()->json(['message' => 'Cart not found'], 404);
-        }
-
-        $product = $cart->products()->where('products.id',$id)->first();
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-
         $operation = $request->input('operation');
-        if($operation == 'increase'){
-            $product->pivot->quantity++;
-        }
-        elseif($operation == 'decrease'){
-            if($product->pivot->quantity > 1){
-                $product->pivot->quantity--;
-            }
-            else{
-                return response()->json(['message'=>'Cannot decrease quantity below 1'],400);
-            }
-        }
-        else{
-            return response()->json(['message'=>'Invalid operation'],400);
-        }
 
-        $product->pivot->save();
+        //Update quantity
+        $response = $this->service->updateProductQuantity($cart, $id, $operation);
 
-        return response()->json(['message'=>'Quantity updates successfully'],200);
-
+        return response()->json(['message' => $response['message']], $response['status']);
     }
 
     /**
@@ -98,30 +75,23 @@ class CartController extends Controller
     {
         //Get cart for authenticated user
         $cart = $request->user()->cart()->firstOrCreate([]);
-        if (!$cart) {
-            return response()->json(['message' => 'Cart not found'], 404);
-        }
 
-        //Get product, then need to be destroyed
-        $product = $cart->products()->where('products.id',$id)->first();
-        if (!$product) {
+        //Check if the product exists in the cart
+        if (!$cart->products()->where('products.id', $id)->exists()) {
             return response()->json(['message' => 'Product not found'], 404);
         }
-    
+
         //Delete product
         $cart->products()->detach($id);
         return response()->json(['message' => 'Product removed from cart'], 200);
     }
-    
+
     public function getCartCount(Request $request)
     {
+        //Get cart and its count
         $cart = $request->user()->cart()->firstOrCreate([]);
-        if ($cart) {
-            $itemCount = $cart->products->count();
-            return response()->json(['cart_count'=> $itemCount]);
-        }
-        return response()->json(['cart_count'=> 0]);
-
+        $itemCount = $cart->products->count();
+        
+        return response()->json(['cart_count' => $itemCount]);
     }
-
 }

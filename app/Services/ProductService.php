@@ -70,4 +70,33 @@ class ProductService
         $productDescriptionIds = $category->productDescriptions->pluck('id');
         return Product::whereIn('product_description_id', $productDescriptionIds)->paginate(15);
     }
+
+    public function updateProductQuantity($cart, $productId, string $operation): array
+    {
+        $product = $cart->products()->where('products.id', $productId)->first();
+
+        if (!$product) {
+            return ['status' => 404, 'message' => 'Product not found'];
+        }
+
+        switch ($operation) {
+            case 'increase':
+                $product->pivot->quantity++;
+                break;
+
+            case 'decrease':
+                if ($product->pivot->quantity > 1) {
+                    $product->pivot->quantity--;
+                } else {
+                    return ['status' => 400, 'message' => 'Cannot decrease quantity below 1'];
+                }
+                break;
+
+            default:
+                return ['status' => 400, 'message' => 'Invalid operation'];
+        }
+
+        $product->pivot->save();
+        return ['status' => 200, 'message' => 'Quantity updated successfully'];
+    }
 }
