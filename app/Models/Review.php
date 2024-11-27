@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Review extends Model
 {
     protected $table = 'reviews';
+    protected $fillable = [
+        'user_id', 'product_id', 'comment', 'rating'
+    ];
     use HasFactory;
 
     public function user()
@@ -19,4 +22,10 @@ class Review extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function replies()
+    {
+        return $this->hasMany(ReviewReply::class);
+    }
+    
 }

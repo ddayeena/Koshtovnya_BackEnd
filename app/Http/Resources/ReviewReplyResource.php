@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ReviewResource extends JsonResource
+class ReviewReplyResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,12 +16,10 @@ class ReviewResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user_first_name' => optional($this->user)->first_name,
-            'user_last_name' => optional($this->user)->last_name,
+            'admin_first_name' => optional($this->admin)->first_name,
+            'admin_last_name' => optional($this->admin)->last_name,
             'comment' => $this->comment,
-            'rating' => $this->rating,
             'date' => $this->created_at->translatedFormat('d F Y, H:i'),
-            'replies' => ReviewReplyResource::collection($this->replies),
         ];
     }
 }
