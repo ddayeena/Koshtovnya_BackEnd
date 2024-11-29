@@ -8,5 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class Notification extends Model
 {
     protected $table = 'notifications';
+    protected $fillable = ['user_id', 'product_id', 'notified_at'];
     use HasFactory;
 }

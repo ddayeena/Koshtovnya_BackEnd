@@ -49,6 +49,12 @@ class Product extends Model
     {
         return $this->belongsToMany(Cart::class)->withPivot('quantity');
     }
+    
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+    
     protected $casts = [
         'price' => 'float',
     ];
