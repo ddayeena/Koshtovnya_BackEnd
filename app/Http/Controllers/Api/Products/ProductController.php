@@ -3,9 +3,15 @@
 namespace App\Http\Controllers\Api\Products;
 
 use App\Http\Controllers\Api\BaseController;
+use App\Http\Filter\ProductFilter;
+use App\Http\Requests\Product\FilterRequest;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductDescriptionResource;
+use App\Models\BeadProducer;
+use App\Models\Color;
 use App\Models\Product;
+use App\Models\ProductDescription;
+use App\Models\Size;
 use Illuminate\Http\Request;
 
 class ProductController extends BaseController
@@ -14,17 +20,19 @@ class ProductController extends BaseController
      * Display a listing of the resource.
      */
 
-     public function index(Request $request)
+     public function index(FilterRequest $request)
      {
         $user = $this->service->getUserFromRequest($request);
-         
-        $products = Product::paginate(15);
 
-        $products = $this->service->attachWishlistInfo($products,$user);
-        $products = $this->service->attachCartInfo($products,$user);
-
-        return ProductResource::collection($products);         
+        $products = $this->service->getFilteredProducts($request->validated(), $user);
+    
+        return ProductResource::collection($products);        
      }
+    
+    public function filter()
+    {
+       return  $this->service->getFilter();
+    }
 
     //display popular products
     public function popular(Request $request)
@@ -58,14 +66,13 @@ class ProductController extends BaseController
     }
 
     //display products by category 
-    public function productsByCategory(Request $request, int $id)
+    public function productsByCategory(FilterRequest $request, int $id)
     {
         $user = $this->service->getUserFromRequest($request);
 
         $products = $this->service->getProductsByCategory($id);
         
-        $products = $this->service->attachWishlistInfo($products,$user);
-        $products = $this->service->attachCartInfo($products,$user);
+        $products = $this->service->getFilteredProducts($request->validated(), $user);
 
         return ProductResource::collection($products);
     }

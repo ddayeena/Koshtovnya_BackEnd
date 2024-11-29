@@ -2,8 +2,13 @@
 
 namespace App\Services;
 
+use App\Http\Filter\ProductFilter;
+use App\Models\BeadProducer;
 use App\Models\Category;
+use App\Models\Color;
 use App\Models\Product;
+use App\Models\ProductDescription;
+use App\Models\Size;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -98,5 +103,68 @@ class ProductService
 
         $product->pivot->save();
         return ['status' => 200, 'message' => 'Quantity updated successfully'];
+    }
+
+    public function getFilteredProducts(array $filters, $user)
+    {
+        // Create filter
+        $filter = app()->make(ProductFilter::class, ['params' => $filters]);
+
+        //Get filtered products and paginate
+        $productQuery = Product::filter($filter);
+        $products = $productQuery->paginate(15);
+
+        // Add wishlist and cart info
+        $products = $this->attachWishlistInfo($products, $user);
+        $products = $this->attachCartInfo($products, $user);
+
+        return $products;
+    }
+
+    public function getFilter()
+    {
+        $is_available =[
+            ['name'=> 'Немає в наявності', 'count'=> Product::where('quantity','=',0)->count()],
+            ['name'=> 'В наявності', 'count'=> Product::where('quantity','>',0)->count()]
+        ];
+
+        $sizes = Size::pluck('size_value');
+        $colors = Color::pluck('color_name');
+
+        $type_of_bead = [
+            ['name'=>'Матовий', 'count'=>ProductDescription::where('type_of_bead','Матовий')->count()],
+            ['name'=>'Не матовий', 'count'=>ProductDescription::where('type_of_bead','Не матовий')->count()]
+        ];
+
+
+        $bead_producer = BeadProducer::withCount('productDescriptions')
+        ->get()
+        ->map(function ($producer) {
+            return [
+                'origin_country' => $producer->origin_country,
+                'count' => $producer->product_descriptions_count,
+            ];
+        });
+
+        $weight = [
+            'min' => ProductDescription::min('weight'),
+            'max' => ProductDescription::max('weight'),
+        ];
+    
+        $price = [
+            'min' => Product::min('price'),
+            'max' => Product::max('price'),
+        ];
+
+
+        return response()->json([
+            'Доступність' => $is_available,
+            'Розмір' => $sizes,
+            'Колір' => $colors,
+            'Тип бісеру' => $type_of_bead,
+            'Виробник бісеру' => $bead_producer,
+            'Вага' => $weight,
+            'Ціна' => $price,
+        ]);
     }
 }

@@ -59,6 +59,7 @@ Route::post('/register', [AuthController::class, 'register']);
 
 // Products Routes
 Route::get('/products', [ProductController::class, 'index']); // Get all products
+Route::get('/filter',[ProductController::class,'filter']);  //Get filter
 Route::get('/products/{id}', [ProductController::class, 'show']); // Get a specific product
 Route::get('/products/{id}/reviews', [ReviewController::class, 'getReviewsByProduct']); // Get reviews for a product
 Route::get('/products/search/{name}', [ProductController::class, 'search']); // Search products

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFilter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -9,6 +10,11 @@ class Product extends Model
 {
     protected $table = 'products';
     use HasFactory;
+    use HasFilter;
+    
+    protected $casts = [
+        'price' => 'float',
+    ];
 
     public function productDescription()
     {
@@ -55,7 +61,5 @@ class Product extends Model
         return $this->hasMany(Notification::class);
     }
     
-    protected $casts = [
-        'price' => 'float',
-    ];
+
 }
