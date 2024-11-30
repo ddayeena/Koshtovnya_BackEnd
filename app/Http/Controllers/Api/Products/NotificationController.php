@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Products;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Notification;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -13,10 +12,7 @@ class NotificationController extends Controller
     public function store(Request $request)
     {
         //Check if the product exists
-        $product = Product::find($request->product_id);
-        if (!$product) {
-            return response()->json(['message' => 'Product not found',], 404);
-        }
+        $product = Product::findOrFail($request->product_id);
         
         //Check if the notification already exists
         $existingNotification = $request->user()->notifications()->where('product_id', $request->product_id)->first();

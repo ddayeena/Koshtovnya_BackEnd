@@ -23,10 +23,7 @@ class ReviewReplyController extends Controller
     public function store(Request $request, string $id)
     {
         //Check if the product exists
-        $review = Review::find($id);
-        if (!$review) {
-            return response()->json(['message' => 'Review not found',], 404);
-        }
+        $review = Review::findOrFail($id);
 
         //Check if the authenticated user has role use
         if($request->user()->role == "user"){

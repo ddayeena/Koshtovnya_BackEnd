@@ -56,6 +56,7 @@ class AuthController extends Controller
         Wishlist::create(['user_id'=>$user->id]);
         Cart::create(['user_id'=>$user->id]);
 
+        //Send welcome email to the new user
         Mail::to($user->email)->send(new WelcomeMail($user));
 
         $token = $user->createToken('auth_token')->plainTextToken;

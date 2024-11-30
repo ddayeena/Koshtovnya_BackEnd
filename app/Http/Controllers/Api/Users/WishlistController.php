@@ -2,21 +2,30 @@
 
 namespace App\Http\Controllers\Api\Users;
 
-use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Controller;
 use App\Http\Resources\WishlistProductResource;
+use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
 
-class WishlistController extends BaseController
+class WishlistController extends Controller
 {
+    private $product_service;
+
+    public function __construct(ProductService $product_service)
+    {
+        $this->product_service = $product_service;
+    }
+
     /**
      * Display a listing of the resource.
      */
+
     public function index(Request $request)
     {
         //Get wishlist for authenticated user
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
-        $products = $this->service->attachCartInfo($wishlist->products, $request->user());
-        
+        $products = $this->product_service->attachCartInfo($wishlist->products, $request->user());
+
         return response()->json([
             'message' => 'Wishlist products retrieved successfully.',
             'products' => WishlistProductResource::collection($products),
@@ -67,10 +76,8 @@ class WishlistController extends BaseController
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
 
         //Check if the product exists in the wishlist
-        if (!$wishlist->products()->where('products.id',$id)->exists()) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-    
+        $wishlist->products()->findOrFail($id);
+        
         //Delete product
         $wishlist->products()->detach($id);
         return response()->json(['message' => 'Product removed from wishlist'], 200);

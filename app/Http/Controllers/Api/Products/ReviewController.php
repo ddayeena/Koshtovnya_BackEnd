@@ -24,10 +24,7 @@ class ReviewController extends Controller
     public function store(Request $request, string $id)
     {
         //Check if the product exists
-        $product = Product::find($id);
-        if (!$product) {
-            return response()->json(['message' => 'Product not found',], 404);
-        }
+        $product = Product::findOrFail($id);
 
         //Check if the data are correct
         $validated = $request->validate([

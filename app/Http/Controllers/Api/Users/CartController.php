@@ -2,13 +2,20 @@
 
 namespace App\Http\Controllers\Api\Users;
 
-use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartProductResource;
+use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
 
-class CartController extends BaseController
+class CartController extends Controller
 {
+    private $product_service;
+
+    public function __construct(ProductService $product_service)
+    {
+        $this->product_service = $product_service;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -63,7 +70,7 @@ class CartController extends BaseController
         $operation = $request->input('operation');
 
         //Update quantity
-        $response = $this->service->updateProductQuantity($cart, $id, $operation);
+        $response = $this->product_service->updateProductQuantity($cart, $id, $operation);
 
         return response()->json(['message' => $response['message']], $response['status']);
     }
@@ -77,9 +84,7 @@ class CartController extends BaseController
         $cart = $request->user()->cart()->firstOrCreate([]);
 
         //Check if the product exists in the cart
-        if (!$cart->products()->where('products.id', $id)->exists()) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
+        $cart->products()->findOrFail($id);
 
         //Delete product
         $cart->products()->detach($id);
