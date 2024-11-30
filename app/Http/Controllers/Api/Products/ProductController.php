@@ -2,70 +2,85 @@
 
 namespace App\Http\Controllers\Api\Products;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Product\FilterRequest;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductDescriptionResource;
-use App\Models\Category;
 use App\Models\Product;
+use App\Services\Product\ProductFilterService;
+use App\Services\Product\ProductService;
+use App\Services\User\UserService;
 use Illuminate\Http\Request;
 
-class ProductController extends BaseController
+class ProductController extends Controller
 {
+    private $product_service;
+    private $user_service;
+    private $product_filter_service;
+
+    public function __construct(ProductService $product_service, UserService $user_service, ProductFilterService $product_filter_service)
+    {
+        $this->product_service = $product_service;
+        $this->user_service = $user_service;
+        $this->product_filter_service = $product_filter_service;
+    }
+
     /**
      * Display a listing of the resource.
      */
-
-     public function index(Request $request)
-     {
-        $user = $this->service->getUserFromRequest($request);
-         
-        $products = Product::paginate(15);
-
-        $products = $this->service->attachWishlistInfo($products,$user);
-        $products = $this->service->attachCartInfo($products,$user);
-
-        return ProductResource::collection($products);         
-     }
-
-    //display popular products
-    public function popular(Request $request)
+    public function index(FilterRequest $request)
     {
-        $user = $this->service->getUserFromRequest($request);
-        $products = Product::with('productDescription')
-            ->withCount('orders')  
-            ->orderBy('orders_count', 'desc')  
-            ->take(6)
-            ->get();
+        $user = $this->user_service->getUserFromRequest($request);
 
-        $products = $this->service->attachWishlistInfo($products,$user);
-        $products = $this->service->attachCartInfo($products,$user);
+        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user);
 
         return ProductResource::collection($products);
     }
 
-    public function newArrivals(Request $request) 
+    public function filter()
     {
-        $user = $this->service->getUserFromRequest($request);
+        return  $this->product_filter_service->getFilter();
+    }
+
+    //display popular products
+    public function popular(Request $request)
+    {
+        $user = $this->user_service->getUserFromRequest($request);
         $products = Product::with('productDescription')
             ->withCount('orders')
-            ->orderBy('created_at', 'desc') 
-            ->take(6) 
-            ->get(); 
+            ->orderBy('orders_count', 'desc')
+            ->take(6)
+            ->get();
 
-        $products = $this->service->attachWishlistInfo($products,$user);
-        $products = $this->service->attachCartInfo($products,$user);
+        $products = $this->product_service->attachWishlistInfo($products, $user);
+        $products = $this->product_service->attachCartInfo($products, $user);
+
+        return ProductResource::collection($products);
+    }
+
+    public function newArrivals(Request $request)
+    {
+        $user = $this->user_service->getUserFromRequest($request);
+        $products = Product::with('productDescription')
+            ->withCount('orders')
+            ->orderBy('created_at', 'desc')
+            ->take(6)
+            ->get();
+
+        $products = $this->product_service->attachWishlistInfo($products, $user);
+        $products = $this->product_service->attachCartInfo($products, $user);
 
         return ProductResource::collection($products);
     }
 
     //display products by category 
-    public function productsByCategory(Request $request, int $id)
+    public function productsByCategory(FilterRequest $request, int $id)
     {
-        $user = $this->service->getUserFromRequest($request);
+        $user = $this->user_service->getUserFromRequest($request);
 
-        $products = $this->service->getProductsByCategory($id);
-        
-        $products = $this->service->attachWishlistInfo($products,$user);
-        $products = $this->service->attachCartInfo($products,$user);
+        $products = $this->product_service->getProductsByCategory($id);
+
+        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user);
 
         return ProductResource::collection($products);
     }

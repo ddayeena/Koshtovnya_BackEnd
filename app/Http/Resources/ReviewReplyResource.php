@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class WishlistProductResource extends JsonResource
+class ReviewReplyResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,10 +16,10 @@ class WishlistProductResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'price' => $this->price,
-            'image_url' => $this->image_url,
-            'is_in_cart' => $this->is_in_cart ?? false,
+            'admin_first_name' => optional($this->admin)->first_name,
+            'admin_last_name' => optional($this->admin)->last_name,
+            'comment' => $this->comment,
+            'date' => $this->created_at->translatedFormat('d F Y, H:i'),
         ];
     }
 }

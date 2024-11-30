@@ -21,6 +21,7 @@ class ReviewResource extends JsonResource
             'comment' => $this->comment,
             'rating' => $this->rating,
             'date' => $this->created_at->translatedFormat('d F Y, H:i'),
+            'replies' => ReviewReplyResource::collection($this->replies),
         ];
     }
 }

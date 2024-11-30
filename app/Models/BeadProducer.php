@@ -10,7 +10,7 @@ class BeadProducer extends Model
     protected $table = 'bead_producers';
     use HasFactory;
 
-    public function productDescription()
+    public function productDescriptions()
     {
         return $this->hasMany(ProductDescription::class);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFilter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -9,6 +10,11 @@ class Product extends Model
 {
     protected $table = 'products';
     use HasFactory;
+    use HasFilter;
+    
+    protected $casts = [
+        'price' => 'float',
+    ];
 
     public function productDescription()
     {
@@ -44,5 +50,16 @@ class Product extends Model
     {
         return $this->belongsToMany(Wishlist::class);
     }
+
+    public function carts()
+    {
+        return $this->belongsToMany(Cart::class)->withPivot('quantity');
+    }
+    
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+    
 
 }

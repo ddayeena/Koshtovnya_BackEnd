@@ -4,24 +4,28 @@ namespace App\Http\Controllers\Api\Users;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\WishlistProductResource;
-use App\Models\Product;
+use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
 
 class WishlistController extends Controller
 {
+    private $product_service;
+
+    public function __construct(ProductService $product_service)
+    {
+        $this->product_service = $product_service;
+    }
+
     /**
      * Display a listing of the resource.
      */
+
     public function index(Request $request)
     {
         //Get wishlist for authenticated user
-        $wishlist = $request->user()->wishlist;
+        $wishlist = $request->user()->wishlist()->firstOrCreate([]);
+        $products = $this->product_service->attachCartInfo($wishlist->products, $request->user());
 
-        if (!$wishlist) {
-            return response()->json(['message' => 'Wishlist not found for this user.',], 404);
-        }
-
-        $products = $wishlist->products;
         return response()->json([
             'message' => 'Wishlist products retrieved successfully.',
             'products' => WishlistProductResource::collection($products),
@@ -36,7 +40,6 @@ class WishlistController extends Controller
         //Get product's ID
         $productId = $request->input('product_id');
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
-
         //Add product to wishlist
         if (!$wishlist->products()->where('products.id', $productId)->exists()) {
             $wishlist->products()->attach($productId, [
@@ -45,7 +48,6 @@ class WishlistController extends Controller
             ]);
             return response()->json(['message' => 'Product added to wishlist']);
         }
-
         return response()->json(['message' => 'Product already in wishlist']);
     }
 
@@ -72,16 +74,10 @@ class WishlistController extends Controller
     {
         //Get wishlist for authenticated user
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
-        if (!$wishlist) {
-            return response()->json(['message' => 'Wishlist not found or access denied'], 404);
-        }
 
-        //Get product, then need to be destroyed
-        $product = $wishlist->products()->where('products.id',$id)->first();
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-    
+        //Check if the product exists in the wishlist
+        $wishlist->products()->findOrFail($id);
+        
         //Delete product
         $wishlist->products()->detach($id);
         return response()->json(['message' => 'Product removed from wishlist'], 200);

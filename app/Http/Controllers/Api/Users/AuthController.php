@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api\Users;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\RegisterRequest;
+use App\Mail\WelcomeMail;
 use App\Models\Cart;
 use App\Models\User;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -28,7 +30,6 @@ class AuthController extends Controller
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid email or password'], 401);
         }
-
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -54,6 +55,9 @@ class AuthController extends Controller
         // Create cart and wishlist for user
         Wishlist::create(['user_id'=>$user->id]);
         Cart::create(['user_id'=>$user->id]);
+
+        //Send welcome email to the new user
+        Mail::to($user->email)->send(new WelcomeMail($user));
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
