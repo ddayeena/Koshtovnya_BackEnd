@@ -10,4 +10,8 @@ class Notification extends Model
     protected $table = 'notifications';
     protected $fillable = ['user_id', 'product_id', 'notified_at'];
     use HasFactory;
+
+    public function product(){
+        return $this->belongsTo(Product::class);
+    }
 }

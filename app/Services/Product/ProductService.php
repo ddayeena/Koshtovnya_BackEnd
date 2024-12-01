@@ -76,4 +76,22 @@ class ProductService
         $product->pivot->save();
         return ['status' => 200, 'message' => 'Quantity updated successfully'];
     }
+
+    //Attach 
+    public function attachUserProductStatus($product, $user)
+    {
+        $product->productDescription->is_in_wishlist = $user 
+        ? $user->wishlist->products()->where('product_id', $product->id)->exists()
+        : false;
+
+        $product->productDescription->is_in_cart = $user 
+        ? $user->cart->products()->where('product_id', $product->id)->exists()
+        : false;
+        
+        $product->productDescription->notify_when_available = $user 
+        ? $user->notifications()->where('product_id', $product->id)->exists()
+        : false;
+
+        return $product;
+    }
 }
