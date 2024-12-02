@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Orders\Delivery\NovaPoshtaController;
 use App\Http\Controllers\Api\Products\CategoryController;
 use App\Http\Controllers\Api\Products\NotificationController;
 use App\Http\Controllers\Api\Products\ProductController;
@@ -11,7 +12,6 @@ use App\Http\Controllers\Api\Users\AuthController;
 use App\Http\Controllers\Api\Users\CartController;
 use App\Http\Controllers\Api\Users\UserController;
 use App\Http\Controllers\Api\Users\WishlistController;
-use App\Models\Notification;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -72,3 +72,7 @@ Route::get('/categories/{id}/products', [ProductController::class, 'productsByCa
 
 // Site Settings Routes
 Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get site settings
+
+// Nova Poshta Routes
+Route::get('/nova-poshta/cities', [NovaPoshtaController::class, 'getCities']); //Get cities
+Route::get('/nova-poshta/ware-houses', [NovaPoshtaController::class, 'getWarehousesForCity']); //Get warehouses

@@ -38,12 +38,13 @@ class CartController extends Controller
     {
         //Get product's ID
         $productId = $request->input('product_id');
+        $quantity = $request->input('quantity');
         $cart = $request->user()->cart()->firstOrCreate([]);
         
         //Add product to wishlist
         if (!$cart->products()->where('products.id', $productId)->exists()) {
             $cart->products()->attach($productId, [
-                'quantity' => 1,
+                'quantity' => $quantity,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
