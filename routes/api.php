@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Orders\Delivery\NovaPoshtaController;
+use App\Http\Controllers\Api\Orders\OrderController;
 use App\Http\Controllers\Api\Products\CategoryController;
 use App\Http\Controllers\Api\Products\NotificationController;
 use App\Http\Controllers\Api\Products\ProductController;
@@ -53,6 +54,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews/{id}/reply', [ReviewReplyController::class, 'store']); // Add reply foreview
 
     Route::post('/notification',[NotificationController::class, 'store']); //Add notification for user
+
+    Route::prefix('orders')->group(function(){
+        Route::get('/', [OrderController::class, 'index']); // Get user's orders
+        Route::get('/{id}', [OrderController::class, 'show']); // Get order`s products
+    });
 });
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -76,3 +82,4 @@ Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get si
 // Nova Poshta Routes
 Route::get('/nova-poshta/cities', [NovaPoshtaController::class, 'getCities']); //Get cities
 Route::get('/nova-poshta/ware-houses', [NovaPoshtaController::class, 'getWarehousesForCity']); //Get warehouses
+

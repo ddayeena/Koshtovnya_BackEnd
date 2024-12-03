@@ -17,7 +17,7 @@ return new class extends Migration
             $table->dateTime('order_date');
             $table->unsignedBigInteger('payment_id'); 
             $table->unsignedBigInteger('delivery_id'); 
-            $table->enum('status',['В очікуванні', 'Відправлено', 'Доставлено']); 
+            $table->enum('status',['В очікуванні', 'Відправлено', 'Доставлено'])->default('В очікуванні'); 
             $table->decimal('total_amount', 8, 2);
             
             $table->foreign('user_id')

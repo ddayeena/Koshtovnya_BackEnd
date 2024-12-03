@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->string('card_number',16);
-            $table->string('expire_date',5);
-            $table->enum('payment_method',['Післяоплата', 'Оплата картою', 'Передплата']); 
+            $table->string('last_4_card_number',4)->nullable();
+            $table->string('type_of_card')->nullable();
+            $table->enum('payment_method',['Післяоплата', 'Оплата картою', 'Передплата'])->default('Післяоплата'); 
             $table->string('transaction_number')->nullable();
             $table->foreign('user_id')
                   ->references('id')

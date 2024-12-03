@@ -16,8 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->string('city'); 
             $table->enum('post_service', ['Укрпошта', 'Нова Пошта'])->default('Нова Пошта');
-            $table->string('post_office',15); 
-            $table->string('phone_number',20);
+            $table->string('post_office'); 
+            $table->decimal('cost', 8, 2); 
 
             $table->foreign('user_id')
                   ->references('id')
