@@ -13,17 +13,22 @@ return new class extends Migration
     {
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->string('city'); 
-            $table->enum('post_service', ['Укрпошта', 'Нова Пошта'])->default('Нова Пошта');
-            $table->string('post_office'); 
-            $table->decimal('cost', 8, 2); 
+            $table->unsignedBigInteger('order_id');
 
-            $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('cascade');
-                  
+
+            $table->enum('post_service', ['Укрпошта', 'Нова Пошта'])->default('Нова Пошта');
+            $table->string('city');
+            $table->string('post_office')->nullable();
+            $table->enum('delivery_type', ['warehouse', 'courier'])->default('warehouse'); 
+            $table->string('delivery_address')->nullable();
+            $table->decimal('cost', 8, 2);
+
+
+            $table->foreign('order_id')
+                ->references('id')
+                ->on('orders')
+                ->onDelete('cascade');
+
             $table->timestamps();
         });
     }

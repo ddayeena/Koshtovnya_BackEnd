@@ -22,14 +22,15 @@ class OrderSeeder extends Seeder
 
         foreach ($users as $user) {
             $products = Product::inRandomOrder()->take(2)->get();
-            $delivery = Delivery::factory()->create(['user_id' => $user->id]);
-            $payment = Payment::factory()->create(['user_id' => $user->id]);
+
 
             $order = Order::factory()->create([
                 'user_id' => $user->id,
-                'delivery_id' =>  $delivery->id,
-                'payment_id' =>  $payment->id,
             ]);
+
+            $delivery = Delivery::factory()->create(['order_id' => $order->id]);
+            $payment = Payment::factory()->create(['order_id' => $order->id]);
+
             foreach ($products as $product) {
                 OrderProduct::factory()->count(2)->create([
                     'order_id' => $order->id,

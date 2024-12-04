@@ -47,8 +47,19 @@ class NovaPoshtaService
     // Filters items by the query, checking if the query exists in the description
     public function filterByQuery(array $items, ?string $query): array
     {
-        return array_filter($items, function ($item) use ($query) {
-            return $query === null || stripos($item['Description'], $query) !== false;
+        if ($query === null) return $items;
+
+        // Search for exact matches
+        $exactMatches = array_filter($items, function ($item) use ($query) {
+            return stripos($item['Description'], $query) !== false && $item['Description'] === $query;
         });
+        if (!empty($exactMatches)) return $exactMatches;
+
+        // If there are no exact matches, search for everything that contains the query as part of it
+        $partialMatches = array_filter($items, function ($item) use ($query) {
+            return stripos($item['Description'], $query) !== false;
+        });
+
+        return $partialMatches;
     }
 }

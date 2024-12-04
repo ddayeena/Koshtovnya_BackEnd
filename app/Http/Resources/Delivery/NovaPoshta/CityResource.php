@@ -16,6 +16,7 @@ class CityResource extends JsonResource
     {
         return [
             'city' => $this['Description'],
+            'Ref' => $this['Ref']
         ];
     }
 }

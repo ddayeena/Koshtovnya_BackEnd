@@ -82,4 +82,4 @@ Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get si
 // Nova Poshta Routes
 Route::get('/nova-poshta/cities', [NovaPoshtaController::class, 'getCities']); //Get cities
 Route::get('/nova-poshta/ware-houses', [NovaPoshtaController::class, 'getWarehousesForCity']); //Get warehouses
-
+Route::get('/nova-poshta/delivery/cost',[NovaPoshtaController::class,'calculateDeliveryCost']); //calculate delivery cost
