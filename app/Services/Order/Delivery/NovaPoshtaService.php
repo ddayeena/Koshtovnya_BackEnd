@@ -44,6 +44,12 @@ class NovaPoshtaService
         return $this->sendRequest('Address', 'getWarehouses', ['CityRef' => $cityRef, 'Limit' => $limit]);
     }
 
+    //Get streets of some city
+    public function getStreetsList($cityRef)
+    {
+        return $this->sendRequest('Address', 'getStreet', ['CityRef' => $cityRef]);        
+    }
+
     // Filters items by the query, checking if the query exists in the description
     public function filterByQuery(array $items, ?string $query): array
     {

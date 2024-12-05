@@ -9,9 +9,11 @@ class DeliveryService
 {
     private string $apiKey;
     private string $cityCender;
+    private NovaPoshtaService $novaPoshtaService; 
 
-    public function __construct()
+    public function __construct(NovaPoshtaService $novaPoshtaService)
     {
+        $this->novaPoshtaService = $novaPoshtaService;
         $this->apiKey = env('NOVAPOSHTA_API_KEY');
         $this->cityCender = env('NOVAPOSHTA_CITY_SENDER');
     }
@@ -53,6 +55,48 @@ class DeliveryService
             'message' => $result['errors'] ?? 'Error calculating delivery cost.',
         ];
     }
+
+    public function filterCitiesByDeliveryType($cities, $deliveryType, $query)
+    {
+        //Filter citis by their delivery type
+        switch ($deliveryType) {
+            case 'Самовивіз з Нової Пошти':
+                return $this->novaPoshtaService->filterByQuery(
+                    array_filter($cities, fn($city) => $city['Delivery1'] === '1' || $city['Delivery4'] === '1'),
+                    $query
+                );
+            case 'Самовивіз з поштоматів Нової Пошти':
+                return $this->novaPoshtaService->filterByQuery(
+                    array_filter($cities, fn($city) => $city['Delivery3'] === '1'),
+                    $query
+                );
+            case 'Кур\'єр Нової Пошти':
+                return $this->novaPoshtaService->filterByQuery(
+                    array_filter($cities, fn($city) => $city['Delivery2'] === '1'),
+                    $query
+                );
+            default: return [];
+        }
+    }
     
+    public function getFilteredWarehouses($cityRef, $deliveryType, $warehouseName)
+    {
+        // Get warehouses of the city
+        $warehouses = collect($this->novaPoshtaService->getWarehouses($cityRef));
+
+        // Filter warehouses by their delivery type
+        if ($deliveryType === 'Самовивіз з Нової Пошти') {
+            $warehouses = $warehouses->filter(function ($warehouse) {
+                return $warehouse['CategoryOfWarehouse'] !== 'Postomat';
+            });
+        } elseif ($deliveryType === 'Самовивіз з поштоматів Нової Пошти') {
+            $warehouses = $warehouses->filter(function ($warehouse) {
+                return $warehouse['CategoryOfWarehouse'] === 'Postomat';
+            });
+        }
+
+        // Further filter warehouses by name query
+        return $this->novaPoshtaService->filterByQuery($warehouses->toArray(), $warehouseName);
+    }
     
 }

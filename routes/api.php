@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\Orders\Delivery\DeliveryController;
+use App\Http\Controllers\Api\Orders\Delivery\DeliveryOptionController;
 use App\Http\Controllers\Api\Orders\Delivery\NovaPoshtaController;
 use App\Http\Controllers\Api\Orders\OrderController;
 use App\Http\Controllers\Api\Products\CategoryController;
@@ -11,6 +13,7 @@ use App\Http\Controllers\Api\Products\ReviewReplyController;
 use App\Http\Controllers\Api\SiteSettingController;
 use App\Http\Controllers\Api\Users\AuthController;
 use App\Http\Controllers\Api\Users\CartController;
+use App\Http\Controllers\Api\Users\UserAddressController;
 use App\Http\Controllers\Api\Users\UserController;
 use App\Http\Controllers\Api\Users\WishlistController;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +34,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [ProfileController::class, 'index']);
+    Route::get('/user-address', [UserAddressController::class, 'show']); // Get users delivery address
 
     Route::patch('/change-password',[UserController::class,'changePassword']);
     
@@ -82,4 +86,7 @@ Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get si
 // Nova Poshta Routes
 Route::get('/nova-poshta/cities', [NovaPoshtaController::class, 'getCities']); //Get cities
 Route::get('/nova-poshta/ware-houses', [NovaPoshtaController::class, 'getWarehousesForCity']); //Get warehouses
-Route::get('/nova-poshta/delivery/cost',[NovaPoshtaController::class,'calculateDeliveryCost']); //calculate delivery cost
+Route::get('/nova-poshta/streets', [NovaPoshtaController::class, 'getStreetsForCity']); //Get streets
+Route::get('/nova-poshta/delivery/cost',[NovaPoshtaController::class,'calculateDeliveryCost']); // Calculate delivery cost
+
+Route::get('/delivery-options',[DeliveryOptionController::class,'index']); // Get delivery options
