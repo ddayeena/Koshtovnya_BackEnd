@@ -11,20 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_addresses', function (Blueprint $table) {
+        Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->unique();
-            $table->enum('post_service', ['Укрпошта', 'Нова Пошта'])->default('Нова Пошта');
+            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('delivery_type_id');
+
             $table->string('city');
             $table->string('post_office')->nullable();
-            $table->enum('delivery_type', ['warehouse', 'courier'])->default('warehouse'); 
             $table->string('delivery_address')->nullable();
+            $table->decimal('cost', 8, 2);
 
-            $table->foreign('user_id')
+
+            $table->foreign('order_id')
                 ->references('id')
-                ->on('users')
+                ->on('orders')
                 ->onDelete('cascade');
 
+            $table->foreign('delivery_type_id')
+                ->references('id')
+                ->on('delivery_types')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -34,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_addresses');
+        Schema::dropIfExists('deliveries');
     }
 };
