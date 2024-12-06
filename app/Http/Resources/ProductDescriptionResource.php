@@ -29,6 +29,9 @@ class ProductDescriptionResource extends JsonResource
             'bead_producer_name' => optional($this->beadProducer)->origin_country,
             'quantity' => optional($this->product)->quantity,
             'is_available' => optional($this->product)->quantity > 0,
+            'is_in_wishlist' => $this->is_in_wishlist ?? false,
+            'is_in_cart' => $this->is_in_cart ?? false,
+            'notify_when_available' => $this->notify_when_available ?? false,
         ];
     }
 }

@@ -20,10 +20,10 @@ class PaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            'card_number' => $this->faker->creditCardNumber,
-            'expire_date' => $this->faker->creditCardExpirationDateString, 
+            'type_of_card' => $this->faker->name(),
             'payment_method' => $this->faker->randomElement(['Післяоплата', 'Оплата картою', 'Передплата']), 
-            'transaction_number' => $this->faker->uuid()
+            'transaction_number' => $this->faker->uuid(),
+            'amount' => $this->faker->numberBetween(200, 2000), 
             
         ];
     }

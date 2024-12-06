@@ -19,13 +19,11 @@ class DeliveryFactory extends Factory
     protected $model = Delivery::class;
     public function definition(): array
     {
-        $user = User::inRandomOrder()->first(); // Вибір випадкового користувача
-
         return [
-            'city' => $this->faker->city, 
             'post_service' => $this->faker->randomElement(['Укрпошта', 'Нова Пошта']), 
+            'city' => $this->faker->city, 
             'post_office' => $this->faker->word(10), 
-            'phone_number' => $this->faker->phoneNumber, 
+            'cost' => $this->faker->numberBetween(20, 200), 
         ];
     }
 }

@@ -11,6 +11,7 @@ use App\Services\Product\ProductFilterService;
 use App\Services\Product\ProductService;
 use App\Services\User\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -102,9 +103,13 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
+        $user = $this->user_service->getUserFromRequest($request);
+        
         $product = Product::findOrFail($id);
+        $product=$this->product_service->attachUserProductStatus($product,$user);
+
         return ProductDescriptionResource::make($product->productDescription);
     }
 

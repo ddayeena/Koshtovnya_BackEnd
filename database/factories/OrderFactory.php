@@ -22,7 +22,6 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         return [
-            'order_date' => $this->faker->dateTime, 
             'status' => $this->faker->randomElement(['В очікуванні', 'Відправлено', 'Доставлено']),
             'total_amount' => $this->faker->randomFloat(2, 100, 10000), 
         ];

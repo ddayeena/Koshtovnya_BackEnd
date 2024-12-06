@@ -13,15 +13,18 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->string('card_number',16);
-            $table->string('expire_date',5);
-            $table->enum('payment_method',['Післяоплата', 'Оплата картою', 'Передплата']); 
-            $table->string('transaction_number')->nullable();
-            $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('cascade');
+            $table->unsignedBigInteger('order_id');
+
+            $table->string('type_of_card')->nullable();
+            $table->enum('payment_method', ['Післяоплата', 'Оплата картою', 'Передплата'])->default('Післяоплата');
+            $table->string('transaction_number')->unique()->nullable();
+            $table->decimal('amount', 8, 2);
+
+            $table->foreign('order_id')
+                ->references('id')
+                ->on('orders')
+                ->onDelete('cascade');
+
             $table->timestamps();
         });
     }
