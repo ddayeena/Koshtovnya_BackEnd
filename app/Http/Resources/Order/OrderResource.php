@@ -21,4 +21,4 @@ class OrderResource extends JsonResource
             'products' => OrderProductResource::collection($this->whenLoaded('products'))
         ];
     }
-}// id дату статус і фото товарів
+}

@@ -22,7 +22,6 @@ class UserAddressResource extends JsonResource
             'delivery_type' => optional($this->deliveryType)->type,
             'delivery_name' => optional($this->deliveryType)->name,
             'city' => $this->city,
-            'post_office' => $this->post_office,
             'delivery_address' => $this->delivery_address,
         ];
     } 

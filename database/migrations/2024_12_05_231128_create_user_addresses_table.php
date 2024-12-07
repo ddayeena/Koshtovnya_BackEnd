@@ -16,8 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->unique();
             $table->unsignedBigInteger('delivery_type_id');
             $table->string('city');
-            $table->string('post_office')->nullable();
-            $table->string('delivery_address')->nullable();
+            $table->string('delivery_address');
 
             $table->foreign('user_id')
                 ->references('id')

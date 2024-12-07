@@ -9,4 +9,15 @@ class Delivery extends Model
 {
     protected $table = 'deliveries';
     use HasFactory;
+
+    public function deliveryType()
+    {
+        return $this->belongsTo(DeliveryType::class);
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+    
 }
