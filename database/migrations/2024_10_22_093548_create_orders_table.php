@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id'); 
+            $table->string('last_name',50);
+            $table->string('first_name',50);
+            $table->string('second_name',50);
+            $table->string('phone_number',20)->unique();
             $table->enum('status',['В очікуванні', 'Відправлено', 'Доставлено'])->default('В очікуванні'); 
             $table->decimal('total_amount', 8, 2);
             

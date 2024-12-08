@@ -18,8 +18,8 @@ class DeliveryResource extends JsonResource
             'delivery_name' => optional($this->deliveryType)->name,
             'delivery_address' => $this->delivery_address,
             'delivery_cost' => $this->cost,
-            'user' => optional($this->order->user)->last_name . ' ' . optional($this->order->user)->first_name  . ' ' . optional($this->order->user)->second_name,
-            'phone_number' => optional($this->order->user)->phone_number
+            'user' => optional($this->order)->last_name . ' ' . optional($this->order)->first_name  . ' ' . optional($this->order)->second_name,
+            'phone_number' => optional($this->order)->phone_number
         ];
     }
 }

@@ -16,12 +16,11 @@ class UserAddressResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user_first_name' => optional($this->user)->first_name,
-            'user_last_name' => optional($this->user)->last_name,
+            'user' => optional($this->user)->last_name . ' ' . optional($this->user)->first_name  . ' ' . optional($this->user)->second_name,
             'phone_number' => optional($this->user)->phone_number,
             'delivery_type' => optional($this->deliveryType)->type,
-            'delivery_name' => optional($this->deliveryType)->name,
             'city' => $this->city,
+            'delivery_name' => optional($this->deliveryType)->name,
             'delivery_address' => $this->delivery_address,
         ];
     } 
