@@ -17,6 +17,7 @@ class Order extends Model
         'first_name',
         'second_name',
         'phone_number',
+        'status'
     ];
 
     public function products()
