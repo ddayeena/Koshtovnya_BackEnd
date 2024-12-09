@@ -22,4 +22,4 @@ class OrderProductResource extends JsonResource
             'image_url' => $this->image_url
         ];
     }
-}// id дату статус і фото товарів
+}

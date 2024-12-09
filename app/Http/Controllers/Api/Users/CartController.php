@@ -41,7 +41,7 @@ class CartController extends Controller
         $quantity = $request->input('quantity');
         $cart = $request->user()->cart()->firstOrCreate([]);
         
-        //Add product to wishlist
+        //Add product to cart
         if (!$cart->products()->where('products.id', $productId)->exists()) {
             $cart->products()->attach($productId, [
                 'quantity' => $quantity,

@@ -13,9 +13,11 @@ class ReviewController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index($productId)
     {
-        //
+        $product = Product::findOrFail($productId);
+        $reviews = $product->reviews()->paginate(3);
+        return ReviewResource::collection($reviews);
     }
 
     /**
@@ -68,12 +70,5 @@ class ReviewController extends Controller
     public function destroy(string $id)
     {
         //
-    }
-
-    public function getReviewsByProduct($productId)
-    {
-        $product = Product::findOrFail($productId);
-        $reviews = $product->reviews()->paginate(3);
-        return ReviewResource::collection($reviews);
     }
 }

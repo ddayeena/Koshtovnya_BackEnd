@@ -1,14 +1,11 @@
 <?php
 
-use App\Http\Controllers\Api\Orders\Delivery\DeliveryController;
-use App\Http\Controllers\Api\Orders\Delivery\DeliveryOptionController;
 use App\Http\Controllers\Api\Orders\Delivery\DeliveryTypeController;
 use App\Http\Controllers\Api\Orders\Delivery\NovaPoshtaController;
 use App\Http\Controllers\Api\Orders\OrderController;
 use App\Http\Controllers\Api\Products\CategoryController;
 use App\Http\Controllers\Api\Products\NotificationController;
 use App\Http\Controllers\Api\Products\ProductController;
-use App\Http\Controllers\Api\Users\ProfileController;
 use App\Http\Controllers\Api\Products\ReviewController;
 use App\Http\Controllers\Api\Products\ReviewReplyController;
 use App\Http\Controllers\Api\SiteSettingController;
@@ -34,8 +31,9 @@ use Illuminate\Support\Facades\Route;
 // Authenticated Routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/profile', [ProfileController::class, 'index']);
+    Route::get('/profile', [UserController::class, 'index']);
 
+    // User Address Routes
     Route::get('/user-address', [UserAddressController::class, 'show']); // Get users delivery address
     Route::post('/user-address', [UserAddressController::class, 'store']); //Add address to user
     Route::delete('/user-address/{id}', [UserAddressController::class, 'destroy']); //Delete address
@@ -65,9 +63,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/notification', [NotificationController::class, 'store']); //Add notification for user
 
+    //Order Routes
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'index']); // Get user's orders
         Route::get('/{id}', [OrderController::class, 'show']); // Get order`s products
+        Route::post('/', [OrderController::class, 'store']); // Add order
     });
 
     Route::get('/delivery-types', [DeliveryTypeController::class, 'index']); // Get delivery options
@@ -88,7 +88,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::get('/products', [ProductController::class, 'index']); // Get all products
 Route::get('/filter', [ProductController::class, 'filter']);  //Get filter
 Route::get('/products/{id}', [ProductController::class, 'show']); // Get a specific product
-Route::get('/products/{id}/reviews', [ReviewController::class, 'getReviewsByProduct']); // Get reviews for a product
+Route::get('/products/{id}/reviews', [ReviewController::class, 'index']); // Get reviews for a product
 Route::get('/products/search/{name}', [ProductController::class, 'search']); // Search products
 Route::get('/popular-products', [ProductController::class, 'popular']); // Get popular products
 Route::get('/new-arrivals', [ProductController::class, 'newArrivals']); // Get new arrivals

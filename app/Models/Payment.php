@@ -9,4 +9,12 @@ class Payment extends Model
 {
     protected $table = 'payments';
     use HasFactory;
+    protected $fillable = [
+        'order_id', 'type_of_card', 
+        'payment_method', 'amount'
+    ];
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 }

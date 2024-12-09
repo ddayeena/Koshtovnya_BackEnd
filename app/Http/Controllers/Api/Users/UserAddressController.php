@@ -42,8 +42,7 @@ class UserAddressController extends Controller
             'user_id' => $request->user()->id,
             'delivery_type_id' =>  $delivery_type_id,
             'city' => $data['city'],
-            'post_office' => $data['post_office'] ?? null,
-            'delivery_address' => $data['delivery_address'] ?? null,
+            'delivery_address' => $data['delivery_address'],
         ]);
 
         $this->updateUserPhoneNumber($request->user(), $data['phone_number']);
@@ -104,8 +103,6 @@ class UserAddressController extends Controller
         // Unset phone_number so that it is not updated
         unset($data['phone_number']);
 
-        $this->handleDeliveryFields($data);
-
         // Update data
         $userAddress->update($data);
 
@@ -145,16 +142,6 @@ class UserAddressController extends Controller
     {
         if (!empty($phoneNumber)) {
             $user->update(['phone_number' => $phoneNumber]);
-        }
-    }
-
-    // Hande delivery fields
-    private function handleDeliveryFields(&$data)
-    {
-        if (!empty($data['delivery_address'])) {
-            $data['post_office'] = null;
-        } elseif (!empty($data['post_office'])) {
-            $data['delivery_address'] = null;
         }
     }
 }

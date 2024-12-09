@@ -56,10 +56,16 @@ class ProductService
     public function updateProductQuantity($cart, $productId, string $operation): array
     {
         $product = $cart->products()->findOrFail($productId);
+        $availableQuantity = Product::findOrFail($productId)->quantity;
 
         switch ($operation) {
             case 'increase':
-                $product->pivot->quantity++;
+                if($product->pivot->quantity < $availableQuantity){
+                    $product->pivot->quantity++;
+                }
+                else{
+                    return ['status' => 400, 'message' => 'Not enough stock available.'];
+                }
                 break;
 
             case 'decrease':

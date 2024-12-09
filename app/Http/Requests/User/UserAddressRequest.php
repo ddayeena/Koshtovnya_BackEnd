@@ -25,8 +25,7 @@ class UserAddressRequest extends FormRequest
             'phone_number' => 'required|string|max:20|regex:/^\+?[0-9\s\-]+$/', 
             'delivery_name' => 'required|string|max:255', 
             'city' => 'required|string|max:255', 
-            'post_office' => 'required_without:delivery_address|string|max:255',
-            'delivery_address' => 'required_without:post_office|string|max:255',
+            'delivery_address' => 'required|string|max:255',
         ];
     }
 }

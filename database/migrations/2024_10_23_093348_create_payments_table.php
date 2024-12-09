@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('order_id');
 
             $table->string('type_of_card')->nullable();
-            $table->enum('payment_method', ['Післяоплата', 'Оплата картою', 'Передплата'])->default('Післяоплата');
+            $table->enum('payment_method', ['Післяоплата', 'Оплата картою', 'Передоплата'])->default('Післяоплата');
             $table->string('transaction_number')->unique()->nullable();
             $table->decimal('amount', 8, 2);
 
