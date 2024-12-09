@@ -1,20 +1,21 @@
-# version: '3.2'
 services:
   nginx:
     build:
       context: ./docker/nginx
       dockerfile: Dockerfile
     volumes:
-    - ./:/var/www
+      - ./:/var/www
     environment:
       - "DB_PORT=3306"
       - "DB_HOST=mysql"
       - "XDG_CONFIG_HOME=/app"
     ports:
-    - "8080:80"
+      - "8080:80"
     links:
       - php-fpm
       - node
+    networks:
+      - app-network
 
   php-fpm:
     build:
@@ -30,13 +31,15 @@ services:
     links:
       - mysql
       - node
+    networks:
+      - app-network
 
   php-cli:
     build:
       context: ./
       dockerfile: docker/php-cli.docker
     volumes:
-    - ./:/var/www
+      - ./:/var/www
     environment:
       - "DB_PORT=3306"
       - "DB_HOST=mysql"
@@ -44,18 +47,23 @@ services:
     links:
       - mysql
     tty: true
+    networks:
+      - app-network
 
   mysql:
     image: mysql:8.0
     volumes:
-    - database:/var/lib/mysql
+      - database:/var/lib/mysql
     environment:
       - "MYSQL_ROOT_PASSWORD=secret"
       - "MYSQL_USER=root"
       - "MYSQL_PASSWORD=secret"
       - "MYSQL_DATABASE=laravel"
     ports:
-    - "33061:3306"
+      - "33061:3306"
+    networks:
+      - app-network
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
@@ -67,14 +75,23 @@ services:
     restart: always
     ports:
       - 8081:80
+    networks:
+      - app-network
+
   node:
     image: node:18-alpine
     ports:
-        - "3000:3000"
+      - "3000:3000"
     volumes:
-    - ./:/var/www
+      - ./:/var/www
     working_dir: /var/www
     tty: true
+    networks:
+      - app-network
 
 volumes:
   database:
+
+networks:
+  app-network:
+    driver: bridge

@@ -21,6 +21,8 @@ RUN apt-get install -y wget unzip curl
 RUN curl -sS https://getcomposer.org/installer |php
 RUN mv composer.phar /usr/local/bin/composer
 
+COPY . /var/www
+
 COPY ./conf.d /usr/local/etc/php/conf.d/
 
 WORKDIR /var/www
