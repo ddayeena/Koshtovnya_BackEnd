@@ -1,24 +1,6 @@
 version: '3.2'
 services:
 
-  php-fpm:
-    container_name: php-fpm
-    build:
-      context: ./docker/php-fpm
-      dockerfile: Dockerfile
-    volumes:
-      - ./:/var/www
-    environment:
-      - "DB_PORT=3306"
-      - "DB_HOST=mysql"
-      - "REDIS_PORT=6379"
-      - "REDIS_HOST=redis"
-    depends_on:
-      - mysql
-    networks:
-      - app_network
-    hostname: php-fpm
-
   nginx:
     build:
       context: ./docker/nginx
@@ -31,8 +13,20 @@ services:
       - "XDG_CONFIG_HOME=/app"
     ports:
       - "8080:80"
-    depends_on:
-      - php-fpm
+    networks:
+      - app_network
+
+  php-fpm:
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/var/www
+    environment:
+      - "DB_PORT=3306"
+      - "DB_HOST=mysql"
+      - "REDIS_PORT=6379"
+      - "REDIS_HOST=redis"
     networks:
       - app_network
 
@@ -46,8 +40,6 @@ services:
       - "DB_PORT=3306"
       - "DB_HOST=mysql"
       - "COMPOSER_MEMORY_LIMIT=-1"
-    depends_on:
-      - mysql
     networks:
       - app_network
     tty: true
