@@ -5,7 +5,7 @@ services:
       context: ./docker/nginx
       dockerfile: Dockerfile
     volumes:
-      - .public/:/var/www
+      - ./public:/var/www
     environment:
       - "DB_PORT=3306"
       - "DB_HOST=mysql"
@@ -22,7 +22,7 @@ services:
       context: ./docker/php-fpm
       dockerfile: Dockerfile
     volumes:
-      - ./:/var/www
+      - ./public:/var/www
     environment:
       - "DB_PORT=3306"
       - "DB_HOST=mysql"
