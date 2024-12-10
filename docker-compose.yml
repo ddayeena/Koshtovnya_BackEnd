@@ -2,6 +2,7 @@ version: '3.2'
 services:
 
   php-fpm:
+    container_name: php-fpm
     build:
       context: ./docker/php-fpm
       dockerfile: Dockerfile
