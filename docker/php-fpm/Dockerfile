@@ -25,5 +25,8 @@ COPY ./docker/php-fpm/conf.d /usr/local/etc/php/conf.d/
 
 WORKDIR /var/www
 
+EXPOSE 9000
+
+
 
 
