@@ -11,7 +11,7 @@ class Product extends Model
     protected $table = 'products';
     use HasFactory;
     use HasFilter;
-    
+
     protected $casts = [
         'price' => 'float',
     ];
@@ -20,7 +20,7 @@ class Product extends Model
     {
         return $this->belongsTo(ProductDescription::class);
     }
-    
+
     public function orders()
     {
         return $this->belongsToMany(Order::class)->withPivot('quantity');
@@ -30,7 +30,7 @@ class Product extends Model
     {
         return $this->belongsToMany(Fitting::class);
     }
-    
+
     public function sizes()
     {
         return $this->belongsToMany(Size::class);
@@ -55,11 +55,9 @@ class Product extends Model
     {
         return $this->belongsToMany(Cart::class)->withPivot('quantity');
     }
-    
+
     public function notifications()
     {
         return $this->hasMany(Notification::class);
     }
-    
-
 }

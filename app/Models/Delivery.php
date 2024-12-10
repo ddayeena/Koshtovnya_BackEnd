@@ -10,11 +10,14 @@ class Delivery extends Model
     protected $table = 'deliveries';
     use HasFactory;
     protected $fillable = [
-        'order_id', 'city', 
-        'delivery_address', 'cost', 'delivery_type_id'
+        'order_id',
+        'city',
+        'delivery_address',
+        'cost',
+        'delivery_type_id'
     ];
 
-    
+
     public function deliveryType()
     {
         return $this->belongsTo(DeliveryType::class);
@@ -24,5 +27,4 @@ class Delivery extends Model
     {
         return $this->belongsTo(Order::class);
     }
-    
 }

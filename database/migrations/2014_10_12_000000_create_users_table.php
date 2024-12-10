@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('last_name',50);
             $table->string('first_name',50);
-            $table->string('second_name',50);
+            $table->string('second_name',50)->nullable();
             $table->enum('role', ['superadmin', 'admin', 'user','manager'])->default('user');
             $table->string('email')->unique();
             $table->string('phone_number',20)->unique()->nullable();
