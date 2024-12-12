@@ -40,7 +40,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/user-address/{id}', [UserAddressController::class, 'update']); //Update address
     Route::get('/user/phone-number', [UserAddressController::class, 'getUserPhoneNumber']); //Get user`s phone number
 
-    Route::patch('/change-password', [UserController::class, 'changePassword']);
+    Route::patch('/change-password', [UserController::class, 'changePassword']); //Change password
+    Route::patch('/user', [UserController::class, 'update']);//Change user data
 
     // Wishlist Routes
     Route::prefix('wishlist')->group(function () {
