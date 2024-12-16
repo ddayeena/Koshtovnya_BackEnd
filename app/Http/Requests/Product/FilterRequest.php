@@ -24,13 +24,14 @@ class FilterRequest extends FormRequest
         return [
             'is_available' => 'nullable|array',
             'is_available.*' => 'in:0,1', // 0 - is NOT available, 1 - is available
-            
-            'size' => 'nullable|numeric', 
-            'color' => 'nullable|string', 
+
+            'size_from' => 'nullable|numeric|min:0',
+            'size_to' =>  'nullable|numeric|min:0|gte:size_from',
+            'color' => 'nullable|string',
             'type_of_bead' => 'nullable|array',
 
             'bead_producer' => 'nullable|array',
-            'bead_producer.*' => 'exists:bead_producers,origin_country', 
+            'bead_producer.*' => 'exists:bead_producers,origin_country',
 
             'weight_from' => 'nullable|numeric|min:0',
             'weight_to' => 'nullable|numeric|min:0|gte:weight_from',

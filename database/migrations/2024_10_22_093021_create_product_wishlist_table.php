@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('wishlist_id'); 
             $table->unsignedBigInteger('product_id');
+            $table->decimal('size',5,2);  
 
             $table->foreign('wishlist_id')
                   ->references('id')

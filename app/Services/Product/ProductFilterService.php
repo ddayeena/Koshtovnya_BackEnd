@@ -7,6 +7,7 @@ use App\Models\BeadProducer;
 use App\Models\Color;
 use App\Models\Product;
 use App\Models\ProductDescription;
+use App\Models\ProductVariant;
 use App\Models\Size;
 
 class ProductFilterService
@@ -53,17 +54,25 @@ class ProductFilterService
     private function getAvailabilityFilter()
     {
         return [
-            ['name' => 'Немає в наявності', 'count' => Product::where('quantity', '=', 0)->count()],
-            ['name' => 'В наявності', 'count' => Product::where('quantity', '>', 0)->count()],
+            ['name' => 'Немає в наявності', 'count' => Product::whereDoesntHave('productVariants', function ($query) {
+                $query->where('quantity', '>', 0); 
+            })->count()],
+            
+            ['name' => 'В наявності', 'count' => Product::whereHas('productVariants', function ($query) {
+                $query->where('quantity', '>', 0);
+            })->count()],
         ];
     }
 
     // Size filter
     private function getSizeFilter()
     {
-        return Size::pluck('size_value');
+        return [
+            'min' => ProductVariant::min('size'),
+            'max' => ProductVariant::max('size'),
+        ];
     }
-
+    
     // Color filter
     private function getColorFilter()
     {
@@ -75,7 +84,7 @@ class ProductFilterService
     {
         return [
             ['name' => 'Матовий', 'count' => ProductDescription::where('type_of_bead', 'Матовий')->count()],
-            ['name' => 'Не матовий', 'count' => ProductDescription::where('type_of_bead', 'Не матовий')->count()],
+            ['name' => 'Прозорий', 'count' => ProductDescription::where('type_of_bead', 'Прозорий')->count()],
         ];
     }
 

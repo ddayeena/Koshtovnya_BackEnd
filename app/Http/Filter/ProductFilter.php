@@ -3,11 +3,13 @@
 namespace App\Http\Filter;
 
 use Illuminate\Database\Eloquent\Builder;
+
 class ProductFilter extends AbstractFilter
 {
     const IS_AVAILABLE = 'is_available';
-    const SIZE = 'size';
-    const COLOR ='color';
+    const SIZE_FROM = 'size_from';
+    const SIZE_TO = 'size_to';
+    const COLOR = 'color';
     const TYPE_OF_BEAD = 'type_of_bead';
     const BEAD_PRODUCER = 'bead_producer';
     const WEIGHT_FROM = 'weight_from';
@@ -19,7 +21,8 @@ class ProductFilter extends AbstractFilter
     {
         return [
             self::IS_AVAILABLE => 'isAvailable',
-            self::SIZE => 'size',
+            self::SIZE_FROM => 'sizeFrom',
+            self::SIZE_TO => 'sizeTo',
             self::COLOR => 'color',
             self::TYPE_OF_BEAD => 'typeOfBead',
             self::BEAD_PRODUCER => 'beadProducer',
@@ -33,18 +36,29 @@ class ProductFilter extends AbstractFilter
     public function isAvailable(Builder $builder, $value)
     {
         if (in_array(0, (array)$value)) {
-            $builder->where('quantity', '=', 0);
+            $builder->orWhereDoesntHave('productVariants', function ($query) {
+                $query->where('quantity', '>', 0); 
+            });
         }
-        
-        if (in_array(1, (array)$value)) {
-            $builder->where('quantity', '>', 0);
-        }
-    }        
 
-    public function size(Builder $builder, $value)
+        if (in_array(1, (array)$value)) {
+            $builder->orWhereHas('productVariants', function ($query) {
+                $query->where('quantity', '>', 0); 
+            });
+        }
+    }
+
+    public function sizeFrom(Builder $builder, $value)
     {
-        $builder->whereHas('sizes', function ($query) use ($value) {
-            $query->where('size_value', $value);
+        $builder->whereHas('productVariants', function ($query) use ($value) {
+            $query->where('size', '>', $value);
+        });
+    }
+
+    public function sizeTo(Builder $builder, $value)
+    {
+        $builder->whereHas('productVariants', function ($query) use ($value) {
+            $query->where('size', '<', $value);
         });
     }
 
@@ -72,26 +86,24 @@ class ProductFilter extends AbstractFilter
     public function weightFrom(Builder $builder, $value)
     {
         $builder->whereHas('productDescription', function ($query) use ($value) {
-            $query->where('weight','>', $value);
+            $query->where('weight', '>', $value);
         });
     }
 
     public function weightTo(Builder $builder, $value)
     {
         $builder->whereHas('productDescription', function ($query) use ($value) {
-            $query->where('weight','<',  $value);
+            $query->where('weight', '<',  $value);
         });
     }
 
     public function priceFrom(Builder $builder, $value)
     {
-        $builder->where('price','>',$value);
+        $builder->where('price', '>', $value);
     }
 
     public function priceTo(Builder $builder, $value)
     {
-        $builder->where('price','<',$value);
+        $builder->where('price', '<', $value);
     }
-
-
 }

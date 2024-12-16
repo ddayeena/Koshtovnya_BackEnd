@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('bead_producer_id');  
             $table->decimal('weight', 10, 2); 
             $table->string('country_of_manufacture', 100);  // Країна виробник
-            $table->enum('type_of_bead', ['Матовий', 'Не матовий'])->default('Не матовий');
+            $table->enum('type_of_bead', ['Матовий', 'Прозорий'])->default('Прозорий');
             $table->unsignedBigInteger('category_id');  
 
             $table->foreign('category_id')

@@ -11,7 +11,14 @@ class Product extends Model
     protected $table = 'products';
     use HasFactory;
     use HasFilter;
-
+    protected $fillable = [
+        'name',
+        'price',
+        'quantity',
+        'image_url',
+        'image_public_id',
+        'product_description_id',
+    ];
     protected $casts = [
         'price' => 'float',
     ];
@@ -59,5 +66,10 @@ class Product extends Model
     public function notifications()
     {
         return $this->hasMany(Notification::class);
+    }
+
+    public function productVariants()
+    {
+        return $this->hasMany(ProductVariant::class);
     }
 }

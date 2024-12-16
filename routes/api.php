@@ -100,3 +100,8 @@ Route::get('/categories/{id}/products', [ProductController::class, 'productsByCa
 
 // Site Settings Routes
 Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get site settings
+
+
+
+//admin panel
+Route::post('/products', [ProductController::class, 'store']);

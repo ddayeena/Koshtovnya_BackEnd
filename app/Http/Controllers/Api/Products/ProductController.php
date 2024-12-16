@@ -4,14 +4,15 @@ namespace App\Http\Controllers\Api\Products;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\FilterRequest;
+use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductDescriptionResource;
 use App\Models\Product;
 use App\Services\Product\ProductFilterService;
 use App\Services\Product\ProductService;
 use App\Services\User\UserService;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -95,9 +96,33 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
+    public function store(StoreProductRequest $request)
+      {
+        $data = $request->validated();
+        try {
+            $im = $data['image']->storeOnCloudinary('products');
+            $url = $im->getSecurePath();
+            $publicId = $im->getPublicId();
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error uploading image',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+
+        $product = Product::create([
+            'name' => $data['name'],
+            'price' => $data['price'],
+            'image_url' => $url, 
+            'image_public_id' => $publicId,
+            'quantity' => $data['quantity'],
+            'product_description_id' => $request->product_description_id,
+        ]);
+
+        return response()->json([
+            'message' => 'Product created successfully',
+            'product' => $product,
+        ]);
     }
 
     /**
@@ -106,9 +131,9 @@ class ProductController extends Controller
     public function show(Request $request, string $id)
     {
         $user = $this->user_service->getUserFromRequest($request);
-        
+
         $product = Product::findOrFail($id);
-        $product=$this->product_service->attachUserProductStatus($product,$user);
+        $product = $this->product_service->attachUserProductStatus($product, $user);
 
         return ProductDescriptionResource::make($product->productDescription);
     }

@@ -4,6 +4,7 @@ namespace App\Services\Product;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariant;
 
 class ProductService
 {
@@ -56,7 +57,7 @@ class ProductService
     public function updateProductQuantity($cart, $productId, string $operation): array
     {
         $product = $cart->products()->findOrFail($productId);
-        $availableQuantity = Product::findOrFail($productId)->quantity;
+        $availableQuantity = ProductVariant::findOrFail($productId)->quantity;
 
         switch ($operation) {
             case 'increase':

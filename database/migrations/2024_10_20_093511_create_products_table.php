@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->decimal('price', 10, 2);
-            $table->string('image_url', 255)->nullable();
-            $table->unsignedInteger('quantity')->default(1);
+            $table->string('image_url')->nullable();
+            $table->string('image_public_id')->nullable();
             $table->unsignedBigInteger('product_description_id');
 
             $table->foreign('product_description_id')

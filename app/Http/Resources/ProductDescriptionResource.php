@@ -24,14 +24,29 @@ class ProductDescriptionResource extends JsonResource
             'type_of_fitting' => optional($this->product->fitting->first())->type_of_fitting,
             'type_of_bead' => $this->type_of_bead,
             'weight' => $this->weight,
-            'sizes' => optional($this->product)->sizes->pluck('size_value'),
+            'variants' => $this->productVariants(), 
             'colors' => optional($this->product)->colors->pluck('color_name'),
             'bead_producer_name' => optional($this->beadProducer)->origin_country,
-            'quantity' => optional($this->product)->quantity,
-            'is_available' => optional($this->product)->quantity > 0,
             'is_in_wishlist' => $this->is_in_wishlist ?? false,
             'is_in_cart' => $this->is_in_cart ?? false,
             'notify_when_available' => $this->notify_when_available ?? false,
         ];
     }
+
+    /**
+     * Get product variants
+     */
+    private function productVariants()
+    {
+        return $this->product->productVariants
+            ->sortBy('size') //Sort by size
+            ->map(function ($variant) {
+                return [
+                    'size' => $variant->size,
+                    'quantity' => $variant->quantity,
+                    'is_available' => $variant->quantity > 0, 
+                ];
+            })->values(); 
+    }
+    
 }
