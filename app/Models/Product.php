@@ -18,6 +18,7 @@ class Product extends Model
         'image_public_id',
         'product_description_id',
     ];
+    
     protected $casts = [
         'price' => 'float',
     ];
@@ -35,11 +36,6 @@ class Product extends Model
     public function fittings()
     {
         return $this->belongsToMany(Fitting::class,'fitting_product')->withPivot('quantity','material_id');
-    }
-
-    public function sizes()
-    {
-        return $this->belongsToMany(Size::class);
     }
 
     public function colors()

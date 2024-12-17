@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             ColorProductSeeder::class,
             ProductVariantSeeder::class,
+            MaterialSeeder::class,
             FittingSeeder::class,
             FittingProductSeeder::class,
             ExpenseSeeder::class,

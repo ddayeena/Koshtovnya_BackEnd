@@ -17,7 +17,7 @@ class Fitting extends Model
 
     public function material()
     {
-        return $this->belongsTo(Material::class, 'material_id');  // зв'язок через material_id
+        return $this->belongsTo(Material::class, 'material_id');
     }
 
 }

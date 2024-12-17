@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Material extends Model
 {
     use HasFactory;
+    protected $table = 'materials';
+
     public function fittings()
     {
         return $this->hasMany(Fitting::class);

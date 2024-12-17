@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Products;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\FilterRequest;
 use App\Http\Requests\Product\StoreProductRequest;
-use App\Http\Resources\CategoryResource;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductDescriptionResource;
 use App\Models\BeadProducer;
