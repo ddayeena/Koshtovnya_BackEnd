@@ -4,8 +4,7 @@ FROM php:8.1-fpm
 RUN apt-get update && apt-get install -y nginx
 
 # Копіюємо конфіги
-COPY ./docker/nginx/conf.d//etc/nginx/conf.d/default.conf
-
+COPY ./docker/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
 # Копіюємо код проекту
 COPY . /var/www
 WORKDIR /var/www
