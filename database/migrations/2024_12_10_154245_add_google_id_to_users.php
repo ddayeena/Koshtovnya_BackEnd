@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sizes', function (Blueprint $table) {
-            $table->id();
-            $table->decimal('size_value',5,2)->unique();
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->string("google_id")->after('id')->nullable();
         });
     }
 
@@ -23,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sizes');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn("google_id");
+        });
     }
 };

@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Size extends Model
+class Material extends Model
 {
-    protected $table = 'sizes';
     use HasFactory;
+    protected $table = 'materials';
 
-    public function products()
+    public function fittings()
     {
-        return $this->belongsToMany(Product::class);
+        return $this->hasMany(Fitting::class);
     }
 }

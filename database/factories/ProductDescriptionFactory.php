@@ -25,7 +25,7 @@ class ProductDescriptionFactory extends Factory
             'weight' => $this->faker->numberBetween(5, 400), 
             'bead_producer_id' => BeadProducer::inRandomOrder()->first()->id,
             'country_of_manufacture' => $this->faker->country(),
-            'type_of_bead' => $this->faker->randomElement(['Матовий', 'Не матовий']),
+            'type_of_bead' => $this->faker->randomElement(['Матовий', 'Прозорий']),
             'category_id' => Category::inRandomOrder()->first()->id
         ];
     }

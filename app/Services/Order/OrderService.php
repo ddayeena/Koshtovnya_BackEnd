@@ -2,12 +2,15 @@
 
 namespace App\Services\Order;
 
+use App\Mail\OrderDetailsMail;
 use App\Models\Order;
 use App\Models\Delivery;
 use App\Models\DeliveryType;
 use App\Models\Payment;
+use App\Models\ProductVariant;
 use App\Models\UserAddress;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class OrderService
 {
@@ -50,6 +53,8 @@ class OrderService
             //Update products quantity in stock
             $this->updateProductStock($order);
 
+            Mail::to($user->email)->send(new OrderDetailsMail($order, $delivery, $payment));
+
             return compact('order', 'delivery', 'payment');
         });
     }
@@ -73,6 +78,7 @@ class OrderService
     {
         foreach ($cart->products as $product) {
             $order->products()->attach($product->id, [
+                'size' => $product->pivot->size,
                 'quantity' => $product->pivot->quantity,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -120,12 +126,39 @@ class OrderService
     //Update products quantity in stock
     private function updateProductStock($order)
     {
+        // Перевірка наявності продуктів у замовленні
+        if (empty($order->products)) {
+            throw new \Exception('Order has no products.');
+        }
+    
         foreach ($order->products as $product) {
-            $product->quantity -= $product->pivot->quantity;
-            if ($product->quantity < 0) {
-                throw new \Exception('Insufficient stock for product: ' . $product->name);
+            // Перевірка, чи існує size у pivot
+            if (!isset($product->pivot->size) || !isset($product->pivot->quantity)) {
+                throw new \Exception('Size or quantity data is missing for product: ' . $product->name);
             }
-            $product->save();
+    
+            $size = $product->pivot->size;
+            $quantity = $product->pivot->quantity;
+    
+            // Знайти відповідний запис у таблиці product_variants
+            $productVariant = ProductVariant::where('product_id', $product->id)
+                ->where('size', $size)
+                ->first();
+    
+            if (!$productVariant) {
+                throw new \Exception('Product variant not found for product: ' . $product->name . ' with size: ' . $size);
+            }
+    
+            // Зменшити кількість у таблиці product_variants
+            $productVariant->quantity -= $quantity;
+    
+            // Перевірка на недостатню кількість
+            if ($productVariant->quantity < 0) {
+                throw new \Exception('Insufficient stock for product: ' . $product->name . ' with size: ' . $size);
+            }
+    
+            // Зберегти оновлену кількість
+            $productVariant->save();
         }
     }
 
@@ -133,30 +166,40 @@ class OrderService
     private function validateCart($cart)
     {
         $errors = [];
-
+        
         if (!$cart || $cart->products->isEmpty()) {
             throw new \Exception('Cart is empty');
         }
-
-        //Check cart to see if all products are available to order
+    
+        // Check cart to see if all products with specific sizes are available to order
         foreach ($cart->products as $product) {
-            //If there are no products left at all
-            if ($product->quantity === 0) {
+            $size = $product->pivot->size; 
+            $variant = $product->productVariants()->where('size', $size)->first(); 
+    
+            if (!$variant) {
                 $errors[] = [
-                    'message' => "Product is out of stock, remove it from your cart to place an order.",
+                    'message' => "Product with size {$size} is not available.",
                     'product_name' => $product->name,
+                    'selected_size' => $size,
+                ];
+            } elseif ($variant->quantity === 0) {
+                $errors[] = [
+                    'message' => "Product with size {$size} is out of stock, remove it from your cart to place an order.",
+                    'product_name' => $product->name,
+                    'selected_size' => $size,
                     'available_quantity' => 0,
                 ];
-                //if there are more cart product than there are in stock 
-            } elseif ($product->quantity < $product->pivot->quantity) {
+            } elseif ($variant->quantity < $product->pivot->quantity) {
                 $errors[] = [
-                    'message' => "Only {$product->quantity} products left in stock, remove it from your cart or change the quantity to place an order.",
+                    'message' => "Only {$variant->quantity} products with size {$size} are left in stock, remove it from your cart or change the quantity to place an order.",
                     'product_name' => $product->name,
-                    'available_quantity' => $product->quantity,
+                    'selected_size' => $size,
+                    'available_quantity' => $variant->quantity,
                 ];
             }
         }
-
+    
         return $errors;
     }
+    
 }

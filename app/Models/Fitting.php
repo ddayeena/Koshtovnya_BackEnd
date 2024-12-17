@@ -9,4 +9,15 @@ class Fitting extends Model
 {
     protected $table = 'fittings';
     use HasFactory;
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class)->withPivot('material_id', 'quantity');
+    }
+
+    public function material()
+    {
+        return $this->belongsTo(Material::class, 'material_id');
+    }
+
 }

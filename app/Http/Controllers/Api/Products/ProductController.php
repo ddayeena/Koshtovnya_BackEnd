@@ -4,14 +4,20 @@ namespace App\Http\Controllers\Api\Products;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\FilterRequest;
+use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductDescriptionResource;
+use App\Models\BeadProducer;
+use App\Models\Category;
+use App\Models\Color;
+use App\Models\Fitting;
+use App\Models\Material;
 use App\Models\Product;
 use App\Services\Product\ProductFilterService;
 use App\Services\Product\ProductService;
 use App\Services\User\UserService;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -92,13 +98,52 @@ class ProductController extends Controller
         $products = Product::where('name', 'LIKE', "%{$name}%")->get();
         return ProductResource::collection($products);
     }
+
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        //
+        try {
+            [$product, $productDescription] = $this->product_service->createProduct($request->validated());
+
+            return response()->json([
+                'message' => 'Product created successfully',
+                'product' => [$product, $productDescription],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error creating product',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
+
+    //Returns data required when creating a product
+    public function formData()
+    {
+        $categories = Category::pluck('name');
+        $bead_producers = BeadProducer::pluck('origin_country');
+        $colors = Color::pluck('color_name');
+        $fittings = Fitting::pluck('name');
+        $materials = Material::pluck('name');
+        $type_of_bead = ['Матовий', 'Прозорий'];
+        $countries_of_manufacture = ['Україна'];
+
+
+        return response()->json([
+            'data' => [
+                'categories' => $categories,
+                'bead_producers' => $bead_producers,
+                'colors' => $colors,
+                'fittings' => $fittings,
+                'materials' => $materials,
+                'type_of_bead' => $type_of_bead,
+                'countries_of_manufacture' => $countries_of_manufacture
+            ]
+        ]);
+    }
+
 
     /**
      * Display the specified resource.
@@ -106,9 +151,9 @@ class ProductController extends Controller
     public function show(Request $request, string $id)
     {
         $user = $this->user_service->getUserFromRequest($request);
-        
+
         $product = Product::findOrFail($id);
-        $product=$this->product_service->attachUserProductStatus($product,$user);
+        $product = $this->product_service->attachUserProductStatus($product, $user);
 
         return ProductDescriptionResource::make($product->productDescription);
     }

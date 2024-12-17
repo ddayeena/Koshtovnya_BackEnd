@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Users;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\UpdateRequest;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -39,10 +40,27 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateRequest $request)
     {
-        //
+        $user = $request->user();
+
+        // Validate data
+        $data = $request->validated(); 
+        
+        //Filter data without null
+        $filteredData = array_filter($data, function ($value) {
+            return !is_null($value);
+        });
+    
+        //Update User
+        $user->update($filteredData);
+    
+        return response()->json([
+            'message' => 'User data updated successfully.',
+            'user' => $user
+        ], 200);
     }
+    
 
     /**
      * Remove the specified resource from storage.
@@ -55,8 +73,8 @@ class UserController extends Controller
     public function changePassword(Request $request)
     {
         $request->validate([
-            'current_password'=>'required|string',
-            'new_password'=>'required|string|min:8|confirmed',
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
         ]);
 
         //Check if the current password is correct
@@ -69,6 +87,6 @@ class UserController extends Controller
             'password' => Hash::make($request->new_password),
         ]);
 
-        return response()->json(['message'=>'Password was changed successfully.']);
+        return response()->json(['message' => 'Password was changed successfully.']);
     }
 }

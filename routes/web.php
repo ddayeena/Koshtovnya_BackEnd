@@ -1,19 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\Users\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
-
-//
-use App\Http\Controllers\PostController;
-use App\Http\Controllers\MainController;
-use App\Http\Controllers\AboutController;
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\Post\IndexController;
-use App\Http\Controllers\Post\UpdateController;
-use App\Http\Controllers\Post\CreateController;
-use App\Http\Controllers\Post\DestroyController;
-use App\Http\Controllers\Post\StoreController;
-//
-
+use Illuminate\Http\Request;
+use Laravel\Socialite\Facades\Socialite;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,3 +19,6 @@ use App\Http\Controllers\Post\StoreController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/auth/google/redirect',[GoogleAuthController::class, 'redirect']);
+Route::get('/auth/google/callback',[GoogleAuthController::class, 'callback']);

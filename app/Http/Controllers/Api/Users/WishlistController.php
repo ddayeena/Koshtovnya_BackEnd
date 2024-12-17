@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Users;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\WishlistProductResource;
+use App\Models\Product;
 use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
 
@@ -39,10 +40,17 @@ class WishlistController extends Controller
     {
         //Get product's ID
         $productId = $request->input('product_id');
+        $size = $request->input('size');
+        if(empty($size)){
+            $product = Product::findOrFail($productId);
+            $size = $product->productVariants->first()->size;
+        }
+        
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
         //Add product to wishlist
         if (!$wishlist->products()->where('products.id', $productId)->exists()) {
             $wishlist->products()->attach($productId, [
+                'size' => $size,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

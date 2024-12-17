@@ -9,7 +9,10 @@ class Review extends Model
 {
     protected $table = 'reviews';
     protected $fillable = [
-        'user_id', 'product_id', 'comment', 'rating'
+        'user_id',
+        'product_id',
+        'comment',
+        'rating'
     ];
     use HasFactory;
 
@@ -27,5 +30,4 @@ class Review extends Model
     {
         return $this->hasMany(ReviewReply::class);
     }
-    
 }

@@ -5,11 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Notification extends Model
+class ProductVariant extends Model
 {
-    protected $table = 'notifications';
-    protected $fillable = ['user_id', 'product_id', 'notified_at'];
     use HasFactory;
+    protected $table = 'product_variants';
+    protected $fillable = [
+        'product_id',
+        'size',
+        'quantity',
+    ];
 
     public function product()
     {
