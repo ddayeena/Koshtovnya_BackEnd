@@ -10,7 +10,13 @@ class ProductDescription extends Model
     protected $table = 'product_descriptions';
 
     use HasFactory;
-    protected $guarded = false;
+    protected $fillable = [
+        'bead_producer_id',
+        'weight',
+        'country_of_manufacture',
+        'type_of_bead',
+        'category_id',
+    ];
 
     public function beadProducer()
     {

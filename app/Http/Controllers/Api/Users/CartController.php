@@ -8,16 +8,17 @@ use App\Models\Cart;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Wishlist;
+use App\Services\Cart\CartService;
 use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
-    private $product_service;
+    private $cart_service;
 
-    public function __construct(ProductService $product_service)
+    public function __construct(CartService $cart_service)
     {
-        $this->product_service = $product_service;
+        $this->cart_service = $cart_service;
     }
 
     /**
@@ -119,7 +120,7 @@ class CartController extends Controller
 
         //Update quantity
         else if($operation)
-        $response = $this->product_service->updateProductQuantity($cart, $id, $operation);
+        $response = $this->cart_service->updateProductQuantity($cart, $id, $operation);
 
         else {
             return response()->json(['message' => 'Operation or size field is required.'], 400);

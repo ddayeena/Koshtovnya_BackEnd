@@ -14,7 +14,6 @@ class Product extends Model
     protected $fillable = [
         'name',
         'price',
-        'quantity',
         'image_url',
         'image_public_id',
         'product_description_id',
@@ -33,9 +32,9 @@ class Product extends Model
         return $this->belongsToMany(Order::class)->withPivot('quantity');
     }
 
-    public function fitting()
+    public function fittings()
     {
-        return $this->belongsToMany(Fitting::class);
+        return $this->belongsToMany(Fitting::class,'fitting_product')->withPivot('quantity','material_id');
     }
 
     public function sizes()

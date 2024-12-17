@@ -161,8 +161,6 @@ class OrderService
             $productVariant->save();
         }
     }
-    
-    
 
     //Validate cart products
     private function validateCart($cart)

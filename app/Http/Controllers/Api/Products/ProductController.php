@@ -5,8 +5,14 @@ namespace App\Http\Controllers\Api\Products;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\FilterRequest;
 use App\Http\Requests\Product\StoreProductRequest;
+use App\Http\Resources\CategoryResource;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductDescriptionResource;
+use App\Models\BeadProducer;
+use App\Models\Category;
+use App\Models\Color;
+use App\Models\Fitting;
+use App\Models\Material;
 use App\Models\Product;
 use App\Services\Product\ProductFilterService;
 use App\Services\Product\ProductService;
@@ -93,37 +99,52 @@ class ProductController extends Controller
         $products = Product::where('name', 'LIKE', "%{$name}%")->get();
         return ProductResource::collection($products);
     }
+
     /**
      * Store a newly created resource in storage.
      */
     public function store(StoreProductRequest $request)
-      {
-        $data = $request->validated();
+    {
         try {
-            $im = $data['image']->storeOnCloudinary('products');
-            $url = $im->getSecurePath();
-            $publicId = $im->getPublicId();
+            [$product, $productDescription] = $this->product_service->createProduct($request->validated());
+
+            return response()->json([
+                'message' => 'Product created successfully',
+                'product' => [$product, $productDescription],
+            ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error uploading image',
+                'message' => 'Error creating product',
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
 
-        $product = Product::create([
-            'name' => $data['name'],
-            'price' => $data['price'],
-            'image_url' => $url, 
-            'image_public_id' => $publicId,
-            'quantity' => $data['quantity'],
-            'product_description_id' => $request->product_description_id,
-        ]);
+    //Returns data required when creating a product
+    public function formData()
+    {
+        $categories = Category::pluck('name');
+        $bead_producers = BeadProducer::pluck('origin_country');
+        $colors = Color::pluck('color_name');
+        $fittings = Fitting::pluck('name');
+        $materials = Material::pluck('name');
+        $type_of_bead = ['Матовий', 'Прозорий'];
+        $countries_of_manufacture = ['Україна'];
+
 
         return response()->json([
-            'message' => 'Product created successfully',
-            'product' => $product,
+            'data' => [
+                'categories' => $categories,
+                'bead_producers' => $bead_producers,
+                'colors' => $colors,
+                'fittings' => $fittings,
+                'materials' => $materials,
+                'type_of_bead' => $type_of_bead,
+                'countries_of_manufacture' => $countries_of_manufacture
+            ]
         ]);
     }
+
 
     /**
      * Display the specified resource.

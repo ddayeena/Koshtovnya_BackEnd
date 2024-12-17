@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id(); 
             $table->unsignedBigInteger('product_id'); 
             $table->unsignedBigInteger('fitting_id'); 
+            $table->unsignedBigInteger('material_id'); 
             $table->integer('quantity')->unsigned(); 
 
             $table->foreign('product_id')
@@ -24,6 +25,11 @@ return new class extends Migration
             $table->foreign('fitting_id')
                    ->references('id')
                    ->on('fittings')
+                   ->onDelete('cascade');
+
+                   $table->foreign('material_id')
+                   ->references('id')
+                   ->on('materials')
                    ->onDelete('cascade');
 
             $table->timestamps(); 

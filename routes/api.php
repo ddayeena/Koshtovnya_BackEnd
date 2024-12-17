@@ -85,6 +85,11 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
+//admin panel
+Route::post('/products', [ProductController::class, 'store']); // Store product
+Route::get('/products/form-data', [ProductController::class, 'formData']); // 
+
+
 // Products Routes
 Route::get('/products', [ProductController::class, 'index']); // Get all products
 Route::get('/filter', [ProductController::class, 'filter']);  //Get filter
@@ -101,7 +106,3 @@ Route::get('/categories/{id}/products', [ProductController::class, 'productsByCa
 // Site Settings Routes
 Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get site settings
 
-
-
-//admin panel
-Route::post('/products', [ProductController::class, 'store']);
