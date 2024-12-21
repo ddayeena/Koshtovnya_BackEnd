@@ -1,89 +1,89 @@
-version: '3.2'
-services:
-  nginx:
-    build:
-      context: ./docker/nginx
-      dockerfile: Dockerfile
-    container_name: nginx
-    volumes:
-      - ./:/var/www
-    environment:
-      - "DB_PORT=3306"  
-      - "DB_HOST=sql7.freesqldatabase.com"  
-      - "DB_DATABASE=sql7753443" 
-      - "DB_USERNAME=sql7753443" 
-      - "DB_PASSWORD=u2S6B1GYgC" 
-      - "XDG_CONFIG_HOME=/app"
-    ports:
-      - "8080:80"
-    networks:
-      - laravel
-    depends_on:
-      - php-fpm
+  version: '3.2'
+  services:
+    nginx:
+      build:
+        context: ./docker/nginx
+        dockerfile: Dockerfile
+      container_name: nginx
+      volumes:
+        - ./:/var/www
+      environment:
+        - "DB_PORT=3306"  
+        - "DB_HOST=sql7.freesqldatabase.com"  
+        - "DB_DATABASE=sql7753443" 
+        - "DB_USERNAME=sql7753443" 
+        - "DB_PASSWORD=u2S6B1GYgC" 
+        - "XDG_CONFIG_HOME=/app"
+      ports:
+        - "8080:80"
+      networks:
+        - laravel
+      depends_on:
+        - php-fpm
 
-  php-fpm:
-    build:
-      context: ./docker/php-fpm
-      dockerfile: Dockerfile
-    container_name: php-fpm
-    volumes:
-      - ./:/var/www
-    environment:
-      - "DB_PORT=3306"
-      - "DB_HOST=sql7.freesqldatabase.com" 
-      - "DB_DATABASE=sql7753443"
-      - "DB_USERNAME=sql7753443"
-      - "DB_PASSWORD=u2S6B1GYgC"
-      - "REDIS_PORT=6379"
-      - "REDIS_HOST=redis"
-    networks:
-      - laravel
+    php-fpm:
+      build:
+        context: ./docker/php-fpm
+        dockerfile: Dockerfile
+      container_name: php-fpm
+      volumes:
+        - ./:/var/www
+      environment:
+        - "DB_PORT=3306"
+        - "DB_HOST=sql7.freesqldatabase.com" 
+        - "DB_DATABASE=sql7753443"
+        - "DB_USERNAME=sql7753443"
+        - "DB_PASSWORD=u2S6B1GYgC"
+        - "REDIS_PORT=6379"
+        - "REDIS_HOST=redis"
+      networks:
+        - laravel
 
-  php-cli:
-    build:
-      context: ./
-      dockerfile: docker/php-cli.docker
-    volumes:
-      - ./:/var/www
-    environment:
-      - "DB_PORT=3306"
-      - "DB_HOST=sql7.freesqldatabase.com" 
-      - "DB_DATABASE=sql7753443"
-      - "DB_USERNAME=sql7753443"
-      - "DB_PASSWORD=u2S6B1GYgC"
-      - "COMPOSER_MEMORY_LIMIT=-1"
-    networks:
-      - laravel
-    tty: true
+    php-cli:
+      build:
+        context: ./
+        dockerfile: docker/php-cli.docker
+      volumes:
+        - ./:/var/www
+      environment:
+        - "DB_PORT=3306"
+        - "DB_HOST=sql7.freesqldatabase.com" 
+        - "DB_DATABASE=sql7753443"
+        - "DB_USERNAME=sql7753443"
+        - "DB_PASSWORD=u2S6B1GYgC"
+        - "COMPOSER_MEMORY_LIMIT=-1"
+      networks:
+        - laravel
+      tty: true
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    environment:
-      - PMA_HOST=sql7.freesqldatabase.com  
-      - PMA_USER=sql7753443 
-      - PMA_PASSWORD=u2S6B1GYgC  
-      - UPLOAD_LIMIT=64M
-    restart: always
-    ports:
-      - 8081:80
-    networks:
-      - laravel
+    phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      container_name: phpmyadmin
+      environment:
+        - PMA_HOST=sql7.freesqldatabase.com  
+        - PMA_USER=sql7753443 
+        - PMA_PASSWORD=u2S6B1GYgC  
+        - UPLOAD_LIMIT=64M
+      restart: always
+      ports:
+        - 8081:80
+      networks:
+        - laravel
 
-  node:
-    image: node:18-alpine
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./:/var/www
-    working_dir: /var/www
-    tty: true
-    networks:
-      - laravel
+    node:
+      image: node:18-alpine
+      ports:
+        - "3000:3000"
+      volumes:
+        - ./:/var/www
+      working_dir: /var/www
+      tty: true
+      networks:
+        - laravel
 
-volumes:
-  database:
+  volumes:
+    database:
 
-networks:
-  laravel:
-    driver: bridge
+  networks:
+    laravel:
+      driver: bridge
