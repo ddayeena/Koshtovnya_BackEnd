@@ -165,9 +165,7 @@ class ProductService
 
                 $fittingData[$fittingId] = [
                     'material_id' => $materialId,
-                    'quantity' => $fitting['quantity'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'quantity' => $fitting['quantity']
                 ];
             }
         }

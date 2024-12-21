@@ -8,8 +8,11 @@ services:
     volumes:
       - ./:/var/www
     environment:
-      - "DB_PORT=3306"
-      - "DB_HOST=mysql"
+      - "DB_PORT=3306"  
+      - "DB_HOST=sql7.freesqldatabase.com"  
+      - "DB_DATABASE=sql7753443" 
+      - "DB_USERNAME=sql7753443" 
+      - "DB_PASSWORD=u2S6B1GYgC" 
       - "XDG_CONFIG_HOME=/app"
     ports:
       - "8080:80"
@@ -27,12 +30,14 @@ services:
       - ./:/var/www
     environment:
       - "DB_PORT=3306"
-      - "DB_HOST=mysql"
+      - "DB_HOST=sql7.freesqldatabase.com" 
+      - "DB_DATABASE=sql7753443"
+      - "DB_USERNAME=sql7753443"
+      - "DB_PASSWORD=u2S6B1GYgC"
       - "REDIS_PORT=6379"
       - "REDIS_HOST=redis"
     networks:
       - laravel
-
 
   php-cli:
     build:
@@ -42,33 +47,22 @@ services:
       - ./:/var/www
     environment:
       - "DB_PORT=3306"
-      - "DB_HOST=mysql"
+      - "DB_HOST=sql7.freesqldatabase.com" 
+      - "DB_DATABASE=sql7753443"
+      - "DB_USERNAME=sql7753443"
+      - "DB_PASSWORD=u2S6B1GYgC"
       - "COMPOSER_MEMORY_LIMIT=-1"
     networks:
       - laravel
     tty: true
 
-  mysql:
-    image: mysql:8.0
-    volumes:
-      - database:/var/lib/mysql
-    environment:
-      - "MYSQL_ROOT_PASSWORD=secret"
-      - "MYSQL_USER=root"
-      - "MYSQL_PASSWORD=secret"
-      - "MYSQL_DATABASE=laravel"
-    ports:
-      - "33061:3306"
-    networks:
-      - laravel
-
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
     environment:
-      - PMA_HOST=mysql
-      - PMA_USER=root
-      - PMA_PASSWORD=secret
+      - PMA_HOST=sql7.freesqldatabase.com  
+      - PMA_USER=sql7753443 
+      - PMA_PASSWORD=u2S6B1GYgC  
       - UPLOAD_LIMIT=64M
     restart: always
     ports:

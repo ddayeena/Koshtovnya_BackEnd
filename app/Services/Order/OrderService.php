@@ -80,8 +80,6 @@ class OrderService
             $order->products()->attach($product->id, [
                 'size' => $product->pivot->size,
                 'quantity' => $product->pivot->quantity,
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
         }
     }
@@ -109,7 +107,7 @@ class OrderService
         ]);
     }
 
-        public function createUserAddress($user, $data, $delivery_type_id)
+    public function createUserAddress($user, $data, $delivery_type_id)
     {
         $userAddress = $user->userAddress;
         if (!$userAddress) {

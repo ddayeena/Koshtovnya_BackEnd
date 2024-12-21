@@ -30,17 +30,17 @@ class Product extends Model
 
     public function orders()
     {
-        return $this->belongsToMany(Order::class)->withPivot('quantity');
+        return $this->belongsToMany(Order::class)->withPivot('quantity')->withTimestamps();
     }
 
     public function fittings()
     {
-        return $this->belongsToMany(Fitting::class,'fitting_product')->withPivot('quantity','material_id');
+        return $this->belongsToMany(Fitting::class,'fitting_product')->withPivot('quantity','material_id')->withTimestamps();
     }
 
     public function colors()
     {
-        return $this->belongsToMany(Color::class);
+        return $this->belongsToMany(Color::class)->withTimestamps();
     }
 
     public function reviews()
@@ -50,12 +50,12 @@ class Product extends Model
 
     public function wishlists()
     {
-        return $this->belongsToMany(Wishlist::class);
+        return $this->belongsToMany(Wishlist::class)->withTimestamps()->withTimestamps();
     }
 
     public function carts()
     {
-        return $this->belongsToMany(Cart::class)->withPivot('quantity');
+        return $this->belongsToMany(Cart::class)->withPivot('quantity')->withTimestamps();
     }
 
     public function notifications()

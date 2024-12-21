@@ -30,35 +30,45 @@ use Illuminate\Support\Facades\Route;
 
 // Authenticated Routes
 Route::middleware('auth:sanctum')->group(function () {
+//========================================================================
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [UserController::class, 'index']);
 
     // User Address Routes
     Route::get('/user-address', [UserAddressController::class, 'show']); // Get users delivery address
+//========================================================================
     Route::post('/user-address', [UserAddressController::class, 'store']); //Add address to user
     Route::delete('/user-address/{id}', [UserAddressController::class, 'destroy']); //Delete address
     Route::patch('/user-address/{id}', [UserAddressController::class, 'update']); //Update address
     Route::get('/user/phone-number', [UserAddressController::class, 'getUserPhoneNumber']); //Get user`s phone number
 
     Route::patch('/change-password', [UserController::class, 'changePassword']); //Change password
+//========================================================================
     Route::patch('/user', [UserController::class, 'update']);//Change user data
 
     // Wishlist Routes
     Route::prefix('wishlist')->group(function () {
         Route::get('/', [WishlistController::class, 'index']); // Get user's wishlist
         Route::post('/', [WishlistController::class, 'store']); // Add product to wishlist
+//========================================================================
+
         Route::delete('{id}', [WishlistController::class, 'destroy']); // Remove product from wishlist
     });
 
     // Cart Routes
     Route::prefix('cart')->group(function () {
+//========================================================================
+
         Route::get('/', [CartController::class, 'index']); // Get user's cart
+//========================================================================
+
         Route::post('/', [CartController::class, 'store']); // Add product to cart
         Route::delete('{id}', [CartController::class, 'destroy']); // Remove product from cart
         Route::patch('/{id}', [CartController::class, 'update']); // Update product's quantity
         Route::get('/cart-count', [CartController::class, 'getCartCount']); //Get item's count of user's cart
     });
 
+//========================================================================
     Route::post('/products/{id}/reviews', [ReviewController::class, 'store']); // Add reviews for a product
     Route::post('/reviews/{id}/reply', [ReviewReplyController::class, 'store']); // Add reply foreview
 
@@ -68,6 +78,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'index']); // Get user's orders
         Route::get('/{id}', [OrderController::class, 'show']); // Get order`s products
+//========================================================================
+
         Route::post('/', [OrderController::class, 'store']); // Add order
     });
 
@@ -82,27 +94,34 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 });
+//========================================================================
 Route::post('/login', [AuthController::class, 'login']);
+//========================================================================
 Route::post('/register', [AuthController::class, 'register']);
 
 //admin panel
+//========================================================================
 Route::post('/products', [ProductController::class, 'store']); // Store product
 Route::get('/products/form-data', [ProductController::class, 'formData']); // 
 
-
 // Products Routes
+//========================================================================
 Route::get('/products', [ProductController::class, 'index']); // Get all products
 Route::get('/filter', [ProductController::class, 'filter']);  //Get filter
+//========================================================================
 Route::get('/products/{id}', [ProductController::class, 'show']); // Get a specific product
+//========================================================================
 Route::get('/products/{id}/reviews', [ReviewController::class, 'index']); // Get reviews for a product
+//========================================================================
 Route::get('/products/search/{name}', [ProductController::class, 'search']); // Search products
 Route::get('/popular-products', [ProductController::class, 'popular']); // Get popular products
 Route::get('/new-arrivals', [ProductController::class, 'newArrivals']); // Get new arrivals
 
 // Categories Routes
+//========================================================================
 Route::get('/categories', [CategoryController::class, 'index']); // Get all categories
+//========================================================================
 Route::get('/categories/{id}/products', [ProductController::class, 'productsByCategory']); // Get products by category
 
 // Site Settings Routes
 Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get site settings
-
