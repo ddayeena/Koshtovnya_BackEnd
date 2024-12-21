@@ -11,6 +11,3 @@ WORKDIR /var/www
 
 # Відкриття порту
 EXPOSE 80
-
-# Запуск NGINX та PHP-FPM
-CMD nginx -g "daemon off;" & php-fpm
