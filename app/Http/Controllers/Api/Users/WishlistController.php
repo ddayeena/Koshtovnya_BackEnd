@@ -51,8 +51,6 @@ class WishlistController extends Controller
         if (!$wishlist->products()->where('products.id', $productId)->exists()) {
             $wishlist->products()->attach($productId, [
                 'size' => $size,
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
             return response()->json(['message' => 'Product added to wishlist']);
         }

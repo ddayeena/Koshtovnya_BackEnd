@@ -12,7 +12,7 @@ class Fitting extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class)->withPivot('material_id', 'quantity');
+        return $this->belongsToMany(Product::class)->withPivot('material_id', 'quantity')->withTimestamps();
     }
 
     public function material()

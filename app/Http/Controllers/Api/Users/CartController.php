@@ -65,8 +65,6 @@ class CartController extends Controller
             $cart->products()->attach($productId, [
                 'size' => $size,
                 'quantity' => $quantity,
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
             return response()->json(['message' => 'Product added to cart']);
         }

@@ -1,28 +1,25 @@
-version: '3.2'
+# version: '3.2'
 services:
   nginx:
     build:
       context: ./docker/nginx
       dockerfile: Dockerfile
-    container_name: nginx
     volumes:
-      - ./:/var/www
+    - ./:/var/www
     environment:
       - "DB_PORT=3306"
       - "DB_HOST=mysql"
       - "XDG_CONFIG_HOME=/app"
     ports:
-      - "8080:80"
-    networks:
-      - laravel
-    depends_on:
+    - "8080:80"
+    links:
       - php-fpm
+      - node
 
   php-fpm:
     build:
       context: ./docker/php-fpm
       dockerfile: Dockerfile
-    container_name: php-fpm
     volumes:
       - ./:/var/www
     environment:
@@ -30,38 +27,35 @@ services:
       - "DB_HOST=mysql"
       - "REDIS_PORT=6379"
       - "REDIS_HOST=redis"
-    networks:
-      - laravel
-
+    links:
+      - mysql
+      - node
 
   php-cli:
     build:
       context: ./
       dockerfile: docker/php-cli.docker
     volumes:
-      - ./:/var/www
+    - ./:/var/www
     environment:
       - "DB_PORT=3306"
       - "DB_HOST=mysql"
       - "COMPOSER_MEMORY_LIMIT=-1"
-    networks:
-      - laravel
+    links:
+      - mysql
     tty: true
 
   mysql:
     image: mysql:8.0
     volumes:
-      - database:/var/lib/mysql
+    - database:/var/lib/mysql
     environment:
       - "MYSQL_ROOT_PASSWORD=secret"
       - "MYSQL_USER=root"
       - "MYSQL_PASSWORD=secret"
       - "MYSQL_DATABASE=laravel"
     ports:
-      - "33061:3306"
-    networks:
-      - laravel
-
+    - "33061:3306"
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
@@ -73,23 +67,14 @@ services:
     restart: always
     ports:
       - 8081:80
-    networks:
-      - laravel
-
   node:
     image: node:18-alpine
     ports:
-      - "3000:3000"
+        - "3000:3000"
     volumes:
-      - ./:/var/www
+    - ./:/var/www
     working_dir: /var/www
     tty: true
-    networks:
-      - laravel
 
 volumes:
   database:
-
-networks:
-  laravel:
-    driver: bridge

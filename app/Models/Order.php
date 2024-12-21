@@ -22,7 +22,7 @@ class Order extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class)->withPivot('quantity','size');
+        return $this->belongsToMany(Product::class)->withPivot('quantity','size')->withTimestamps();
     }
 
     public function delivery()
