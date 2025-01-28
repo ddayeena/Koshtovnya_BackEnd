@@ -28,10 +28,15 @@ use Illuminate\Support\Facades\Route;
 */
 
 
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+
 // Authenticated Routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [UserController::class, 'index']);
+    Route::patch('/change-password', [UserController::class, 'changePassword']); //Change password
+    Route::patch('/user', [UserController::class, 'update']);//Change user data
 
     // User Address Routes
     Route::get('/user-address', [UserAddressController::class, 'show']); // Get users delivery address
@@ -39,9 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/user-address/{id}', [UserAddressController::class, 'destroy']); //Delete address
     Route::patch('/user-address/{id}', [UserAddressController::class, 'update']); //Update address
     Route::get('/user/phone-number', [UserAddressController::class, 'getUserPhoneNumber']); //Get user`s phone number
-
-    Route::patch('/change-password', [UserController::class, 'changePassword']); //Change password
-    Route::patch('/user', [UserController::class, 'update']);//Change user data
 
     // Wishlist Routes
     Route::prefix('wishlist')->group(function () {
@@ -82,8 +84,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 });
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
 
 //admin panel
 Route::post('/products', [ProductController::class, 'store']); // Store product

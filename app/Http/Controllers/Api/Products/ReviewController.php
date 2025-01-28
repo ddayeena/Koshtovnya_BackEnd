@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ReviewResource;
 use App\Models\Product;
 use App\Models\Review;
+use App\Services\Product\ReviewService;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
@@ -23,7 +24,7 @@ class ReviewController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, string $id)
+    public function store(Request $request, string $id, ReviewService $review_service)
     {
         //Check if the product exists
         $product = Product::findOrFail($id);
@@ -34,11 +35,14 @@ class ReviewController extends Controller
             'rating' => 'required|integer|min:1|max:5',
         ]);
 
+        //Check bad words
+        $filteredComment = $review_service->filterBadWords($validated['comment']);
+
         //Create review
         $review = Review::create([
             'user_id' => $request->user()->id,
             'product_id' => $product->id,
-            'comment' => $validated['comment'],
+            'comment' => $filteredComment,
             'rating' =>$validated['rating'],
         ]);
 
@@ -47,6 +51,7 @@ class ReviewController extends Controller
             'review' => $review,
         ]);
     }
+
 
     /**
      * Display the specified resource.
@@ -71,4 +76,5 @@ class ReviewController extends Controller
     {
         //
     }
+    
 }

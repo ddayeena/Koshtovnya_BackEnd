@@ -12,10 +12,10 @@ class BeadProducerSeeder extends Seeder
     public function run(): void
     {
         DB::table('bead_producers')->insertOrIgnore([
-            ['name' => 'Японський бісер', 'origin_country' => 'Японія', 'cost_per_gram' => 1.5],
+            ['name' => 'Японський бісер', 'origin_country' => 'Японія', 'cost_per_gram' => 15],
             ['name' => 'Китайський бісер', 'origin_country' => 'Китай', 'cost_per_gram' => 0.5],
-            ['name' => 'Чешський бісер', 'origin_country' => 'Чехія', 'cost_per_gram' => 2.8],
-            ['name' => 'Український бісер', 'origin_country' => 'Україна', 'cost_per_gram' => 0.7],
+            ['name' => 'Чешський бісер', 'origin_country' => 'Чехія', 'cost_per_gram' => 4],
+            ['name' => 'Український бісер', 'origin_country' => 'Україна', 'cost_per_gram' => 1],
         ]);
     }
 }
