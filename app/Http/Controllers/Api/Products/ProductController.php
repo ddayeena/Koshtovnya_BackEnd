@@ -13,6 +13,7 @@ use App\Models\Color;
 use App\Models\Fitting;
 use App\Models\Material;
 use App\Models\Product;
+use App\Models\Review;
 use App\Services\Product\ProductFilterService;
 use App\Services\Product\ProductService;
 use App\Services\User\UserService;
@@ -82,15 +83,19 @@ class ProductController extends Controller
 
     //display products by category 
     public function productsByCategory(FilterRequest $request, int $id)
-    {
+    {        
         $user = $this->user_service->getUserFromRequest($request);
-
-        $products = $this->product_service->getProductsByCategory($id);
-
         $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user);
+        $products = Product::whereHas('productDescription', function ($query) use ($id) {
+            $query->where('category_id', $id);
+        })->with('productDescription')->paginate(15);
 
+        $products = $this->product_service->attachWishlistInfo($products, $user);
+        $products = $this->product_service->attachCartInfo($products, $user);
         return ProductResource::collection($products);
     }
+    
+    
 
     //display products by name
     public function search(string $name)
@@ -153,7 +158,12 @@ class ProductController extends Controller
         $user = $this->user_service->getUserFromRequest($request);
 
         $product = Product::findOrFail($id);
+        $averageRating = (float)Review::where('product_id', $id)->avg('rating');
+        $reviewCount = Review::where('product_id', $id)->count();        
+
         $product = $this->product_service->attachUserProductStatus($product, $user);
+        $product->productDescription->rating = $averageRating;
+        $product->productDescription->review_count = $reviewCount;
 
         return ProductDescriptionResource::make($product->productDescription);
     }

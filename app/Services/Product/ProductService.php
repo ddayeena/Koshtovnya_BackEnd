@@ -50,15 +50,6 @@ class ProductService
         return $products;
     }
 
-    //Get products from one category
-    public function getProductsByCategory(int $categoryId)
-    {
-        //Return products by category with description
-        $category = Category::findOrFail($categoryId);
-        $productDescriptionIds = $category->productDescriptions->pluck('id');
-        return Product::whereIn('product_description_id', $productDescriptionIds)->paginate(15);
-    }
-
     //Attach 
     public function attachUserProductStatus($product, $user)
     {

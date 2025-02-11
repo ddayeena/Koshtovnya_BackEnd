@@ -31,6 +31,8 @@ class ProductDescriptionResource extends JsonResource
             'is_in_wishlist' => $this->is_in_wishlist ?? false,
             'is_in_cart' => $this->is_in_cart ?? false,
             'notify_when_available' => $this->notify_when_available ?? false,
+            'rating' => $this->rating,
+            'review_count' => $this->review_count,
         ];
     }
 
