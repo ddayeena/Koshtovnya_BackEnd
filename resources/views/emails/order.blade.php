@@ -40,13 +40,6 @@
             width: 200px;
         }
 
-        /* .store-name {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1f2937;
-            text-align: center;
-        } */
-
         h1 {
             font-size: 28px;
             color: #6b1f1f;

@@ -30,6 +30,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/verify-code', [UserController::class, 'verify']);
+Route::post('/resend-code', [AuthController::class, 'resendCode']);
+
 
 // Authenticated Routes
 Route::middleware('auth:sanctum')->group(function () {
