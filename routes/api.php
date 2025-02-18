@@ -88,9 +88,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
-//admin panel
-Route::post('/products', [ProductController::class, 'store']); // Store product
-Route::get('/products/form-data', [ProductController::class, 'formData']); // 
+Route::middleware(['auth:sanctum', 'role:admin, superadmin, manager'])->group(function () {
+    Route::post('/products', [ProductController::class, 'store']); // Store product
+    Route::get('/products/form-data', [ProductController::class, 'formData']); // form data for storing product
+});
+
 
 // Products Routes
 Route::get('/products', [ProductController::class, 'index']); // Get all products

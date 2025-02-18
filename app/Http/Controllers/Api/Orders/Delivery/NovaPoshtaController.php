@@ -91,7 +91,8 @@ class NovaPoshtaController extends Controller
     {
         $validated = $request->validate([
             'CityRecipient' => 'required|string',
-            'product_ids' => 'required|array',
+            'product_ids' => 'required|array|min:1',
+            'product_ids.*' => 'integer|exists:products,id',
             'ServiceType' => 'required|string|in:WarehouseDoors,WarehouseWarehouse',
         ]);
 
