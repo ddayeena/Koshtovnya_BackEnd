@@ -40,13 +40,6 @@
             width: 200px;
         }
 
-        /* .store-name {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1f2937;
-            text-align: center;
-        } */
-
         h1 {
             font-size: 28px;
             color: #6b1f1f;
@@ -155,6 +148,7 @@
             <p><span class="important">Спосіб доставки:</span> {{ $delivery->deliveryType->name }}</p>
             <p><span class="important">Адреса доставки:</span> {{ $delivery->city }}, {{ $delivery->delivery_address }}</p>
             <p><span class="important">Метод оплати:</span> {{ $payment->payment_method }}</p>
+            <p><span class="important">Накладна для відстеження:</span> {{ $wayBill }}</p>
         </div>
 
         <div class="products">
@@ -180,7 +174,7 @@
 
         <div class="footer">
             Дякуємо за ваше замовлення!<br>
-            Якщо у вас є запитання, <a href="#">звертайтеся до нас</a>.
+            Якщо у вас є запитання, звертайтеся до нас!.
         </div>
     </div>
 </body>

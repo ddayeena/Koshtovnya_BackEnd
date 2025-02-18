@@ -2,6 +2,7 @@
 
 namespace App\Services\Order\Delivery;
 
+use App\Models\Order;
 use Illuminate\Support\Facades\Http;
 
 class NovaPoshtaService
@@ -67,5 +68,5 @@ class NovaPoshtaService
         });
 
         return $partialMatches;
-    }
+    }    
 }

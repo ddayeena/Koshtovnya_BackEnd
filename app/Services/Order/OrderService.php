@@ -9,11 +9,13 @@ use App\Models\DeliveryType;
 use App\Models\Payment;
 use App\Models\ProductVariant;
 use App\Models\UserAddress;
+use App\Services\Order\Delivery\NovaPoshtaService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class OrderService
 {
+
     public function processOrder(array $data, $user)
     {
         return DB::transaction(function () use ($data, $user) {
@@ -47,18 +49,23 @@ class OrderService
 
             //Create payment
             $payment = $this->createPayment($order, $data, $totalAmount);
-
+            $order->waybill = $this->generateTestNumber(14);
+            $order->save();
             $this->createUserAddress($user, $data,  $deliveryTypeId);
 
             //Update products quantity in stock
             $this->updateProductStock($order);
 
-            Mail::to($user->email)->send(new OrderDetailsMail($order, $delivery, $payment));
+            Mail::to($user->email)->send(new OrderDetailsMail($order, $delivery, $payment, $order->waybill));
 
             return compact('order', 'delivery', 'payment');
         });
     }
-    
+    protected function generateTestNumber($length = 14): string
+{
+    return substr(str_shuffle(str_repeat('0123456789', $length)), 0, $length);
+}
+
     //Create order
     private function createOrder(array $data, $user, $totalAmount)
     {
