@@ -2,16 +2,12 @@
 
 namespace App\Services\Order;
 
-use App\Mail\OrderDetailsMail;
 use App\Models\Order;
 use App\Models\Delivery;
 use App\Models\DeliveryType;
-use App\Models\Payment;
 use App\Models\ProductVariant;
 use App\Models\UserAddress;
-use App\Services\Order\Delivery\NovaPoshtaService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class OrderService
 {
@@ -47,8 +43,6 @@ class OrderService
             }
             $delivery = $this->createDelivery($order, $data, $deliveryTypeId);
 
-            //Create payment
-            $payment = $this->createPayment($order, $data, $totalAmount);
             $order->waybill = $this->generateTestNumber(14);
             $order->save();
             $this->createUserAddress($user, $data,  $deliveryTypeId);
@@ -56,15 +50,13 @@ class OrderService
             //Update products quantity in stock
             $this->updateProductStock($order);
 
-            Mail::to($user->email)->send(new OrderDetailsMail($order, $delivery, $payment, $order->waybill));
-
-            return compact('order', 'delivery', 'payment');
+            return compact('order', 'delivery');
         });
     }
     protected function generateTestNumber($length = 14): string
-{
-    return substr(str_shuffle(str_repeat('0123456789', $length)), 0, $length);
-}
+    {
+        return substr(str_shuffle(str_repeat('0123456789', $length)), 0, $length);
+    }
 
     //Create order
     private function createOrder(array $data, $user, $totalAmount)
@@ -103,17 +95,6 @@ class OrderService
         ]);
     }
 
-    //Create payment
-    private function createPayment($order, array $data, $totalAmount)
-    {
-        return Payment::create([
-            'order_id' => $order->id,
-            'type_of_card' => $data['type_of_card'],
-            'payment_method' => $data['payment_method'],
-            'amount' => $totalAmount,
-        ]);
-    }
-
     public function createUserAddress($user, $data, $delivery_type_id)
     {
         $userAddress = $user->userAddress;
@@ -135,33 +116,33 @@ class OrderService
         if (empty($order->products)) {
             throw new \Exception('Order has no products.');
         }
-    
+
         foreach ($order->products as $product) {
             // Перевірка, чи існує size у pivot
             if (!isset($product->pivot->size) || !isset($product->pivot->quantity)) {
                 throw new \Exception('Size or quantity data is missing for product: ' . $product->name);
             }
-    
+
             $size = $product->pivot->size;
             $quantity = $product->pivot->quantity;
-    
+
             // Знайти відповідний запис у таблиці product_variants
             $productVariant = ProductVariant::where('product_id', $product->id)
                 ->where('size', $size)
                 ->first();
-    
+
             if (!$productVariant) {
                 throw new \Exception('Product variant not found for product: ' . $product->name . ' with size: ' . $size);
             }
-    
+
             // Зменшити кількість у таблиці product_variants
             $productVariant->quantity -= $quantity;
-    
+
             // Перевірка на недостатню кількість
             if ($productVariant->quantity < 0) {
                 throw new \Exception('Insufficient stock for product: ' . $product->name . ' with size: ' . $size);
             }
-    
+
             // Зберегти оновлену кількість
             $productVariant->save();
         }
@@ -171,16 +152,16 @@ class OrderService
     private function validateCart($cart)
     {
         $errors = [];
-        
+
         if (!$cart || $cart->products->isEmpty()) {
             throw new \Exception('Cart is empty');
         }
-    
+
         // Check cart to see if all products with specific sizes are available to order
         foreach ($cart->products as $product) {
-            $size = $product->pivot->size; 
-            $variant = $product->productVariants()->where('size', $size)->first(); 
-    
+            $size = $product->pivot->size;
+            $variant = $product->productVariants()->where('size', $size)->first();
+
             if (!$variant) {
                 $errors[] = [
                     'message' => "Product with size {$size} is not available.",
@@ -203,8 +184,7 @@ class OrderService
                 ];
             }
         }
-    
+
         return $errors;
     }
-    
 }

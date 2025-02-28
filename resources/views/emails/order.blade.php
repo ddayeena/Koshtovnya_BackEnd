@@ -148,7 +148,7 @@
             <p><span class="important">Спосіб доставки:</span> {{ $delivery->deliveryType->name }}</p>
             <p><span class="important">Адреса доставки:</span> {{ $delivery->city }}, {{ $delivery->delivery_address }}</p>
             <p><span class="important">Метод оплати:</span> {{ $payment->payment_method }}</p>
-            <p><span class="important">Накладна для відстеження:</span> {{ $wayBill }}</p>
+            <p><span class="important">Накладна для відстеження:</span> {{ $order->waybill }}</p>
         </div>
 
         <div class="products">
