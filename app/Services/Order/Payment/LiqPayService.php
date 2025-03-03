@@ -23,7 +23,7 @@ class LiqPayService
             'order_id'       => $order_id,
             'version'        => '3',
             'sandbox'        => 1, // 1 - test, 0 - not test
-            'server_url'     => 'https://0d24-176-121-4-31.ngrok-free.app/api/liqpay-callback',
+            'server_url'     => 'https://2d3f-176-121-4-31.ngrok-free.app',
             'result_url'     => url('http://localhost:8080/payment-confirmed') // After successfull payment
         ];
 

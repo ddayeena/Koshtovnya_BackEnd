@@ -35,13 +35,6 @@ class PaymentController extends Controller
             $request->description
         );
     
-        // Create payment
-        Payment::create([
-            'order_id' => $request->order_id,
-            'payment_method' => 'Оплата картою',
-            'amount' => $request->amount,
-        ]);
-    
         return response()->json(['form' => $form]);
     }
     public function callback(Request $request)

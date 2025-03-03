@@ -5,6 +5,7 @@ namespace App\Services\Order;
 use App\Models\Order;
 use App\Models\Delivery;
 use App\Models\DeliveryType;
+use App\Models\Payment;
 use App\Models\ProductVariant;
 use App\Models\UserAddress;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +44,8 @@ class OrderService
             }
             $delivery = $this->createDelivery($order, $data, $deliveryTypeId);
 
+            //Create payment
+            $payment = $this->createPayment($order, $data, $totalAmount);
             $order->waybill = $this->generateTestNumber(14);
             $order->save();
             $this->createUserAddress($user, $data,  $deliveryTypeId);
@@ -92,6 +95,16 @@ class OrderService
             'delivery_type_id' => $deliveryTypeId,
             'delivery_address' => $data['delivery_address'],
             'cost' => $data['delivery_cost'],
+        ]);
+    }
+
+    //Create payment
+    private function createPayment($order, array $data, $totalAmount)
+    {
+        return Payment::create([
+            'order_id' => $order->id,
+            'payment_method' => $data['payment_method'],
+            'amount' => $totalAmount,
         ]);
     }
 
