@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AdminController;
 use App\Http\Controllers\Api\Orders\Delivery\DeliveryTypeController;
 use App\Http\Controllers\Api\Orders\Delivery\NovaPoshtaController;
 use App\Http\Controllers\Api\Orders\OrderController;
@@ -98,6 +99,9 @@ Route::middleware(['auth:sanctum', 'role:admin, superadmin, manager'])->group(fu
     Route::get('/products/form-data', [ProductController::class, 'formData']); // form data for storing product
 });
 
+Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function(){
+    Route::post('/admin', [AdminController::class, 'addAdmin']);
+});
 
 // Products Routes
 Route::get('/products', [ProductController::class, 'index']); // Get all products
