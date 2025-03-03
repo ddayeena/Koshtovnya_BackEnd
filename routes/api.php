@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Orders\Delivery\DeliveryTypeController;
 use App\Http\Controllers\Api\Orders\Delivery\NovaPoshtaController;
 use App\Http\Controllers\Api\Orders\OrderController;
+use App\Http\Controllers\Api\Orders\Payment\PaymentController;
 use App\Http\Controllers\Api\Products\CategoryController;
 use App\Http\Controllers\Api\Products\NotificationController;
 use App\Http\Controllers\Api\Products\ProductController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Api\Users\CartController;
 use App\Http\Controllers\Api\Users\UserAddressController;
 use App\Http\Controllers\Api\Users\UserController;
 use App\Http\Controllers\Api\Users\WishlistController;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -86,7 +88,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/delivery/cost', [NovaPoshtaController::class, 'calculateDeliveryCost']); // Calculate delivery cost    
     });
 
+    Route::post('/payment', [PaymentController::class, 'createPayment']);
 });
+Route::post('/liqpay-callback', [PaymentController::class, 'callback'])->name('liqpay.callback');
+
 
 Route::middleware(['auth:sanctum', 'role:admin, superadmin, manager'])->group(function () {
     Route::post('/products', [ProductController::class, 'store']); // Store product
@@ -109,3 +114,4 @@ Route::get('/categories/{id}/products', [ProductController::class, 'productsByCa
 
 // Site Settings Routes
 Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get site settings
+

@@ -50,7 +50,6 @@ class OrderController extends Controller
                 'data' => [
                     'order' => OrderResource::make($result['order']),
                     'delivery' => DeliveryResource::make($result['delivery']),
-                    'payment' => PaymentResource::make($result['payment']),
                 ]
             ], 201);
         } catch (\Exception $e) {

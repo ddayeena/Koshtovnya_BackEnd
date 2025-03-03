@@ -45,6 +45,7 @@ class ProductController extends Controller
         return ProductResource::collection($products);
     }
 
+    //get filter fields
     public function filter()
     {
         return  $this->product_filter_service->getFilter();
@@ -85,13 +86,14 @@ class ProductController extends Controller
     public function productsByCategory(FilterRequest $request, int $id)
     {        
         $user = $this->user_service->getUserFromRequest($request);
-        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user);
         $products = Product::whereHas('productDescription', function ($query) use ($id) {
             $query->where('category_id', $id);
         })->with('productDescription')->paginate(15);
+        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user);
 
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
+
         return ProductResource::collection($products);
     }
     

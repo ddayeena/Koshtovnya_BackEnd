@@ -11,8 +11,21 @@ class CartService
     public function updateProductQuantity($cart, $productId, string $operation): array
     {
         $product = $cart->products()->findOrFail($productId);
-        $availableQuantity = ProductVariant::findOrFail($productId)->quantity;
-
+    
+        //Get product's size from cart
+        $size = $product->pivot->size;
+    
+        //Get product variant in order to get size
+        $productVariant = ProductVariant::where('product_id', $productId)
+                                        ->where('size', $size)
+                                        ->first();
+    
+        if (!$productVariant) {
+            return ['status' => 400, 'message' => 'Product variant not found'];
+        }
+    
+        $availableQuantity = $productVariant->quantity;
+    
         switch ($operation) {
             case 'increase':
                 if($product->pivot->quantity < $availableQuantity){

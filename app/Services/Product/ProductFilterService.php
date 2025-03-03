@@ -8,7 +8,6 @@ use App\Models\Color;
 use App\Models\Product;
 use App\Models\ProductDescription;
 use App\Models\ProductVariant;
-use App\Models\Size;
 
 class ProductFilterService
 {

@@ -41,26 +41,40 @@ class CartController extends Controller
      */
     public function store(Request $request)
     {
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1',
+            'size' => 'nullable|string',
+        ]);
+
         //Get product's ID
-        $productId = $request->input('product_id');
-        $quantity = $request->input('quantity');
-        $size = $request->input('size');
+        $productId = $validated['product_id'];
+        $quantity = $validated['quantity'];
+        $size = $validated['size'] ?? null;
+
+        $product = Product::findOrFail($productId);
+
         if (empty($size)) {
             $wishlist = $request->user()->wishlist;
-
             $wishlistProduct = $wishlist->products()->where('product_id', $productId)->first();
+            //if user has that product in wishlist, then get this product's size
             if ($wishlistProduct) {
-                // If there is a product in wishlist then get size 
                 $size = $wishlistProduct->pivot->size;
             } else {
-                //If there is no product in wishlist then get size by default
-                $product = Product::findOrFail($productId);
+                //if not, then get the first size of product by default
                 $size = $product->productVariants->first()->size;
             }
         }
+        $variant = $product->productVariants->where('size', $size)->first();
+        //Change quantity of product 
+        if ($variant) {
+            $variant->quantity -= $quantity;
+            $variant->save();
+        }
 
         $cart = $request->user()->cart()->firstOrCreate([]);
-        //Add product to cart
+
+        //Add product to the cart
         if (!$cart->products()->where('products.id', $productId)->exists()) {
             $cart->products()->attach($productId, [
                 'size' => $size,
@@ -68,8 +82,10 @@ class CartController extends Controller
             ]);
             return response()->json(['message' => 'Product added to cart']);
         }
+
         return response()->json(['message' => 'Product already in cart']);
     }
+
 
     /**
      * Display the specified resource.
@@ -89,36 +105,35 @@ class CartController extends Controller
         $operation = $request->input('operation');
         $size = $request->input('size');
 
-        if ($size) {    
+        if ($size) {
             $productVariant = ProductVariant::where('product_id', $id)
-            ->where('size', $size)
-            ->firstOrFail();
-            if($productVariant->quantity === 0){
+                ->where('size', $size)
+                ->firstOrFail();
+            if ($productVariant->quantity === 0) {
                 return response()->json([
-                    'message'=> 'This product size is out of stock. Choose another one.',
+                    'message' => 'This product size is out of stock. Choose another one.',
                     'available_quantity' => 0,
-                ],400);
-            }
-            else if($productVariant->quantity < $cart->products()->findOrFail($id)->pivot->quantity){
+                ], 400);
+            } else if ($productVariant->quantity < $cart->products()->findOrFail($id)->pivot->quantity) {
                 return response()->json([
-                    'message'=> 'Not enough stock available for this product size. Change the quantity of the product or choose another size. ',
+                    'message' => 'Not enough stock available for this product size. Change the quantity of the product or choose another size. ',
                     'available_quantity' => $productVariant->quantity,
-                ],400);
+                ], 400);
             }
-            
+
 
             if ($cart->products()->where('product_id', $id)->first()) {
                 // Update product size in cart
                 $cart->products()->updateExistingPivot($id, ['size' => $size]);
-                return response()->json(['message'=> 'Size updated successfully.'],200);
+                return response()->json(['message' => 'Size updated successfully.'], 200);
             } else {
                 return response()->json(['message' => 'Product not found in cart'], 404);
             }
         }
 
         //Update quantity
-        else if($operation)
-        $response = $this->cart_service->updateProductQuantity($cart, $id, $operation);
+        else if ($operation)
+            $response = $this->cart_service->updateProductQuantity($cart, $id, $operation);
 
         else {
             return response()->json(['message' => 'Operation or size field is required.'], 400);

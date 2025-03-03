@@ -12,17 +12,15 @@ class OrderDetailsMail extends Mailable
     public $order;
     public $delivery;
     public $payment;
-    public $wayBill;
 
     /**
      * Конструктор, що отримує користувача.
      */
-    public function __construct($order, $delivery, $payment, $wayBill)
+    public function __construct($order, $delivery, $payment)
     {
         $this->order = $order;
         $this->delivery = $delivery;
         $this->payment = $payment;
-        $this->wayBill = $wayBill;
     }
 
     /**
