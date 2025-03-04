@@ -17,9 +17,9 @@ class AdminInvitation extends Mailable
 
     public function build()
     {
-        $subject = $this->admin->role === 'admin' 
-            ? 'Запрошення стати адміністратором' 
-            : 'Запрошення стати менеджером';
+        $subject = $this->admin->role === 'manager' 
+            ? 'Запрошення стати менеджером' 
+            : 'Запрошення стати адміністратором';
 
         return $this->subject($subject)
                     ->view('emails.admin_invitation');

@@ -100,7 +100,7 @@ Route::middleware(['auth:sanctum', 'role:admin, superadmin, manager'])->group(fu
 });
 
 Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function(){
-    Route::post('/admin', [AdminController::class, 'addAdmin']);
+    Route::post('/admin', [AdminController::class, 'store']);
 });
 
 // Products Routes
@@ -118,4 +118,5 @@ Route::get('/categories/{id}/products', [ProductController::class, 'productsByCa
 
 // Site Settings Routes
 Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get site settings
+Route::patch('/site-settings', [SiteSettingController::class, 'update']); // Get site settings
 

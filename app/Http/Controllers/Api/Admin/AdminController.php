@@ -12,25 +12,35 @@ use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
 {
-    public function addAdmin(Request $request)
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    public function store(Request $request)
     {
         $data = $request->validate( [
             'first_name' => 'required|string|max:50',
             'second_name' => 'required|string|max:50',
             'last_name' => 'required|string|max:50',
             'email' => 'required|string|email|max:255|unique:users',
-            'role' => 'required|in:admin,manager', 
+            'phone_number' => 'required|string|max:20|regex:/^\+?[0-9\s\-]+$/', 
+            'role' => 'required|in:admin,manager,superadmin', 
         ]);
         $password = Str::random(10);
 
         // Create admin
         $admin = User::create([
-            'first_name' => $request->first_name,
-            'second_name' => $request->second_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
+            'first_name' => $data['first_name'],
+            'second_name' => $data['second_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'],
             'password' => Hash::make($password),
-            'role' => $request->role,
+            'phone_number' => $data['phone_number'],
+            'role' => $data['role'],
         ]);
 
         //Send invitation to admin
@@ -40,5 +50,13 @@ class AdminController extends Controller
             'message' => 'Admin/manager added successfully',
             'admin' => $admin
         ], 201);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
     }
 }
