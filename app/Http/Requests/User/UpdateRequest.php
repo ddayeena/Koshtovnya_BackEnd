@@ -27,6 +27,7 @@ class UpdateRequest extends FormRequest
             'second_name' => 'nullable|string|max:50',
             'email' => 'nullable|string|email|max:255|unique:users,email,' . $this->user()->id,
             'phone_number' => 'nullable|string|max:20|regex:/^\+?[0-9\s\-]+$/',
+            'role' => 'nullable|string|in:superadmin,admin,manager,user'
         ];
     }
 }

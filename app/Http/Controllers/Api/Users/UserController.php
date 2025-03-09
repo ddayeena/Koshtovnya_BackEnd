@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api\Users;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\UpdateRequest;
+use App\Http\Resources\UserProfileResource;
 use App\Http\Resources\UserResource;
+use App\Mail\AdminInvitation;
 use App\Mail\WelcomeMail;
 use App\Models\Cart;
 use App\Models\User;
 use App\Models\Wishlist;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -20,10 +23,55 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        return response()->json([
-            'message' => 'Profile successful',
-            'user' => UserResource::make(auth()->user()),
-        ], 200);
+        $authUser = auth()->user();
+        $query = User::query();
+
+        if ($request->has('role')) {
+            if ($request->role === 'user') {
+                $requestedRoles = ['user'];
+            } elseif ($request->role === 'employee') {
+                $requestedRoles = ['admin', 'superadmin', 'manager'];
+            }
+        }
+
+        //Manager can only see users
+        if ($authUser->role === 'manager' && !empty(array_intersect($requestedRoles, ['admin', 'superadmin']))) {
+            return response()->json(['message' => 'Access denied'], 403);
+        }
+
+        if ($request->has('role')) {
+            $query->whereIn('role', $requestedRoles);
+        }
+
+        $users = $query->paginate(10);
+
+        return UserResource::collection($users);
+    }
+    //search users 
+    public function search(Request $request, string $name)
+    {
+        if($request->role === 'employee' && $request->user()->role === 'manager'){
+            return response()->json(['message' => 'Access denied'], 403);
+        }
+        // Search users
+        $query = User::where(function ($query) use ($name) {
+            $query->where('first_name', 'LIKE', "%{$name}%")
+                ->orWhere('second_name', 'LIKE', "%{$name}%")
+                ->orWhere('last_name', 'LIKE', "%{$name}%");
+        });
+
+        //Filter by type
+        if ($request->has('role')) {
+            if ($request->role === 'user') {
+                $query->where('role', 'user');
+            } elseif ($request->role === 'employee') {
+                $query->whereIn('role', ['admin', 'superadmin', 'manager']);
+            }
+        }
+
+        //Get users
+        $users = $query->get();
+        return UserResource::collection($users);
     }
 
     /**
@@ -31,38 +79,107 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $authUser = $request->user();
+        $data = $request->validate([
+            'first_name' => 'required|string|max:50',
+            'second_name' => 'required|string|max:50',
+            'last_name' => 'required|string|max:50',
+            'email' => 'required|string|email|max:255|unique:users',
+            'phone_number' => 'required|string|max:20|regex:/^\+?[0-9\s\-]+$/',
+            'role' => 'required|in:admin,manager,superadmin,user',
+        ]);
+        $password = Str::random(10);
+
+        if ($authUser->role === 'admin' && $data['role'] !== 'user') {
+            return response()->json(['message' => 'Access denied'], 403);
+        }
+        // Create user
+        $user = User::create([
+            'first_name' => $data['first_name'],
+            'second_name' => $data['second_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'],
+            'password' => Hash::make($password),
+            'phone_number' => $data['phone_number'],
+            'role' => $data['role'],
+        ]);
+
+        //Send invitation to admin
+        Mail::to($user->email)->send(new AdminInvitation($user, $password));
+
+        return response()->json([
+            'message' => 'User added successfully',
+            'admin' => $user
+        ], 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show()
     {
-        //
+        return response()->json([
+            'message' => 'Profile successful',
+            'user' => UserProfileResource::make(auth()->user()),
+        ], 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateRequest $request)
+    public function update(UpdateRequest $request, $id)
     {
-        $user = $request->user();
+        $authUser = $request->user();
+        $user = User::findOrFail($id);
 
-        // Validate data
-        $data = $request->validated();
+        // User can update only himself
+        if ($authUser->id === $user->id) {
+            if ($request->has('role')) {
+                return response()->json(['message' => 'Access denied'], 403);
+            }
+            return $this->performUpdate($user, $request);
+        }
 
-        //Filter data without null
-        $filteredData = array_filter($data, function ($value) {
+        // Manager can update only users and not change role
+        if ($authUser->role === 'manager' && $user->role === 'user') {
+            if ($request->has('role')) {
+                return response()->json(['message' => 'Access denied'], 403);
+            }
+            return $this->performUpdate($user, $request);
+        }
+
+        if (in_array($authUser->role, ['admin', 'superadmin'])) {
+            if ($request->has('role')) {
+                $newRole = $request->input('role');
+
+                //Restrictions for admin
+                if ($authUser->role === 'admin' && ($user->role === 'superadmin' || $newRole === 'superadmin')) {
+                    return response()->json(['message' => 'Access denied'], 403);
+                }
+                if ($authUser->role === 'admin' && !in_array($newRole, ['admin', 'manager', 'user'])) {
+                    return response()->json(['message' => 'Access denied'], 403);
+                }
+                $user->role = $newRole;
+            }
+
+            return $this->performUpdate($user, $request);
+        }
+
+        return response()->json(['message' => 'Access denied'], 403);
+    }
+
+
+    private function performUpdate(User $user, UpdateRequest $request)
+    {
+        $data = array_filter($request->validated(), function ($value) {
             return !is_null($value);
         });
 
-        //Update User
-        $user->update($filteredData);
+        $user->update($data);
 
         return response()->json([
             'message' => 'User data updated successfully.',
-            'user' => $user
+            'user' => UserProfileResource::make($user),
         ], 200);
     }
 
@@ -70,9 +187,24 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $authUser = auth()->user();
+        $userToDelete = User::findOrFail($id);
+
+        //Prevent self-deletion
+        if ($authUser->id === $userToDelete->id) {
+            return response()->json(['message' => 'You cannot delete yourself'], 403);
+        }
+
+        //Admin can only delete refular users
+        if ($authUser->role === 'admin' && $userToDelete !== 'user') {
+            return response()->json(['message' => 'Access denied'], 403);
+        }
+
+        //Delete user
+        $userToDelete->delete();
+        return response()->json(['message' => 'User deleted successfully']);
     }
 
     public function changePassword(Request $request)

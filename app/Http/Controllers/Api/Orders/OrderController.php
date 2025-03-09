@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Api\Orders;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\OrderRequest;
 use App\Http\Resources\Delivery\DeliveryResource;
-use App\Http\Resources\Order\PaymentResource;
+use App\Http\Resources\Order\OrderListResource;
 use App\Http\Resources\Order\OrderResource;
 use App\Models\Order;
+use App\Models\User;
 use App\Services\Order\OrderService;
 use Illuminate\Http\Request;
 
@@ -25,14 +26,34 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         //Get orders for authenticated user
-        $orders = $request->user()->orders()->with('products')->get();
+        $orders = Order::paginate(10);
+
+        return response()->json([
+            'message' => 'Orders retrieved successfully.',
+            'orders' => OrderListResource::collection($orders)
+        ]);
+    }
+    public function userOrders(Request $request)
+    {
+       //Get orders for authenticated user
+       $orders = $request->user()->orders()->with('products')->get();
+
+       return response()->json([
+           'message' => 'Orders retrieved successfully.',
+           'orders' => OrderResource::collection($orders)
+       ]);
+    }
+    public function adminOrders(Int $id)
+    {
+        //Get orders
+        $user = User::findOrFail($id);
+        $orders = $user->orders()->with('products');
 
         return response()->json([
             'message' => 'Orders retrieved successfully.',
             'orders' => OrderResource::collection($orders)
         ]);
     }
-
     /**
      * Store a newly created resource in storage.
      */
@@ -77,6 +98,7 @@ class OrderController extends Controller
                 'total_cost' => $order->total_amount,
                 'delivery' => DeliveryResource::make($order->delivery),
                 'payment_method' => $order->payment->payment_method,
+                'status'=>$order->payment->status
             ]
         ], 200);
     }
