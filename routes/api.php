@@ -121,6 +121,7 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(func
     Route::get('/admin/users/{id}/orders',[OrderController::class, 'adminOrders']); //Get user`s orders
     Route::get('/admin/orders/{id}',[OrderController::class, 'show']); //Get user`s orders details
     Route::get('/admin/orders',[OrderController::class, 'index']);//Get all orders
+    Route::patch('/admin/orders/{id}',[OrderController::class,'update']); //Change status of order
 });
 
 Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){

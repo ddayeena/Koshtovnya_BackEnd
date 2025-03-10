@@ -7,10 +7,13 @@ use App\Http\Requests\Order\OrderRequest;
 use App\Http\Resources\Delivery\DeliveryResource;
 use App\Http\Resources\Order\OrderListResource;
 use App\Http\Resources\Order\OrderResource;
+use App\Mail\OrderDeliveredMail;
+use App\Mail\OrderShippedMail;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\Order\OrderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
 {
@@ -35,13 +38,13 @@ class OrderController extends Controller
     }
     public function userOrders(Request $request)
     {
-       //Get orders for authenticated user
-       $orders = $request->user()->orders()->with('products')->get();
+        //Get orders for authenticated user
+        $orders = $request->user()->orders()->with('products')->get();
 
-       return response()->json([
-           'message' => 'Orders retrieved successfully.',
-           'orders' => OrderResource::collection($orders)
-       ]);
+        return response()->json([
+            'message' => 'Orders retrieved successfully.',
+            'orders' => OrderResource::collection($orders)
+        ]);
     }
     public function adminOrders(Int $id)
     {
@@ -98,7 +101,7 @@ class OrderController extends Controller
                 'total_cost' => $order->total_amount,
                 'delivery' => DeliveryResource::make($order->delivery),
                 'payment_method' => $order->payment->payment_method,
-                'status'=>$order->payment->status
+                'status' => $order->payment->status
             ]
         ], 200);
     }
@@ -108,7 +111,31 @@ class OrderController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $order = Order::findOrFail($id);
+        $data = $request->validate([
+            'status' => 'required|in:В очікуванні,Відправлено,Доставлено'
+        ]);
+
+        // Update status
+        $order->update(['status' => $data['status']]);
+        if($data['status'] === 'Відправлено'){
+            Mail::to($request->user()->email)->send(new OrderShippedMail($order));
+        }
+        elseif($data['status'] === 'Доставлено'){
+            if($order->payment->payment_method === 'Післяоплата')
+            $order->payment->update([
+                'status' => 'Оплачено',
+                'paid_at' => now(),
+            ]);
+            
+
+            Mail::to($request->user()->email)->send(new OrderDeliveredMail($order, $order->delivery));
+        }
+
+        return response()->json([
+            'message' => 'Order`s status updated successfully',
+            'order' => OrderListResource::make($order)
+        ], 200);
     }
 
     /**
