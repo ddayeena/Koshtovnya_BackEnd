@@ -113,9 +113,13 @@ class OrderController extends Controller
     {
         $order = Order::findOrFail($id);
         $data = $request->validate([
-            'status' => 'required|in:В очікуванні,Відправлено,Доставлено'
+            'status' => 'required|in:Відправлено,Доставлено'
         ]);
-
+        if ($order->status === 'Доставлено' && $data['status'] === 'Відправлено') {
+            return response()->json([
+                'message' => 'You cannot change status from "Доставлено" to "Відправлено"'
+            ], 400);
+        }
         // Update status
         $order->update(['status' => $data['status']]);
         if($data['status'] === 'Відправлено'){
@@ -128,8 +132,7 @@ class OrderController extends Controller
                 'paid_at' => now(),
             ]);
             
-
-            Mail::to($request->user()->email)->send(new OrderDeliveredMail($order, $order->delivery));
+            Mail::to($order->user->email)->send(new OrderDeliveredMail($order, $order->delivery));
         }
 
         return response()->json([

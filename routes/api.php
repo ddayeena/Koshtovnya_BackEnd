@@ -115,13 +115,19 @@ Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get si
 Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(function () {
     Route::get('/admin/users', [UserController::class, 'index']); //Get all users
     Route::get('/admin/users/search/{name}', [UserController::class, 'search']); // Search users
-    Route::post('/products', [ProductController::class, 'store']); // Store product
-    Route::get('/products/form-data', [ProductController::class, 'formData']); // form data for storing product
     Route::patch('/admin/user/{id}', [UserController::class, 'update']);//Update user data
+
+    Route::post('/admin/products', [ProductController::class, 'store']); // Store product
+    Route::get('/admin/products/form-data', [ProductController::class, 'formData']); // form data for storing product
+    Route::patch('/admin/products/{id}', [ProductController::class,'update']); //Update Product
+    Route::get('/admin/products', [ProductController::class, 'index']); // Get all products
+    Route::get('/admin/products/{id}', [ProductController::class, 'show']); // Get a specific product
+
     Route::get('/admin/users/{id}/orders',[OrderController::class, 'adminOrders']); //Get user`s orders
     Route::get('/admin/orders/{id}',[OrderController::class, 'show']); //Get user`s orders details
     Route::get('/admin/orders',[OrderController::class, 'index']);//Get all orders
     Route::patch('/admin/orders/{id}',[OrderController::class,'update']); //Change status of order
+
 });
 
 Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){

@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Fitting extends Model
 {
     protected $table = 'fittings';
+    protected $fillable = [
+        'fitting',
+    ];
+
     use HasFactory;
 
     public function products()
@@ -19,5 +23,4 @@ class Fitting extends Model
     {
         return $this->belongsTo(Material::class, 'material_id');
     }
-
 }

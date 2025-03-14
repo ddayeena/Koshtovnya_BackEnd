@@ -94,7 +94,7 @@ class ProductService
     }
 
     //Upload image on cloudinary
-    private function uploadImage($image)
+    public function uploadImage($image)
     {
         $im = $image->storeOnCloudinary('products');
         return [
