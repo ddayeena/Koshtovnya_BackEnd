@@ -19,13 +19,38 @@ class ProductFilterService
     }
 
     //Return filtered products
-    public function getFilteredProducts(array $filters, $user)
+    public function getFilteredProducts(array $filters, $user, $isAdminPanel, $products = null )
     {
         // Create filter
         $filter = app()->make(ProductFilter::class, ['params' => $filters]);
 
-        // Get filtered products and paginate them
-        $productQuery = Product::filter($filter);
+        // Формуємо базовий запит із фільтрацією
+        if ($products) {
+            $productQuery = Product::filter($filter)
+                ->whereIn('id', $products->pluck('id'));
+        } else {
+            $productQuery = Product::filter($filter);
+        }
+
+        // Якщо це не адмін панель, показуємо лише не видалені товари
+        if (!$isAdminPanel) {
+            $productQuery->whereNull('deleted_at');
+        } else {
+            // Якщо це адмін панель, додаємо видалені товари
+            $productQuery->withTrashed();
+        }
+
+        // Завантажуємо всі необхідні зв’язки
+        $productQuery->with([
+            'productDescription' => function ($query) use ($isAdminPanel) {
+                if (!$isAdminPanel) {
+                    $query->whereNull('deleted_at'); // Вибираємо лише не видалені
+                } else {
+                    $query->withTrashed(); // Додаємо видалені для адмінів
+                }
+            }
+        ]);
+
         $products = $productQuery->paginate(15);
 
         // Attach information about cart and wishlist
@@ -54,9 +79,9 @@ class ProductFilterService
     {
         return [
             ['name' => 'Немає в наявності', 'count' => Product::whereDoesntHave('productVariants', function ($query) {
-                $query->where('quantity', '>', 0); 
+                $query->where('quantity', '>', 0);
             })->count()],
-            
+
             ['name' => 'В наявності', 'count' => Product::whereHas('productVariants', function ($query) {
                 $query->where('quantity', '>', 0);
             })->count()],
@@ -71,7 +96,7 @@ class ProductFilterService
             'max' => ProductVariant::max('size'),
         ];
     }
-    
+
     // Color filter
     private function getColorFilter()
     {

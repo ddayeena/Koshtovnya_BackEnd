@@ -94,9 +94,9 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/liqpay-callback', [PaymentController::class, 'callback'])->name('liqpay.callback');
 
 // Products Routes
-Route::get('/products', [ProductController::class, 'index']); // Get all products
+Route::get('/products', [ProductController::class, 'index'])->defaults('isAdminPanel', false);; // Get all products
 Route::get('/filter', [ProductController::class, 'filter']);  //Get filter
-Route::get('/products/{id}', [ProductController::class, 'show']); // Get a specific product
+Route::get('/products/{id}', [ProductController::class, 'show'])->defaults('isAdminPanel', false);; // Get a specific product
 Route::get('/products/{id}/reviews', [ReviewController::class, 'index']); // Get reviews for a product
 Route::get('/products/search/{name}', [ProductController::class, 'search']); // Search products
 Route::get('/popular-products', [ProductController::class, 'popular']); // Get popular products
@@ -119,9 +119,11 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(func
 
     Route::post('/admin/products', [ProductController::class, 'store']); // Store product
     Route::get('/admin/products/form-data', [ProductController::class, 'formData']); // form data for storing product
+    Route::delete('/admin/products/{id}', [ProductController::class,'destroy']); // Soft Delete Product
     Route::patch('/admin/products/{id}', [ProductController::class,'update']); //Update Product
-    Route::get('/admin/products', [ProductController::class, 'index']); // Get all products
-    Route::get('/admin/products/{id}', [ProductController::class, 'show']); // Get a specific product
+    Route::post('/admin/products/{id}/restore', [ProductController::class,'restore']); // Restore deleted product
+    Route::get('/admin/products', [ProductController::class, 'index'])->defaults('isAdminPanel', true); // Get all products
+    Route::get('/admin/products/{id}', [ProductController::class, 'show'])->defaults('isAdminPanel', true);; // Get a specific product
 
     Route::get('/admin/users/{id}/orders',[OrderController::class, 'adminOrders']); //Get user`s orders
     Route::get('/admin/orders/{id}',[OrderController::class, 'show']); //Get user`s orders details

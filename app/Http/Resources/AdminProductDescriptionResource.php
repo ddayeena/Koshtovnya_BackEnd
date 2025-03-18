@@ -18,6 +18,7 @@ class AdminProductDescriptionResource extends JsonResource
         return [
             'id' => optional($this->product)->id,
             'name' => optional($this->product)->name,
+            'category' => $this->category->name,
             'price' => optional($this->product)->price,
             'image_url' => optional($this->product)->image_url,
             'country_of_manufacture' => $this->country_of_manufacture,
@@ -28,11 +29,8 @@ class AdminProductDescriptionResource extends JsonResource
             'variants' => $this->productVariants(),
             'colors' => optional($this->product)->colors->pluck('color_name'),
             'bead_producer_name' => optional($this->beadProducer)->origin_country,
-            'is_in_wishlist' => $this->is_in_wishlist ?? false,
-            'is_in_cart' => $this->is_in_cart ?? false,
-            'notify_when_available' => $this->notify_when_available ?? false,
-            'rating' => $this->rating,
-            'review_count' => $this->review_count,
+            'rating' => $this->rating ?? 0,
+            'review_count' => $this->review_count ?? 0,
         ];
     }
 
@@ -56,17 +54,16 @@ class AdminProductDescriptionResource extends JsonResource
     {
         return $this->product->fittings
             ->map(function ($fitting) {
-                // Отримуємо саму модель Material, використовуючи material_id
                 $material = Material::find($fitting->pivot->material_id);
     
                 return [
-                    'fitting' => $fitting->name,  // Отримуємо name з моделі Fitting
+                    'fitting' => $fitting->name,  
                     'quantity' => $fitting->pivot->quantity,
-                    'material' => $material ? $material->name : null,  // Перевіряємо, чи існує матеріал, і отримуємо його name
+                    'material' => $material ? $material->name : null,  
                 ];
             })
-            ->unique()  // Видаляє повторювані значення
-            ->values(); // Перевпорядковує індекси колекції
+            ->unique() 
+            ->values(); 
     }
     
 }

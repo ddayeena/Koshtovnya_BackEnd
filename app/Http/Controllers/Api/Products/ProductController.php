@@ -9,24 +9,18 @@ use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\AdminProductDescriptionResource;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductDescriptionResource;
-use App\Mail\ProductAvailableNotification;
 use App\Models\BeadProducer;
 use App\Models\Category;
 use App\Models\Color;
 use App\Models\Fitting;
 use App\Models\Material;
-use App\Models\Notification;
 use App\Models\Product;
 use App\Models\Review;
-use App\Models\User;
 use App\Services\Product\ProductFilterService;
 use App\Services\Product\ProductService;
 use App\Services\User\UserService;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class ProductController extends Controller
 {
@@ -47,8 +41,7 @@ class ProductController extends Controller
     public function index(FilterRequest $request)
     {
         $user = $this->user_service->getUserFromRequest($request);
-
-        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user);
+        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user, $request->isAdminPanel);
 
         return ProductResource::collection($products);
     }
@@ -97,14 +90,14 @@ class ProductController extends Controller
         $products = Product::whereHas('productDescription', function ($query) use ($id) {
             $query->where('category_id', $id);
         })->with('productDescription')->paginate(15);
-        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user);
+
+        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user, false, $products);
 
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
 
         return ProductResource::collection($products);
     }
-
 
 
     //display products by name
@@ -166,162 +159,108 @@ class ProductController extends Controller
     public function show(Request $request, string $id)
     {
         $user = $this->user_service->getUserFromRequest($request);
-
-        $product = Product::findOrFail($id);
-        $averageRating = (float)Review::where('product_id', $id)->avg('rating');
-        $reviewCount = Review::where('product_id', $id)->count();
+        $product = Product::withTrashed()->find($id);
+        
+        if ($product->trashed()) {
+            if($request->isAdminPanel)return $this->showTrashed($id);
+            else return response()->json(['message' => 'Product not found'], 404);
+        }
 
         $product = $this->product_service->attachUserProductStatus($product, $user);
-        $product->productDescription->rating = $averageRating;
-        $product->productDescription->review_count = $reviewCount;
+        $product->productDescription->rating = (float)Review::where('product_id', $id)->avg('rating');
+        $product->productDescription->review_count = Review::where('product_id', $id)->count();
 
-        if ($user->role === 'user') {
-            return ProductDescriptionResource::make($product->productDescription);
+        if ($request->isAdminPanel) {
+            return AdminProductDescriptionResource::make($product->productDescription);
         }
-        return AdminProductDescriptionResource::make($product->productDescription);
+        return ProductDescriptionResource::make($product->productDescription);
+
     }
 
+    public function showTrashed(string $id)
+    {
+        $product = Product::withTrashed()
+            ->with([
+                'productDescription' => function ($query) {
+                    $query->withTrashed();
+                },
+                'productVariants' => function ($query) {
+                    $query->withTrashed();
+                },
+                'reviews' => function ($query) {
+                    $query->withTrashed();
+                },
+            ])
+            ->find($id);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $colors = DB::table('color_product')
+            ->join('colors', 'color_product.color_id', '=', 'colors.id')
+            ->where('color_product.product_id', $id)
+            ->whereNotNull('color_product.deleted_at')
+            ->select('colors.color_name')
+            ->get();
+
+            $fittings = DB::table('fitting_product')
+            ->join('fittings', 'fitting_product.fitting_id', '=', 'fittings.id')
+            ->join('materials', 'fitting_product.material_id', '=', 'materials.id') 
+            ->where('fitting_product.product_id', $id)
+            ->whereNotNull('fitting_product.deleted_at') 
+            ->select('fittings.name as fitting', 'materials.name as material', 'fitting_product.quantity')
+            ->get();
+
+            $averageRating = (float) $product->reviews->avg('rating');
+            $reviewCount = $product->reviews->count();
+            
+
+        return response()->json([
+            'data' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'category' => $product->productDescription->category->name,
+                'price' => $product->price,
+                'image_url' => $product->image_url,
+                'country_of_manufacture' =>  $product->productDescription->country_of_manufacture,
+                'material' => 'Бісер',
+                'type_of_fitting' => $fittings->map(function ($fitting) {
+                    return [
+                        'fitting_name' => $fitting->fitting,
+                        'quantity' => $fitting->quantity,
+                        'material_name' => $fitting->material,
+                    ];
+                }),
+                'type_of_bead' =>  $product->productDescription->type_of_bead,
+                'weight' =>  $product->productDescription->weight,
+                'variants' => $product->productVariants->map(function ($variant) {
+                    return [
+                        'size' => $variant->size,
+                        'quantity' => $variant->quantity,
+                        'is_available' => $variant->quantity > 0,
+                    ];
+                }),
+                'colors' => $colors->pluck("color_name"),
+                'bead_producer_name' => $product->productDescription->beadProducer->origin_country,
+                'rating' =>  $averageRating,
+                'review_count' =>  $reviewCount,
+            ]
+        ]);
+    }
+
+    
     /**
      * Update the specified resource in storage.
      */
     public function update(UpdateProductRequest $request, string $id)
     {
-        $data = $request->validated();
         $product = Product::findOrFail($id);
-
-        DB::transaction(function () use ($product, $data) {
-            // Оновлення основних полів у `products`
-            $product->fill([
-                'name' => $data['name'] ?? $product->name,
-                'price' => $data['price'] ?? $product->price,
-            ]);
-
-            // Оновлення зображення
-            if (isset($data['image'])) {
-                Cloudinary::destroy($product->image_public_id);
-                $image = $this->product_service->uploadImage($data['image']);
-                $product->image_url = $image['url'];
-                $product->image_public_id = $image['public_id'];
-            }
-
-            $product->save();
-
-            // Оновлення `product_descriptions`
-            $productDescription = $product->productDescription;
-
-            // Знаходимо category_id за переданою назвою
-            if (isset($data['category'])) {
-                $category = Category::where('name', $data['category'])->first();
-                if ($category) {
-                    $data['category_id'] = $category->id;
-                }
-            }
-
-            // Знаходимо bead_producer_id за переданою назвою
-            if (isset($data['bead_producer'])) {
-                $beadProducer = BeadProducer::where('origin_country', $data['bead_producer'])->first();
-                if ($beadProducer) {
-                    $data['bead_producer_id'] = $beadProducer->id;
-                }
-            }
-
-            // Оновлюємо `product_descriptions`
-            $productDescription->fill([
-                'bead_producer_id' => $data['bead_producer_id'] ?? $productDescription->bead_producer_id,
-                'weight' => $data['weight'] ?? $productDescription->weight,
-                'country_of_manufacture' => $data['country_of_manufacture'] ?? $productDescription->country_of_manufacture,
-                'type_of_bead' => $data['type_of_bead'] ?? $productDescription->type_of_bead,
-                'category_id' => $data['category_id'] ?? $productDescription->category_id,
-            ]);
-
-            $productDescription->save();
-
-            // Оновлення fittings
-            if (isset($data['fittings'])) {
-                foreach ($data['fittings'] as $fitting) {
-                    $fittingModel = Fitting::where('name', $fitting['fitting'])->first();
-                    $materialModel = Material::where('name', $fitting['material'])->first();
-
-                    if ($fittingModel && $materialModel) {
-                        // Перевіряємо, чи є вже такий fitting з таким material у продукту
-                        $existingFitting = DB::table('fitting_product')
-                            ->where('product_id', $product->id)
-                            ->where('fitting_id', $fittingModel->id)
-                            ->where('material_id', $materialModel->id)
-                            ->first();
-
-                        if ($existingFitting) {
-                            // Якщо є, то видаляємо його
-                            DB::table('fitting_product')
-                                ->where('product_id', $product->id)
-                                ->where('fitting_id', $fittingModel->id)
-                                ->where('material_id', $materialModel->id)
-                                ->delete();
-                        } else {
-                            // Якщо немає, додаємо новий
-                            $product->fittings()->attach($fittingModel->id, [
-                                'material_id' => $materialModel->id,
-                                'quantity' => $fitting['quantity'] ?? 0
-                            ]);
-                        }
-                    }
-                }
-            }
-
-
-            // Оновлення sizes
-            if (isset($data['sizes'])) {
-                foreach ($data['sizes'] as $size) {
-                    $existingVariant = $product->productVariants()->where('size', $size['size'])->first();
-
-                    if ($existingVariant) {
-                        if ($existingVariant->quantity == 0 && $size['quantity'] > 0) {
-                            $users = Notification::where('product_id', $product->id)
-                            ->whereNull('notified_at') // Перевіряємо, що користувач ще не був повідомлений
-                            ->get();
-
-                            foreach ($users as $notification) {
-                                $user = User::find($notification->user_id);
-                    
-                                if ($user) {
-                                    // Надсилаємо email (можеш замінити на реальну логіку)
-                                    Mail::to($user->email)->send(new ProductAvailableNotification($user, $product));
-
-                                    // Оновлюємо час сповіщення
-                                    $notification->update(['notified_at' => now()]);
-                                }
-                            }
-
-                        }
-                        // Оновлюємо кількість, якщо розмір уже існує
-                        $existingVariant->update(['quantity' => $size['quantity']]);
-                    } else {
-                        // Додаємо новий розмір, якщо його ще немає
-                        $product->productVariants()->create([
-                            'size' => $size['size'],
-                            'quantity' => $size['quantity'],
-                        ]);
-                    }
-                }
-            }
-
-
-            // Оновлення кольорів
-            if (isset($data['colors'])) {
-                $existingColors = $product->colors()->pluck('colors.id')->toArray(); // Поточні кольори товару
-                $newColors = Color::whereIn('color_name', $data['colors'])->pluck('id')->toArray(); // ID переданих кольорів
-
-                $colorsToDelete = array_intersect($existingColors, $newColors); // Кольори, що треба видалити
-                $colorsToAdd = array_diff($newColors, $existingColors); // Кольори, що треба додати
-
-                $product->colors()->detach($colorsToDelete); // Видаляємо кольори
-                $product->colors()->attach($colorsToAdd); // Додаємо нові
-            }
-        });
+        $productResource = $this->product_service->updateProduct($product, $request->validated());
 
         return response()->json([
             'message' => 'Product updated successfully',
-            'product' => ProductDescriptionResource::make($product->productDescription)
+            'product' => $productResource,
         ]);
     }
 
@@ -330,6 +269,72 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+            $product = Product::findOrFail($id);
+
+            // Softdelete
+            $product->productDescription()->delete();
+            DB::table('color_product')
+                ->where('product_id', $id)
+                ->update(['deleted_at' => now()]);
+            DB::table('fitting_product')
+                ->where('product_id', $id)
+                ->update(['deleted_at' => now()]);
+            $product->productVariants()->delete();
+
+            $reviews = $product->reviews;
+            foreach ($reviews as $review) {
+                $review->replies()->delete();
+                $review->delete();
+            }
+            $product->delete();
+
+            // Full delete 
+            DB::table('cart_product')->where('product_id', $id)->delete();
+            DB::table('product_wishlist')->where('product_id', $id)->delete();
+            DB::table('notifications')->where('product_id', $id)->delete();
+
+            DB::commit();
+
+            return response()->json(['message' => 'Product deleted successfully.'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function restore(string $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $product = Product::withTrashed()->findOrFail($id);
+
+            // Restore all data
+            $product->productDescription()->restore();
+            DB::table('color_product')
+                ->where('product_id', $id)
+                ->update(['deleted_at' => null]);
+            DB::table('fitting_product')
+                ->where('product_id', $id)
+                ->update(['deleted_at' => null]);
+            $product->productVariants()->restore();
+
+            $reviews = $product->reviews()->onlyTrashed()->get();
+            foreach ($reviews as $review) {
+                $review->replies()->restore();
+                $review->restore();
+            }
+            $product->restore();
+
+            DB::commit();
+
+            return response()->json(['message' => 'Product restored successfully.'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error', 'error' => $e->getMessage()], 500);
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services\Order;
 
+use App\Mail\OrderDetailsMail;
 use App\Models\Order;
 use App\Models\Delivery;
 use App\Models\DeliveryType;
@@ -9,6 +10,7 @@ use App\Models\Payment;
 use App\Models\ProductVariant;
 use App\Models\UserAddress;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class OrderService
 {
@@ -52,6 +54,8 @@ class OrderService
 
             //Update products quantity in stock
             $this->updateProductStock($order);
+            if($payment->payment_method === 'Післяоплата')
+            Mail::to($order->user->email)->send(new OrderDetailsMail($order, $delivery, $payment));
 
             return compact('order', 'delivery');
         });

@@ -50,7 +50,7 @@ class OrderController extends Controller
     {
         //Get orders
         $user = User::findOrFail($id);
-        $orders = $user->orders()->with('products');
+        $orders = $user->orders()->with('products')->get();
 
         return response()->json([
             'message' => 'Orders retrieved successfully.',

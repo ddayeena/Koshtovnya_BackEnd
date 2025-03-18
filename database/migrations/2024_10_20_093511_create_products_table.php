@@ -23,7 +23,7 @@ return new class extends Migration
                   ->references('id')
                   ->on('product_descriptions')
                   ->onDelete('cascade');
-
+            $table->softDeletes();
             $table->timestamps();
         });
     }

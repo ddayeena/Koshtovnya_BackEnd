@@ -2,15 +2,23 @@
 
 namespace App\Services\Product;
 
+use App\Http\Requests\Product\UpdateProductRequest;
+use App\Http\Resources\AdminProductDescriptionResource;
+use App\Http\Resources\ProductDescriptionResource;
+use App\Mail\ProductAvailableNotification;
 use App\Models\BeadProducer;
 use App\Models\Category;
 use App\Models\Color;
 use App\Models\Fitting;
 use App\Models\Material;
+use App\Models\Notification;
 use App\Models\Product;
 use App\Models\ProductDescription;
 use App\Models\ProductVariant;
+use App\Models\User;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class ProductService
 {
@@ -161,5 +169,140 @@ class ProductService
             }
         }
         $product->fittings()->attach($fittingData);
+    }
+
+
+    public function updateProduct(Product $product, array $data)
+    {
+        DB::transaction(function () use ($product, $data) {
+            $this->updateBasicFields($product, $data);
+            $this->updateImage($product, $data);
+            $this->updateProductDescription($product, $data);
+            $this->updateFittings($product, $data);
+            $this->updateSizes($product, $data);
+            $this->updateColors($product, $data);
+        });
+    
+        return  AdminProductDescriptionResource::make($product->productDescription);
+    }
+    
+    private function updateBasicFields(Product $product, array $data)
+    {
+        $product->fill([
+            'name' => $data['name'] ?? $product->name,
+            'price' => $data['price'] ?? $product->price,
+        ]);
+        $product->save();
+    }
+    
+    private function updateImage(Product $product, array $data)
+    {
+        if (isset($data['image'])) {
+            Cloudinary::destroy($product->image_public_id);
+            $image = $this->uploadImage($data['image']);
+            $product->image_url = $image['url'];
+            $product->image_public_id = $image['public_id'];
+            $product->save();
+        }
+    }
+    
+    private function updateProductDescription(Product $product, array $data)
+    {
+        $productDescription = $product->productDescription;
+        $data['category_id'] = $this->getCategoryId($data);
+        $data['bead_producer_id'] = $this->getBeadProducerId($data);
+        
+        $productDescription->fill([
+            'bead_producer_id' => $data['bead_producer_id'] ?? $productDescription->bead_producer_id,
+            'weight' => $data['weight'] ?? $productDescription->weight,
+            'country_of_manufacture' => $data['country_of_manufacture'] ?? $productDescription->country_of_manufacture,
+            'type_of_bead' => $data['type_of_bead'] ?? $productDescription->type_of_bead,
+            'category_id' => $data['category_id'] ?? $productDescription->category_id,
+        ]);
+        $productDescription->save();
+    }
+    
+    private function getCategoryId(array $data)
+    {
+        if (isset($data['category'])) {
+            $category = Category::where('name', $data['category'])->first();
+            return $category ? $category->id : null;
+        }
+        return null;
+    }
+    
+    private function getBeadProducerId(array $data)
+    {
+        if (isset($data['bead_producer'])) {
+            $beadProducer = BeadProducer::where('origin_country', $data['bead_producer'])->first();
+            return $beadProducer ? $beadProducer->id : null;
+        }
+        return null;
+    }
+    
+    private function updateFittings(Product $product, array $data)
+    {
+        if (!isset($data['fittings'])) return;
+        
+        foreach ($data['fittings'] as $fitting) {
+            $fittingModel = Fitting::where('name', $fitting['fitting'])->first();
+            $materialModel = Material::where('name', $fitting['material'])->first();
+    
+            if ($fittingModel && $materialModel) {
+                DB::table('fitting_product')->updateOrInsert([
+                    'product_id' => $product->id,
+                    'fitting_id' => $fittingModel->id,
+                    'material_id' => $materialModel->id
+                ], [
+                    'quantity' => $fitting['quantity'] ?? 0
+                ]);
+            }
+        }
+    }
+    
+    private function updateSizes(Product $product, array $data)
+    {
+        if (!isset($data['sizes'])) return;
+        
+        foreach ($data['sizes'] as $size) {
+            $existingVariant = $product->productVariants()->where('size', $size['size'])->first();
+            if ($existingVariant) {
+                if ($existingVariant->quantity == 0 && $size['quantity'] > 0) {
+                    $this->notifyUsersAboutAvailability($product);
+                }
+                $existingVariant->update(['quantity' => $size['quantity']]);
+            } else {
+                $product->productVariants()->create($size);
+            }
+        }
+    }
+    
+    private function notifyUsersAboutAvailability(Product $product)
+    {
+        $users = Notification::where('product_id', $product->id)
+            ->whereNull('notified_at')
+            ->get();
+    
+        foreach ($users as $notification) {
+            $user = User::find($notification->user_id);
+            if ($user) {
+                Mail::to($user->email)->send(new ProductAvailableNotification($user, $product));
+                $notification->update(['notified_at' => now()]);
+            }
+        }
+    }
+    
+    private function updateColors(Product $product, array $data)
+    {
+        if (!isset($data['colors'])) return;
+        
+        $existingColors = $product->colors()->pluck('colors.id')->toArray();
+        $newColors = Color::whereIn('color_name', $data['colors'])->pluck('id')->toArray();
+        
+        $colorsToDelete = array_intersect($existingColors, $newColors);
+        $colorsToAdd = array_diff($newColors, $existingColors);
+        
+        $product->colors()->detach($colorsToDelete);
+        $product->colors()->attach($colorsToAdd);
     }
 }

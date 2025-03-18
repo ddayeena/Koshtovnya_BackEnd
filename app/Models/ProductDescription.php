@@ -4,12 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductDescription extends Model
 {
     protected $table = 'product_descriptions';
 
     use HasFactory;
+    use SoftDeletes;
+
     protected $fillable = [
         'bead_producer_id',
         'weight',
