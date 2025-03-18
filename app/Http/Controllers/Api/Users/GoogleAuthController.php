@@ -58,4 +58,4 @@ class GoogleAuthController extends Controller
             'user' => $user
         ], 200);
     }
-}
+}   

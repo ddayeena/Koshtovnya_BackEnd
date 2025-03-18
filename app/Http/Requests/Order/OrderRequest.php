@@ -29,7 +29,6 @@ class OrderRequest extends FormRequest
             'city' => 'required|string|max:255',
             'delivery_name' => 'required|string|max:255',
             'delivery_address' => 'required|string|max:255',
-            'type_of_card' => 'nullable|string|max:255',
             'payment_method' => 'required|in:Післяоплата,Оплата картою,Передоплата',
             'delivery_cost' => 'required|numeric|min:0',
             'cart_cost' => 'required|numeric|min:0',

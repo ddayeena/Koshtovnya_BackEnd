@@ -20,10 +20,10 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone_number',20)->unique()->nullable();
             $table->string('password');
-            $table->rememberToken();
             $table->boolean('access')->default(1);
             $table->timestamps();
         });
+        // $table->rememberToken();
 
         // Schema::create('sessions', function (Blueprint $table) {
         //     $table->string('id')->primary();

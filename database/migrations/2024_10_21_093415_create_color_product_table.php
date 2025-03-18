@@ -26,7 +26,7 @@ return new class extends Migration
                   ->references('id')
                   ->on('colors')
                   ->onDelete('cascade');
-                  
+            $table->softDeletes();
             $table->timestamps();  
             $table->unique(['product_id', 'color_id']);
         });

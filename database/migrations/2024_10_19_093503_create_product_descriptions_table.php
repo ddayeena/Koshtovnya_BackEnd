@@ -28,7 +28,7 @@ return new class extends Migration
                   ->references('id')
                   ->on('bead_producers')
                   ->onDelete('cascade');
-
+            $table->softDeletes();
             $table->timestamps();  
         });
     }

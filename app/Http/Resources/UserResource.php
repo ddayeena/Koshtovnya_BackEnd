@@ -21,6 +21,9 @@ class UserResource extends JsonResource
             "second_name" => $this->second_name,
             "email" => $this->email,
             "phone_number" => $this->phone_number,
-        ];
+            "role" => $this->role,
+            'date' => $this->created_at->translatedFormat('d.m.Y'),
+            'order_id' => optional($this->orders->last())->id
+        ];            
     }
 }

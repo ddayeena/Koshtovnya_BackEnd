@@ -8,16 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class Fitting extends Model
 {
     protected $table = 'fittings';
+    protected $fillable = [
+        'fitting',
+    ];
+
     use HasFactory;
 
     public function products()
     {
-        return $this->belongsToMany(Product::class)->withPivot('material_id', 'quantity');
+        return $this->belongsToMany(Product::class)->withPivot('material_id', 'quantity')->withTimestamps();
     }
 
     public function material()
     {
         return $this->belongsTo(Material::class, 'material_id');
     }
-
 }

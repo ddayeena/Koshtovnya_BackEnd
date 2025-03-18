@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AdminController;
 use App\Http\Controllers\Api\Orders\Delivery\DeliveryTypeController;
 use App\Http\Controllers\Api\Orders\Delivery\NovaPoshtaController;
 use App\Http\Controllers\Api\Orders\OrderController;
+use App\Http\Controllers\Api\Orders\Payment\PaymentController;
 use App\Http\Controllers\Api\Products\CategoryController;
 use App\Http\Controllers\Api\Products\NotificationController;
 use App\Http\Controllers\Api\Products\ProductController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\Api\Users\CartController;
 use App\Http\Controllers\Api\Users\UserAddressController;
 use App\Http\Controllers\Api\Users\UserController;
 use App\Http\Controllers\Api\Users\WishlistController;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,10 +31,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/verify-code', [UserController::class, 'verify']);
+Route::post('/resend-code', [AuthController::class, 'resendCode']);
+
+
 // Authenticated Routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/profile', [UserController::class, 'index']);
+    Route::get('/profile', [UserController::class, 'show']);
+    Route::patch('/change-password', [UserController::class, 'changePassword']); //Change password
+    Route::patch('/user/{id}', [UserController::class, 'update']);//Update user data
 
     // User Address Routes
     Route::get('/user-address', [UserAddressController::class, 'show']); // Get users delivery address
@@ -39,9 +50,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/user-address/{id}', [UserAddressController::class, 'destroy']); //Delete address
     Route::patch('/user-address/{id}', [UserAddressController::class, 'update']); //Update address
     Route::get('/user/phone-number', [UserAddressController::class, 'getUserPhoneNumber']); //Get user`s phone number
-
-    Route::patch('/change-password', [UserController::class, 'changePassword']); //Change password
-    Route::patch('/user', [UserController::class, 'update']);//Change user data
 
     // Wishlist Routes
     Route::prefix('wishlist')->group(function () {
@@ -66,7 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Order Routes
     Route::prefix('orders')->group(function () {
-        Route::get('/', [OrderController::class, 'index']); // Get user's orders
+        Route::get('/', [OrderController::class, 'userOrders']); // Get user's orders
         Route::get('/{id}', [OrderController::class, 'show']); // Get order`s products
         Route::post('/', [OrderController::class, 'store']); // Add order
     });
@@ -81,19 +89,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/delivery/cost', [NovaPoshtaController::class, 'calculateDeliveryCost']); // Calculate delivery cost    
     });
 
+    Route::post('/payment', [PaymentController::class, 'createPayment']);
 });
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
-
-//admin panel
-Route::post('/products', [ProductController::class, 'store']); // Store product
-Route::get('/products/form-data', [ProductController::class, 'formData']); // 
-
+Route::post('/liqpay-callback', [PaymentController::class, 'callback'])->name('liqpay.callback');
 
 // Products Routes
-Route::get('/products', [ProductController::class, 'index']); // Get all products
+Route::get('/products', [ProductController::class, 'index'])->defaults('isAdminPanel', false);; // Get all products
 Route::get('/filter', [ProductController::class, 'filter']);  //Get filter
-Route::get('/products/{id}', [ProductController::class, 'show']); // Get a specific product
+Route::get('/products/{id}', [ProductController::class, 'show'])->defaults('isAdminPanel', false);; // Get a specific product
 Route::get('/products/{id}/reviews', [ReviewController::class, 'index']); // Get reviews for a product
 Route::get('/products/search/{name}', [ProductController::class, 'search']); // Search products
 Route::get('/popular-products', [ProductController::class, 'popular']); // Get popular products
@@ -105,4 +108,38 @@ Route::get('/categories/{id}/products', [ProductController::class, 'productsByCa
 
 // Site Settings Routes
 Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get site settings
+
+
+
+
+Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(function () {
+    Route::get('/admin/users', [UserController::class, 'index']); //Get all users
+    Route::get('/admin/users/search/{name}', [UserController::class, 'search']); // Search users
+    Route::patch('/admin/user/{id}', [UserController::class, 'update']);//Update user data
+
+    Route::post('/admin/products', [ProductController::class, 'store']); // Store product
+    Route::get('/admin/products/form-data', [ProductController::class, 'formData']); // form data for storing product
+    Route::delete('/admin/products/{id}', [ProductController::class,'destroy']); // Soft Delete Product
+    Route::patch('/admin/products/{id}', [ProductController::class,'update']); //Update Product
+    Route::post('/admin/products/{id}/restore', [ProductController::class,'restore']); // Restore deleted product
+    Route::get('/admin/products', [ProductController::class, 'index'])->defaults('isAdminPanel', true); // Get all products
+    Route::get('/admin/products/{id}', [ProductController::class, 'show'])->defaults('isAdminPanel', true);; // Get a specific product
+
+    Route::get('/admin/users/{id}/orders',[OrderController::class, 'adminOrders']); //Get user`s orders
+    Route::get('/admin/orders/{id}',[OrderController::class, 'show']); //Get user`s orders details
+    Route::get('/admin/orders',[OrderController::class, 'index']);//Get all orders
+    Route::patch('/admin/orders/{id}',[OrderController::class,'update']); //Change status of order
+
+});
+
+Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){
+    Route::delete('/admin/users/{id}', [UserController::class, 'destroy']); //Delete user
+    Route::post('/admin/user', [UserController::class, 'store']);   // Add user
+});
+
+Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function(){
+    Route::patch('/admin/site-settings', [SiteSettingController::class, 'update']); // Update site settings
+});
+
+
 

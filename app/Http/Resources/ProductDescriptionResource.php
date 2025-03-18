@@ -16,7 +16,7 @@ class ProductDescriptionResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => optional($this->product)->id,
             'name' => optional($this->product)->name,
             'price' => optional($this->product)->price,
             'image_url' => optional($this->product)->image_url,
@@ -31,6 +31,8 @@ class ProductDescriptionResource extends JsonResource
             'is_in_wishlist' => $this->is_in_wishlist ?? false,
             'is_in_cart' => $this->is_in_cart ?? false,
             'notify_when_available' => $this->notify_when_available ?? false,
+            'rating' => $this->rating,
+            'review_count' => $this->review_count,
         ];
     }
 

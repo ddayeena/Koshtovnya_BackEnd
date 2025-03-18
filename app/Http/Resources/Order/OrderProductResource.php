@@ -20,7 +20,8 @@ class OrderProductResource extends JsonResource
             'price' => $this->price,
             'quantity' => $this->pivot->quantity,
             'size' => $this->pivot->size,
-            'image_url' => $this->image_url
+            'image_url' => $this->image_url,
+            'is_deleted' => $this->deleted_at !== null
         ];
     }
 }

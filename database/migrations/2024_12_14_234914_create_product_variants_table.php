@@ -23,6 +23,7 @@ return new class extends Migration
             ->onDelete('cascade');
 
             $table->unique(['product_id', 'size']);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

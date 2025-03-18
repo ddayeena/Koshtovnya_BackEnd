@@ -13,7 +13,7 @@ class Wishlist extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class)->withPivot('size');
+        return $this->belongsToMany(Product::class)->withPivot('size')->withTimestamps();
     }
     
 }

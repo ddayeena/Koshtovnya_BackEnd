@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class FittingProduct extends Model
 {
     protected $table = 'fitting_product';
+
     use HasFactory;
 
     public function product()

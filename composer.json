@@ -12,7 +12,8 @@
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/socialite": "^5.16",
-        "laravel/tinker": "^2.8"
+        "laravel/tinker": "^2.8",
+        "liqpay/liqpay": "^1.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
