@@ -34,7 +34,11 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/verify-code', [UserController::class, 'verify']);
-Route::post('/resend-code', [AuthController::class, 'resendCode']);
+Route::post('/resend-code', [AuthController::class, 'sendCode']);
+
+Route::post('/send-code', [AuthController::class, 'sendCode']); // Send code for reset password
+Route::post('/verify-reset-code', [AuthController::class, 'verifyResetCode']); //Verify code for reset password
+Route::patch('/reset-password', [AuthController::class, 'resetPassword']); //Change password
 
 
 // Authenticated Routes
@@ -69,7 +73,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/products/{id}/reviews', [ReviewController::class, 'store']); // Add reviews for a product
     Route::post('/reviews/{id}/reply', [ReviewReplyController::class, 'store']); // Add reply foreview
-
     Route::post('/notification', [NotificationController::class, 'store']); //Add notification for user
 
     //Order Routes

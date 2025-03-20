@@ -33,8 +33,8 @@ class User extends Authenticatable
         'access',
         'verification_code',
         'verification_expires_at',
-        'email_verified_at'
-
+        'email_verified_at',
+        'password_reset_verified'
 
     ];
     /**

@@ -71,8 +71,11 @@ class AuthController extends Controller
         return response()->json(['message' => 'Code sent to the email']);
     }
 
-    public function resendCode(Request $request)
+    public function sendCode(Request $request)
     {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
         $user = User::where('email', $request->email)->first();
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
@@ -85,7 +88,8 @@ class AuthController extends Controller
 
         // Generate new code
         $code =  str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-        $user->update(['verification_code' => $code]);
+        $user->update(['verification_code' => $code, 'verification_expires_at' => Carbon::now()->addMinutes(15)]);
+
 
         Mail::to($user->email)->send(new VerificationCodeMail($code));
 
@@ -95,6 +99,64 @@ class AuthController extends Controller
         return response()->json(['message' => 'Code sent to the email']);
     }
 
+    public function verifyResetCode(Request $request)
+    {
+        // Validate data
+        $request->validate([
+            'email' => 'required|email',
+            'code' => 'required|string|size:6',
+        ]);
+
+        // Get user
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // Check code
+        if ($user->verification_code !== $request->code) {
+            return response()->json(['message' => 'Invalid verification code'], 400);
+        }
+        if ($user->verification_expires_at < now()) {
+            return response()->json(['message' => 'Verification code has expired'], 400);
+        }
+
+        //Give permission to reset password
+        $user->update([
+            'verification_code' => null,
+            'verification_expires_at' => null,
+            'password_reset_verified' => 1,
+        ]);
+
+
+        return response()->json(['message' => 'Code verified, you can now reset your password']);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        //Validate data
+        $request->validate([
+            'email' => 'required|email',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+        //Get user
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['message' => 'Invalid request'], 400);
+        }
+        // Check if code verified
+        if (!$user->password_reset_verified) {
+            return response()->json(['message' => 'Password reset code not verified'], 403);
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($request->new_password),
+            'password_reset_verified' => null, 
+        ]);
+
+        return response()->json(['message' => 'Password was changed successfully.']);
+    }
 
     public function logout(Request $request)
     {
