@@ -97,8 +97,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/liqpay-callback', [PaymentController::class, 'callback'])->name('liqpay.callback');
 
 // Products Routes
-Route::get('/products', [ProductController::class, 'index'])->defaults('isAdminPanel', false);; // Get all products
-Route::get('/filter', [ProductController::class, 'filter']);  //Get filter
+Route::get('/products', [ProductController::class, 'index'])->defaults('isAdminPanel', false); // Get all products
+Route::get('/product-filter', [ProductController::class, 'filter']);  //Get  product filter
 Route::get('/products/{id}', [ProductController::class, 'show'])->defaults('isAdminPanel', false);; // Get a specific product
 Route::get('/products/{id}/reviews', [ReviewController::class, 'index']); // Get reviews for a product
 Route::get('/products/search/{name}', [ProductController::class, 'search']); // Search products
@@ -133,6 +133,7 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(func
     Route::get('/admin/orders',[OrderController::class, 'index']);//Get all orders
     Route::patch('/admin/orders/{id}',[OrderController::class,'update']); //Change status of order
 
+    Route::get('/admin/product-filter', [ProductController::class, 'filter']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){
