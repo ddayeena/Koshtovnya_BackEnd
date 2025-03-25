@@ -8,10 +8,17 @@ use App\Http\Resources\UserAddressResource;
 use App\Models\DeliveryType;
 use App\Models\User;
 use App\Models\UserAddress;
+use App\Services\Order\Delivery\NovaPoshtaService;
 use Illuminate\Http\Request;
 
 class UserAddressController extends Controller
 {
+    private NovaPoshtaService $novaPoshtaService;
+
+    public function __construct(NovaPoshtaService $novaPoshtaService)
+    {
+        $this->novaPoshtaService = $novaPoshtaService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -62,7 +69,6 @@ class UserAddressController extends Controller
     {
         $userAddress = $request->user()->userAddress;
 
-        //User can have only one address
         if (!$userAddress) {
             return response()->json([
                 'data' => null,
@@ -70,11 +76,21 @@ class UserAddressController extends Controller
             ], 404);
         }
 
+        //Get ref of the city
+        $cityRef = $this->getCityRef($userAddress->city);
+        $userAddress->city_ref = $cityRef;
+
         return response()->json([
-            'data' => [
-                'address' => UserAddressResource::make($userAddress)
-            ]
+            'data' => new UserAddressResource($userAddress)
         ]);
+    }
+
+    private function getCityRef(?string $cityName): ?string
+    {
+        if (!$cityName) return null;
+        $cities = $this->novaPoshtaService->getCities();
+        $city = collect($cities)->firstWhere(fn($c) => strcasecmp($c['Description'], $cityName) === 0);
+        return $city['Ref'] ?? null;
     }
 
     /**
