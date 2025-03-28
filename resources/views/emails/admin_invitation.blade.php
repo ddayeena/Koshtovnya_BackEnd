@@ -91,7 +91,9 @@
         </div>
 
         <p class="footer">Будь ласка, після входу змініть пароль на більш надійний. Раді бачити вас серед наших працівників!</p>
-
+        <a href="http://localhost:8080/homepage" style="color: blue; text-decoration: underline;">
+                Перейти на сайт
+            </a>
         <p class="footer">Якщо ви не реєструвалися, проігноруйте це повідомлення.</p>
     </div>
 </body>

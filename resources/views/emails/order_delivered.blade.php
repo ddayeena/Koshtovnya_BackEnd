@@ -53,6 +53,7 @@
             text-align: center;
             margin-bottom: 20px;
         }
+
         .footer {
             text-align: center;
             font-size: 14px;
@@ -79,8 +80,14 @@
 
         <div class="footer">
             Дякуємо за ваше замовлення!<br>
-            Якщо у вас є запитання, звертайтеся до нас!.
+            Якщо у вас є запитання, звертайтеся до нас!<br>
+            <a href="http://localhost:8080/homepage" style="color: blue; text-decoration: underline;">
+                Перейти на сайт
+            </a>
         </div>
+
+
+
     </div>
 </body>
 

@@ -90,7 +90,7 @@
 
         <div class="message">
             Дякуємо за Ваше замовлення! Ваша посилка ретельно упакована і вже відправлена.
-            Очікуйте на повідомлення про доставку посилки до вказаного місця. 
+            Очікуйте на повідомлення про доставку посилки до вказаного місця.
         </div>
 
         <div class="order-summary">
@@ -99,11 +99,14 @@
             <p><strong>Дата відправлення:</strong> {{ $order->updated_at }}</p>
             <p><strong>Сума:</strong> {{ number_format($order->total_amount, 2) }} грн</p>
         </div>
-
         <div class="footer">
             Дякуємо за ваше замовлення!<br>
-            Якщо у вас є запитання, звертайтеся до нас!.
+            Якщо у вас є запитання, звертайтеся до нас!<br>
+            <a href="http://localhost:8080/homepage" style="color: blue; text-decoration: underline;">
+                Перейти на сайт
+            </a>
         </div>
+
     </div>
 </body>
 

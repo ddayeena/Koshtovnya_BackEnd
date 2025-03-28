@@ -47,6 +47,9 @@
         <h1>Привіт, {{ $user->first_name }}!</h1>
         <p>Дякуємо, що зареєструвалися в нашому магазині.</p>
         <p>Раді бачити вас серед наших клієнтів!</p>
+        <a href="http://localhost:8080/homepage" style="color: blue; text-decoration: underline;">
+                Перейти на сайт
+            </a>
     </div>
 </body>
 </html>

@@ -55,10 +55,14 @@ class UserController extends Controller
         }
         // Search users
         $query = User::where(function ($query) use ($name) {
-            $query->where('first_name', 'LIKE', "%{$name}%")
-                ->orWhere('second_name', 'LIKE', "%{$name}%")
-                ->orWhere('last_name', 'LIKE', "%{$name}%");
+            $query->where('id', $name)  
+                ->orWhere('first_name', 'LIKE', "%{$name}%")  
+                ->orWhere('second_name', 'LIKE', "%{$name}%")  
+                ->orWhere('last_name', 'LIKE', "%{$name}%")
+                ->orWhere('phone_number', 'LIKE', "%{$name}%")  
+                ->orWhere('email', 'LIKE', "%{$name}%"); 
         });
+        
 
         //Filter by type
         if ($request->has('role')) {
