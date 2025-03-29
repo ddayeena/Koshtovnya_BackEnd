@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\Users;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\StoreRequest;
 use App\Http\Requests\User\UpdateRequest;
 use App\Http\Resources\UserProfileResource;
 use App\Http\Resources\UserResource;
 use App\Mail\AdminInvitation;
+use App\Mail\UserInvitation;
 use App\Mail\WelcomeMail;
 use App\Models\Cart;
 use App\Models\User;
@@ -23,7 +25,6 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $authUser = auth()->user();
         $query = User::query();
 
         if ($request->has('role')) {
@@ -32,17 +33,11 @@ class UserController extends Controller
             } elseif ($request->role === 'employee') {
                 $requestedRoles = ['admin', 'superadmin', 'manager'];
             }
-        }
-
-        //Manager can only see users
-        if ($authUser->role === 'manager' && !empty(array_intersect($requestedRoles, ['admin', 'superadmin']))) {
-            return response()->json(['message' => 'Access denied'], 403);
-        }
-
-        if ($request->has('role')) {
             $query->whereIn('role', $requestedRoles);
         }
 
+        //Manager can only see users
+        $this->authorize('viewAny', [User::class, $request->role]);
         $users = $query->paginate(10);
 
         return UserResource::collection($users);
@@ -81,22 +76,13 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreRequest $request)
     {
-        $authUser = $request->user();
-        $data = $request->validate([
-            'first_name' => 'required|string|max:50',
-            'second_name' => 'required|string|max:50',
-            'last_name' => 'required|string|max:50',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone_number' => 'required|string|max:20|regex:/^\+?[0-9\s\-]+$/',
-            'role' => 'required|in:admin,manager,superadmin,user',
-        ]);
+        $data = $request->validated();
+        $this->authorize('create', [User::class, $data['role']]);
+
         $password = Str::random(10);
 
-        if ($authUser->role === 'admin' && $data['role'] !== 'user') {
-            return response()->json(['message' => 'Access denied'], 403);
-        }
         // Create user
         $user = User::create([
             'first_name' => $data['first_name'],
@@ -108,8 +94,8 @@ class UserController extends Controller
             'role' => $data['role'],
         ]);
 
-        //Send invitation to admin
-        Mail::to($user->email)->send(new AdminInvitation($user, $password));
+        //Send invitation to user
+        Mail::to($user->email)->send(new UserInvitation($user, $password));
 
         return response()->json([
             'message' => 'User added successfully',
@@ -135,42 +121,19 @@ class UserController extends Controller
     {
         $authUser = $request->user();
         $user = User::findOrFail($id);
-
-        // User can update only himself
-        if ($authUser->id === $user->id) {
-            if ($request->has('role')) {
-                return response()->json(['message' => 'Access denied'], 403);
-            }
-            return $this->performUpdate($user, $request);
+        $newRole = $request->input('role');
+    
+        if (!$authUser->can('update', [$user, $newRole])) {
+            return response()->json(['message' => 'Access denied'], 403);
         }
-
-        // Manager can update only users and not change role
-        if ($authUser->role === 'manager' && $user->role === 'user') {
-            if ($request->has('role')) {
-                return response()->json(['message' => 'Access denied'], 403);
-            }
-            return $this->performUpdate($user, $request);
+    
+        if ($request->has('role')) {
+            $user->role = $newRole;
         }
-
-        if (in_array($authUser->role, ['admin', 'superadmin'])) {
-            if ($request->has('role')) {
-                $newRole = $request->input('role');
-
-                //Restrictions for admin
-                if ($authUser->role === 'admin' && ($user->role === 'superadmin' || $newRole === 'superadmin')) {
-                    return response()->json(['message' => 'Access denied'], 403);
-                }
-                if ($authUser->role === 'admin' && !in_array($newRole, ['admin', 'manager', 'user'])) {
-                    return response()->json(['message' => 'Access denied'], 403);
-                }
-                $user->role = $newRole;
-            }
-
-            return $this->performUpdate($user, $request);
-        }
-
-        return response()->json(['message' => 'Access denied'], 403);
+    
+        return $this->performUpdate($user, $request);
     }
+    
 
 
     private function performUpdate(User $user, UpdateRequest $request)
@@ -193,20 +156,9 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        $authUser = auth()->user();
         $userToDelete = User::findOrFail($id);
-
-        //Prevent self-deletion
-        if ($authUser->id === $userToDelete->id) {
-            return response()->json(['message' => 'You cannot delete yourself'], 403);
-        }
-
-        //Admin can only delete refular users
-        if ($authUser->role === 'admin' && $userToDelete !== 'user') {
-            return response()->json(['message' => 'Access denied'], 403);
-        }
-
-        //Delete user
+        $this->authorize('delete', $userToDelete);
+    
         $userToDelete->delete();
         return response()->json(['message' => 'User deleted successfully']);
     }
