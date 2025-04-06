@@ -21,6 +21,7 @@ class UserAddressResource extends JsonResource
             'delivery_type' => optional($this->deliveryType)->type,
             'city' => $this->city,
             'delivery_name' => optional($this->deliveryType)->name,
+            'Ref' => $this->city_ref,
             'delivery_address' => $this->delivery_address,
         ];
     } 

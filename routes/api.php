@@ -34,7 +34,11 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/verify-code', [UserController::class, 'verify']);
-Route::post('/resend-code', [AuthController::class, 'resendCode']);
+Route::post('/resend-code', [AuthController::class, 'sendCode']);
+
+Route::post('/send-code', [AuthController::class, 'sendCode']); // Send code for reset password
+Route::post('/verify-reset-code', [AuthController::class, 'verifyResetCode']); //Verify code for reset password
+Route::patch('/reset-password', [AuthController::class, 'resetPassword']); //Change password
 
 
 // Authenticated Routes
@@ -53,14 +57,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Wishlist Routes
     Route::prefix('wishlist')->group(function () {
-        Route::get('/', [WishlistController::class, 'index']); // Get user's wishlist
+        Route::get('/', [WishlistController::class, 'show']); // Get user's wishlist
         Route::post('/', [WishlistController::class, 'store']); // Add product to wishlist
         Route::delete('{id}', [WishlistController::class, 'destroy']); // Remove product from wishlist
     });
 
     // Cart Routes
     Route::prefix('cart')->group(function () {
-        Route::get('/', [CartController::class, 'index']); // Get user's cart
+        Route::get('/', [CartController::class, 'show']); // Get user's cart
         Route::post('/', [CartController::class, 'store']); // Add product to cart
         Route::delete('{id}', [CartController::class, 'destroy']); // Remove product from cart
         Route::patch('/{id}', [CartController::class, 'update']); // Update product's quantity
@@ -69,7 +73,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/products/{id}/reviews', [ReviewController::class, 'store']); // Add reviews for a product
     Route::post('/reviews/{id}/reply', [ReviewReplyController::class, 'store']); // Add reply foreview
-
     Route::post('/notification', [NotificationController::class, 'store']); //Add notification for user
 
     //Order Routes
@@ -94,8 +97,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/liqpay-callback', [PaymentController::class, 'callback'])->name('liqpay.callback');
 
 // Products Routes
-Route::get('/products', [ProductController::class, 'index'])->defaults('isAdminPanel', false);; // Get all products
-Route::get('/filter', [ProductController::class, 'filter']);  //Get filter
+Route::get('/products', [ProductController::class, 'index'])->defaults('isAdminPanel', false); // Get all products
+Route::get('/product-filter', [ProductController::class, 'filter']);  //Get  product filter
 Route::get('/products/{id}', [ProductController::class, 'show'])->defaults('isAdminPanel', false);; // Get a specific product
 Route::get('/products/{id}/reviews', [ReviewController::class, 'index']); // Get reviews for a product
 Route::get('/products/search/{name}', [ProductController::class, 'search']); // Search products
@@ -130,6 +133,7 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(func
     Route::get('/admin/orders',[OrderController::class, 'index']);//Get all orders
     Route::patch('/admin/orders/{id}',[OrderController::class,'update']); //Change status of order
 
+    Route::get('/admin/product-filter', [ProductController::class, 'filter']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){
@@ -140,6 +144,3 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){
 Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function(){
     Route::patch('/admin/site-settings', [SiteSettingController::class, 'update']); // Update site settings
 });
-
-
-

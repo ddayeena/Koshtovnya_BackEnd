@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone_number',20)->unique()->nullable();
             $table->string('password');
+            $table->boolean('password_reset_verified')->nullable();
             $table->boolean('access')->default(1);
             $table->timestamps();
         });

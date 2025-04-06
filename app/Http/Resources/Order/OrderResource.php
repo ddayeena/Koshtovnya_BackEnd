@@ -18,6 +18,7 @@ class OrderResource extends JsonResource
             'id' => $this->id,
             'order_date' => $this->created_at->translatedFormat('d F Y, H:i'),
             'status' => $this->status,
+            'amount' => $this->total_amount,
             'products' => OrderProductResource::collection($this->whenLoaded('products'))
         ];
     }

@@ -123,7 +123,7 @@ class OrderController extends Controller
         // Update status
         $order->update(['status' => $data['status']]);
         if($data['status'] === 'Відправлено'){
-            Mail::to($request->user()->email)->send(new OrderShippedMail($order));
+            Mail::to($order->user->email)->send(new OrderShippedMail($order));
         }
         elseif($data['status'] === 'Доставлено'){
             if($order->payment->payment_method === 'Післяоплата')
@@ -141,11 +141,4 @@ class OrderController extends Controller
         ], 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }

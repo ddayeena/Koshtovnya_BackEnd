@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Delivery\NovaPoshta\CityResource;
 use App\Http\Resources\Delivery\NovaPoshta\StreetResource;
 use App\Http\Resources\Delivery\NovaPoshta\WarehouseResource;
+use App\Models\Product;
 use App\Services\Order\Delivery\DeliveryService;
 use App\Services\Order\Delivery\NovaPoshtaService;
 use Illuminate\Http\Request;
@@ -75,7 +76,6 @@ class NovaPoshtaController extends Controller
         $cityName = $request->input('Ref');
         $street = $request->input('street');
 
-
         // Get streets list for this city
         $streets = $this->novaPoshtaService->getStreetsList($cityName);
         // Filter streets that contain the entered part in the name
@@ -95,6 +95,16 @@ class NovaPoshtaController extends Controller
             'product_ids.*' => 'integer|exists:products,id',
             'ServiceType' => 'required|string|in:WarehouseDoors,WarehouseWarehouse',
         ]);
+
+        $totalPrice = Product::whereIn('id', $validated['product_ids'])->sum('price');
+
+        //Check for free delivery
+        if ($totalPrice >= 2000) {
+            return response()->json([
+                'success' => true,
+                'data' => ['cost' => 0],
+            ]);
+        }
 
         //Calculate delivery cost
         $result = $this->deliveryService->calculateCost(

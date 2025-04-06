@@ -16,6 +16,8 @@ class ProductFilter extends AbstractFilter
     const WEIGHT_TO = 'weight_to';
     const PRICE_FROM = 'price_from';
     const PRICE_TO = 'price_to';
+    const CATEGORY = 'category';
+    const IS_DELETED = 'is_deleted';
 
     public function getCallbacks(): array
     {
@@ -30,37 +32,56 @@ class ProductFilter extends AbstractFilter
             self::WEIGHT_TO => 'weightTo',
             self::PRICE_FROM => 'priceFrom',
             self::PRICE_TO => 'priceTo',
+            self::CATEGORY => 'category',
+            self::IS_DELETED => 'isDeleted'
         ];
     }
 
     public function isAvailable(Builder $builder, $value)
     {
         if (in_array(0, (array)$value)) {
-            $builder->orWhereDoesntHave('productVariants', function ($query) {
-                $query->where('quantity', '>', 0); 
+            $builder->whereDoesntHave('productVariants', function ($query) {
+                $query->withTrashed()->where('quantity', '>', 0);
             });
         }
-
+    
         if (in_array(1, (array)$value)) {
-            $builder->orWhereHas('productVariants', function ($query) {
-                $query->where('quantity', '>', 0); 
+            $builder->whereHas('productVariants', function ($query) {
+                $query->withTrashed()->where('quantity', '>', 0);
             });
         }
     }
+    public function isDeleted(Builder $builder, $value)
+    {
+        $value = (array) $value; 
+    
+        if (in_array(0, $value) && in_array(1, $value)) {
+            return;
+        }
+    
+        if (in_array(1, $value)) {
+            $builder->onlyTrashed();
+        } elseif (in_array(0, $value)) {
+            $builder->whereNull('deleted_at');
+        }
+    }
+    
+    
 
     public function sizeFrom(Builder $builder, $value)
     {
         $builder->whereHas('productVariants', function ($query) use ($value) {
-            $query->where('size', '>', $value);
+            $query->withTrashed()->where('size', '>=', $value);
         });
     }
-
+    
     public function sizeTo(Builder $builder, $value)
     {
         $builder->whereHas('productVariants', function ($query) use ($value) {
-            $query->where('size', '<', $value);
+            $query->withTrashed()->where('size', '<=', $value);
         });
     }
+    
 
     public function color(Builder $builder, $value)
     {
@@ -69,41 +90,55 @@ class ProductFilter extends AbstractFilter
         });
     }
 
+
+    public function category(Builder $builder, $value)
+    {
+        $builder->whereHas('productDescription', function ($query) use ($value) {
+            $query->withTrashed()->whereHas('category', function ($query) use ($value) {
+                $query->whereIn('name', (array) $value);
+            });
+        });
+    }
+    
     public function typeOfBead(Builder $builder, $value)
     {
         $builder->whereHas('productDescription', function ($query) use ($value) {
-            $query->whereIn('type_of_bead', (array) $value);
+            $query->withTrashed()->whereIn('type_of_bead', (array) $value);
         });
     }
-
+    
     public function beadProducer(Builder $builder, $value)
     {
-        $builder->whereHas('productDescription.beadProducer', function ($query) use ($value) {
-            $query->whereIn('origin_country', (array) $value);
+        $builder->whereHas('productDescription', function ($query) use ($value) {
+            $query->withTrashed()->whereHas('beadProducer', function ($query) use ($value) {
+                $query->whereIn('origin_country', (array) $value);
+            });
         });
     }
+    
 
     public function weightFrom(Builder $builder, $value)
     {
         $builder->whereHas('productDescription', function ($query) use ($value) {
-            $query->where('weight', '>', $value);
+            $query->withTrashed()->where('weight', '>=', $value);
         });
     }
-
+    
     public function weightTo(Builder $builder, $value)
     {
         $builder->whereHas('productDescription', function ($query) use ($value) {
-            $query->where('weight', '<',  $value);
+            $query->withTrashed()->where('weight', '<=', $value);
         });
     }
+    
 
     public function priceFrom(Builder $builder, $value)
     {
-        $builder->where('price', '>', $value);
+        $builder->where('price', '>=', $value);
     }
 
     public function priceTo(Builder $builder, $value)
     {
-        $builder->where('price', '<', $value);
+        $builder->where('price', '<=', $value);
     }
 }

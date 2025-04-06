@@ -4,6 +4,7 @@ namespace App\Services\Product;
 
 use App\Http\Filter\ProductFilter;
 use App\Models\BeadProducer;
+use App\Models\Category;
 use App\Models\Color;
 use App\Models\Product;
 use App\Models\ProductDescription;
@@ -19,7 +20,7 @@ class ProductFilterService
     }
 
     //Return filtered products
-    public function getFilteredProducts(array $filters, $user, $isAdminPanel, $products = null )
+    public function getFilteredProducts(array $filters, $user, $isAdminPanel, $products = null)
     {
         // Create filter
         $filter = app()->make(ProductFilter::class, ['params' => $filters]);
@@ -32,21 +33,18 @@ class ProductFilterService
             $productQuery = Product::filter($filter);
         }
 
-        // Якщо це не адмін панель, показуємо лише не видалені товари
         if (!$isAdminPanel) {
             $productQuery->whereNull('deleted_at');
         } else {
-            // Якщо це адмін панель, додаємо видалені товари
             $productQuery->withTrashed();
         }
 
-        // Завантажуємо всі необхідні зв’язки
         $productQuery->with([
             'productDescription' => function ($query) use ($isAdminPanel) {
                 if (!$isAdminPanel) {
-                    $query->whereNull('deleted_at'); // Вибираємо лише не видалені
+                    $query->whereNull('deleted_at');
                 } else {
-                    $query->withTrashed(); // Додаємо видалені для адмінів
+                    $query->withTrashed();
                 }
             }
         ]);
@@ -71,6 +69,8 @@ class ProductFilterService
             'Виробник бісеру' => $this->getBeadProducerFilter(),
             'Вага' => $this->getWeightFilter(),
             'Ціна' => $this->getPriceFilter(),
+            'Категорія' => $this->getCategory(),
+            'Статус' => $this->getDeletedFilter()
         ];
     }
 
@@ -142,4 +142,26 @@ class ProductFilterService
             'max' => Product::max('price'),
         ];
     }
+
+    //Category filter
+    private function getCategory()
+    {
+        return Category::withCount('productDescriptions')->pluck('name');
+    }
+
+    // Deleted products filter
+    private function getDeletedFilter()
+    {
+        return [
+            [
+                'name' => 'Видалено',
+                'count' => Product::onlyTrashed()->count(), 
+            ],
+            [
+                'name' => 'Не видалено',
+                'count' => Product::whereNull('deleted_at')->count(), 
+            ],
+        ];
+    }
+    
 }

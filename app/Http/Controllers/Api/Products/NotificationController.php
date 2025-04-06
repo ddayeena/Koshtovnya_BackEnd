@@ -12,7 +12,7 @@ class NotificationController extends Controller
     public function store(Request $request)
     {
         //Check if the product exists
-        $product = Product::findOrFail($request->product_id);
+        Product::findOrFail($request->product_id);
         
         //Check if the notification already exists
         $existingNotification = $request->user()->notifications()->where('product_id', $request->product_id)->first();
