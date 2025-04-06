@@ -17,7 +17,7 @@ class DeliveryTypeController extends Controller
         $pickup = DeliveryType::where('type','pickup')->get();
         $courier = DeliveryType::where('type', 'courier')->get();
         //Return data
-        return response()->json([
+        return response()->json([ 
             'data' => [
                 'pickup' => DeliveryTypeResource::collection($pickup),
                 'courier' => DeliveryTypeResource::collection($courier),

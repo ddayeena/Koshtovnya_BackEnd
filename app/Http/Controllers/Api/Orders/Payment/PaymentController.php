@@ -88,7 +88,7 @@ class PaymentController extends Controller
         
         Mail::to($order->user->email)->send(new OrderDetailsMail($order, $delivery, $payment));
     
-        return response()->json(['message' => 'Callback processed successfully']);
+        return response()->json(['message' => 'Callback processed successfully']); 
     }
     
 }

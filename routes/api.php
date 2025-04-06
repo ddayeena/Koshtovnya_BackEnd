@@ -57,14 +57,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Wishlist Routes
     Route::prefix('wishlist')->group(function () {
-        Route::get('/', [WishlistController::class, 'index']); // Get user's wishlist
+        Route::get('/', [WishlistController::class, 'show']); // Get user's wishlist
         Route::post('/', [WishlistController::class, 'store']); // Add product to wishlist
         Route::delete('{id}', [WishlistController::class, 'destroy']); // Remove product from wishlist
     });
 
     // Cart Routes
     Route::prefix('cart')->group(function () {
-        Route::get('/', [CartController::class, 'index']); // Get user's cart
+        Route::get('/', [CartController::class, 'show']); // Get user's cart
         Route::post('/', [CartController::class, 'store']); // Add product to cart
         Route::delete('{id}', [CartController::class, 'destroy']); // Remove product from cart
         Route::patch('/{id}', [CartController::class, 'update']); // Update product's quantity
@@ -144,6 +144,3 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){
 Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function(){
     Route::patch('/admin/site-settings', [SiteSettingController::class, 'update']); // Update site settings
 });
-
-
-

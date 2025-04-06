@@ -18,22 +18,6 @@ class WishlistController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     */
-
-    public function index(Request $request)
-    {
-        //Get wishlist for authenticated user
-        $wishlist = $request->user()->wishlist()->firstOrCreate([]);
-        $products = $this->product_service->attachCartInfo($wishlist->products, $request->user());
-
-        return response()->json([
-            'message' => 'Wishlist products retrieved successfully.',
-            'products' => WishlistProductResource::collection($products),
-        ]);
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -41,11 +25,11 @@ class WishlistController extends Controller
         //Get product's ID
         $productId = $request->input('product_id');
         $size = $request->input('size');
-        if(empty($size)){
+        if (empty($size)) {
             $product = Product::findOrFail($productId);
             $size = $product->productVariants->first()->size;
         }
-        
+
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
         //Add product to wishlist
         if (!$wishlist->products()->where('products.id', $productId)->exists()) {
@@ -60,18 +44,18 @@ class WishlistController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request)
     {
-        //
+        //Get wishlist for authenticated user
+        $wishlist = $request->user()->wishlist()->firstOrCreate([]);
+        $products = $this->product_service->attachCartInfo($wishlist->products, $request->user());
+
+        return response()->json([
+            'message' => 'Wishlist products retrieved successfully.',
+            'products' => WishlistProductResource::collection($products),
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
 
     /**
      * Remove the specified resource from storage.
@@ -83,7 +67,7 @@ class WishlistController extends Controller
 
         //Check if the product exists in the wishlist
         $wishlist->products()->findOrFail($id);
-        
+
         //Delete product
         $wishlist->products()->detach($id);
         return response()->json(['message' => 'Product removed from wishlist'], 200);

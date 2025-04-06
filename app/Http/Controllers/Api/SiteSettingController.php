@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateSiteSettingsRequest;
 use App\Http\Resources\SiteSettingResource;
 use App\Models\SiteSetting;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class SiteSettingController extends Controller
 {

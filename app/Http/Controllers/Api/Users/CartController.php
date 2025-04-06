@@ -22,21 +22,6 @@ class CartController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
-    {
-        //Get wishlist for authenticated user
-        $cart = $request->user()->cart()->firstOrCreate([]);
-        $products = $cart->products;
-
-        return response()->json([
-            'message' => 'Cart products retrieved successfully.',
-            'products' => CartProductResource::collection($products),
-        ]);
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -90,9 +75,16 @@ class CartController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request)
     {
-        //
+        //Get wishlist for authenticated user
+        $cart = $request->user()->cart()->firstOrCreate([]);
+        $products = $cart->products;
+
+        return response()->json([
+            'message' => 'Cart products retrieved successfully.',
+            'products' => CartProductResource::collection($products),
+        ]);
     }
 
     /**

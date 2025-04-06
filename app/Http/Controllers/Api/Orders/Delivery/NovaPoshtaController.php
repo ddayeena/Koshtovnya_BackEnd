@@ -76,7 +76,6 @@ class NovaPoshtaController extends Controller
         $cityName = $request->input('Ref');
         $street = $request->input('street');
 
-
         // Get streets list for this city
         $streets = $this->novaPoshtaService->getStreetsList($cityName);
         // Filter streets that contain the entered part in the name

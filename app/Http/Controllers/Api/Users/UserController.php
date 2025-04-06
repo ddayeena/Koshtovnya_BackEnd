@@ -134,8 +134,6 @@ class UserController extends Controller
         return $this->performUpdate($user, $request);
     }
     
-
-
     private function performUpdate(User $user, UpdateRequest $request)
     {
         $data = array_filter($request->validated(), function ($value) {
@@ -149,7 +147,6 @@ class UserController extends Controller
             'user' => UserProfileResource::make($user),
         ], 200);
     }
-
 
     /**
      * Remove the specified resource from storage.

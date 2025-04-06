@@ -215,7 +215,6 @@ class ProductController extends Controller
             $averageRating = (float) $product->reviews->avg('rating');
             $reviewCount = $product->reviews->count();
             
-
         return response()->json([
             'data' => [
                 'id' => $product->id,
