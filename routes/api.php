@@ -31,10 +31,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/verify-code', [UserController::class, 'verify']);
-Route::post('/resend-code', [AuthController::class, 'sendCode']);
+Route::post('/login', [AuthController::class, 'login']); //Login user
+Route::post('/register', [AuthController::class, 'register']); //Register user
+Route::post('/verify-code', [UserController::class, 'verify']); //Verify  code for email
+Route::post('/resend-code', [AuthController::class, 'sendCode']); //Resend code for email
 
 Route::post('/send-code', [AuthController::class, 'sendCode']); // Send code for reset password
 Route::post('/verify-reset-code', [AuthController::class, 'verifyResetCode']); //Verify code for reset password
@@ -92,7 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/delivery/cost', [NovaPoshtaController::class, 'calculateDeliveryCost']); // Calculate delivery cost    
     });
 
-    Route::post('/payment', [PaymentController::class, 'createPayment']);
+    Route::post('/payment', [PaymentController::class, 'createPayment']); // Create payment
 });
 Route::post('/liqpay-callback', [PaymentController::class, 'callback'])->name('liqpay.callback');
 
@@ -113,9 +113,8 @@ Route::get('/categories/{id}/products', [ProductController::class, 'productsByCa
 Route::get('/site-settings', [SiteSettingController::class, 'index']); // Get site settings
 
 
-
-
 Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(function () {
+    Route::get('/admin/profile', [UserController::class, 'show']);
     Route::get('/admin/users', [UserController::class, 'index']); //Get all users
     Route::get('/admin/users/search/{name}', [UserController::class, 'search']); // Search users
     Route::patch('/admin/user/{id}', [UserController::class, 'update']);//Update user data

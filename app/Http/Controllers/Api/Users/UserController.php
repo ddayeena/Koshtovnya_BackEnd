@@ -26,22 +26,25 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $query = User::query();
-
+    
         if ($request->has('role')) {
-            if ($request->role === 'user') {
-                $requestedRoles = ['user'];
-            } elseif ($request->role === 'employee') {
+            if ($request->role === 'employee') {
+                // If employee - get all employees
                 $requestedRoles = ['admin', 'superadmin', 'manager'];
+                $query->whereIn('role', $requestedRoles);
+            } elseif (in_array($request->role, ['admin', 'manager', 'superadmin', 'user'])) {
+                // If role, then get users with that role
+                $query->where('role', $request->role);
             }
-            $query->whereIn('role', $requestedRoles);
         }
-
-        //Manager can only see users
+    
         $this->authorize('viewAny', [User::class, $request->role]);
+    
         $users = $query->paginate(10);
-
+    
         return UserResource::collection($users);
     }
+    
     //search users 
     public function search(Request $request, string $name)
     {

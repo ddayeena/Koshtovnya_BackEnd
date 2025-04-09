@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\Users\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
 
 /*
