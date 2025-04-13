@@ -99,20 +99,20 @@ class ProductFilter extends AbstractFilter
             });
         });
     }
-    
-    public function typeOfBead(Builder $builder, $value)
-    {
-        $builder->whereHas('productDescription', function ($query) use ($value) {
-            $query->withTrashed()->whereIn('type_of_bead', (array) $value);
-        });
-    }
-    
+
     public function beadProducer(Builder $builder, $value)
     {
         $builder->whereHas('productDescription', function ($query) use ($value) {
             $query->withTrashed()->whereHas('beadProducer', function ($query) use ($value) {
                 $query->whereIn('origin_country', (array) $value);
             });
+        });
+    }
+    
+    public function typeOfBead(Builder $builder, $value)
+    {
+        $builder->whereHas('productDescription', function ($query) use ($value) {
+            $query->withTrashed()->whereIn('type_of_bead', (array) $value);
         });
     }
     

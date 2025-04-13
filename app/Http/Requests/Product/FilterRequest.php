@@ -39,7 +39,8 @@ class FilterRequest extends FormRequest
             'price_from' => 'nullable|numeric|min:0',
             'price_to' => 'nullable|numeric|min:0|gte:price_from',
 
-            'category' => 'nullable|string',
+            'category' => 'nullable|array',
+            'category.*' => 'exists:categories,name',
 
             'is_deleted' => 'nullable|array',
             'is_deleted.*' => 'nullable|in:0,1'

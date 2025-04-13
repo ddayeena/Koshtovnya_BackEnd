@@ -24,7 +24,7 @@ class LiqPayService
             'version'        => '3',
             'sandbox'        => 1, // 1 - test, 0 - not test
             'server_url' => 'https://koshtovnya.api-dev.bmax-edu.website/api/liqpay-callback',
-            'result_url'     => url('http://localhost:8080/payment-confirmed') // After successfull payment
+            'result_url'     => url('https://koshtovnya-front-end-33rd.vercel.app/payment-confirmed') // After successfull payment
         ];
 
         return $this->liqpay->cnb_form($params);
