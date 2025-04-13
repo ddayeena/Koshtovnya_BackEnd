@@ -94,7 +94,7 @@
         </div>
 
         <p class="footer">Будь ласка, після входу змініть пароль на більш надійний. Раді бачити вас в нашому колективі!</p>
-        <a href="http://localhost:8080/homepage" style="color: blue; text-decoration: underline;">
+        <a href="https://koshtovnya-front-end-33rd.vercel.app/login" style="color: blue; text-decoration: underline;">
             Перейти на сайт
         </a>
         <p class="footer">Якщо ви не реєструвалися, проігноруйте це повідомлення.</p>

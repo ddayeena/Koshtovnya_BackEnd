@@ -23,7 +23,7 @@ class LiqPayService
             'order_id'       => $order_id,
             'version'        => '3',
             'sandbox'        => 1, // 1 - test, 0 - not test
-            'server_url' => 'https://b9ca-176-121-4-31.ngrok-free.app/api/liqpay-callback',
+            'server_url' => 'https://koshtovnya.api-dev.bmax-edu.website/api/liqpay-callback',
             'result_url'     => url('http://localhost:8080/payment-confirmed') // After successfull payment
         ];
 
