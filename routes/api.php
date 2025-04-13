@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Users\CartController;
 use App\Http\Controllers\Api\Users\UserAddressController;
 use App\Http\Controllers\Api\Users\UserController;
 use App\Http\Controllers\Api\Users\WishlistController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
@@ -142,4 +143,32 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){
 
 Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function(){
     Route::patch('/admin/site-settings', [SiteSettingController::class, 'update']); // Update site settings
+});
+
+
+Route::get('/run-migrations', function () {
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+        return '✅ Міграції успішно виконані!';
+    } catch (\Exception $e) {
+        return '❌ Помилка: ' . $e->getMessage();
+    }
+});
+
+Route::get('/run-seeders', function () {
+    try {
+        Artisan::call('db:seed', ['--force' => true]);
+        return '✅ Сідери успішно виконані!';
+    } catch (\Exception $e) {
+        return '❌ Помилка: ' . $e->getMessage();
+    }
+});
+
+Route::get('/migrate-fresh', function () {
+    try {
+        Artisan::call('migrate:fresh', ['--force' => true]);
+        return '✅ База даних очищена та міграції виконані заново!';
+    } catch (\Exception $e) {
+        return '❌ Помилка: ' . $e->getMessage();
+    }
 });
