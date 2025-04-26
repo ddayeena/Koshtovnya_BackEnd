@@ -41,10 +41,21 @@ class ProductController extends Controller
     public function index(FilterRequest $request)
     {
         $user = $this->user_service->getUserFromRequest($request);
-        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user, $request->isAdminPanel);
-
+        
+        $products = $this->product_filter_service->getFilteredProducts(
+            $request->validated(),
+            $user,
+            $request->isAdminPanel
+        );
+    
+        // Завантажуємо рейтинг і кількість відгуків для кожного товару
+        $products->load(['productDescription'])
+                 ->loadCount('reviews')
+                 ->loadAvg('reviews', 'rating');
+    
         return ProductResource::collection($products);
     }
+    
 
     //get filter fields
     public function filter()
@@ -62,6 +73,9 @@ class ProductController extends Controller
             ->take(6)
             ->get();
 
+        $products->loadCount('reviews')
+            ->loadAvg('reviews', 'rating');
+
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
 
@@ -77,6 +91,8 @@ class ProductController extends Controller
             ->take(6)
             ->get();
 
+        $products->loadCount('reviews')
+            ->loadAvg('reviews', 'rating');
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
 
@@ -87,17 +103,24 @@ class ProductController extends Controller
     public function productsByCategory(FilterRequest $request, int $id)
     {
         $user = $this->user_service->getUserFromRequest($request);
+    
         $products = Product::whereHas('productDescription', function ($query) use ($id) {
             $query->where('category_id', $id);
-        })->with('productDescription')->paginate(15);
-
+        })
+        ->with('productDescription')
+        ->paginate(15);
+    
         $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user, false, $products);
-
+    
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
-
+    
+        $products->loadCount('reviews')
+                 ->loadAvg('reviews', 'rating');
+    
         return ProductResource::collection($products);
     }
+    
 
 
     //display products by name
