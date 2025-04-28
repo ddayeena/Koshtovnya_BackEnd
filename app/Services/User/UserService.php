@@ -34,8 +34,8 @@ class UserService
         //Allow sort fields for each role
         $allowedSortFields = [
             'employee' => ['id', 'first_name', 'email', 'date', 'role', 'phone_number'],
-            'user' => ['id', 'name', 'last_name', 'email', 'date', 'order_id'],
-        ][$role] ?? ['id', 'name', 'last_name', 'email', 'date', 'order_id'];
+            'user' => ['id', 'first_name', 'last_name', 'email', 'date', 'order_id'],
+        ][$role] ?? ['id', 'first_name', 'last_name', 'email', 'date', 'order_id'];
 
         //Sort
         if ($sortBy && in_array($sortBy, $allowedSortFields) && in_array($sortOrder, ['asc', 'desc'])) {

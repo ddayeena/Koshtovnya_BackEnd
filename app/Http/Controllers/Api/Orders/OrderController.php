@@ -13,6 +13,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\Order\OrderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
@@ -28,14 +29,35 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        //Get orders for authenticated user
-        $orders = Order::paginate(10);
-
-        return response()->json([
-            'message' => 'Orders retrieved successfully.',
-            'orders' => OrderListResource::collection($orders)
-        ]);
+        $query = Order::query();
+    
+        $sortBy = $request->get('sort_by');
+        $sortOrder = $request->get('sort_order', 'asc'); // за замовченням asc
+    
+        $sortFieldsMap = [
+            'id' => 'orders.id',
+            'order_date' => 'orders.created_at',
+            'status' => 'orders.status',
+            'phone_number' => 'orders.phone_number',
+            'products' => 'products_names',
+        ];
+    
+        if ($sortBy === 'products') {
+            $query->leftJoin('order_product', 'orders.id', '=', 'order_product.order_id')
+                  ->leftJoin('products', 'order_product.product_id', '=', 'products.id')
+                  ->select('orders.*', DB::raw('GROUP_CONCAT(products.name ORDER BY products.name ASC SEPARATOR ", ") as products_names'))
+                  ->groupBy('orders.id');
+        }
+    
+        if (isset($sortFieldsMap[$sortBy]) && in_array($sortOrder, ['asc', 'desc'])) {
+            $query->orderBy($sortFieldsMap[$sortBy], $sortOrder);
+        }
+    
+        $orders = $query->paginate(10);
+    
+        return OrderListResource::collection($orders);
     }
+    
     public function userOrders(Request $request)
     {
         //Get orders for authenticated user
