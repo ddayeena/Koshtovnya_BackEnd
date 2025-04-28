@@ -13,8 +13,10 @@ use App\Mail\WelcomeMail;
 use App\Models\Cart;
 use App\Models\User;
 use App\Models\Wishlist;
+use App\Services\User\UserService;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
@@ -23,28 +25,26 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, UserService $userService)
     {
         $query = User::query();
+        $role = $request->get('role');
     
-        if ($request->has('role')) {
-            if ($request->role === 'employee') {
-                // If employee - get all employees
-                $requestedRoles = ['admin', 'superadmin', 'manager'];
-                $query->whereIn('role', $requestedRoles);
-            } elseif (in_array($request->role, ['admin', 'manager', 'superadmin', 'user'])) {
-                // If role, then get users with that role
-                $query->where('role', $request->role);
-            }
+        //Get role
+        if ($role === 'employee') {
+            $query->whereIn('role', ['admin', 'superadmin', 'manager']);
+        } elseif (in_array($role, ['admin', 'manager', 'superadmin', 'user'])) {
+            $query->where('role', $role);
         }
     
-        $this->authorize('viewAny', [User::class, $request->role]);
+        $this->authorize('viewAny', [User::class, $role]);
     
-        $users = $query->paginate(10);
+        //Sort
+        $query = $userService->applySorting($query, $role, $request->get('sort_by'), $request->get('sort_order', 'asc'));
     
-        return UserResource::collection($users);
+        return UserResource::collection($query->paginate(10));
     }
-    
+        
     //search users 
     public function search(Request $request, string $name)
     {
