@@ -32,7 +32,7 @@ class OrderController extends Controller
         $query = Order::query();
     
         $sortBy = $request->get('sort_by');
-        $sortOrder = $request->get('sort_order', 'asc'); // за замовченням asc
+        $sortOrder = $request->get('sort_order', 'asc'); 
     
         $sortFieldsMap = [
             'id' => 'orders.id',
@@ -109,14 +109,19 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id, Request $request)
     {
-        $order = Order::with('products')
+        if($request->isAdminPanel){
+            $order = Order::with('products')
+            ->where('id', $id)
+            ->firstOrFail();
+        }
+        else{
+            $order = Order::with('products')
             ->where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
-
-
+        }
         return response()->json([
             'data' => [
                 'order' => OrderResource::make($order),

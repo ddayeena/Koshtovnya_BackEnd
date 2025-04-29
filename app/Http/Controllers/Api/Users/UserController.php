@@ -11,6 +11,7 @@ use App\Mail\AdminInvitation;
 use App\Mail\UserInvitation;
 use App\Mail\WelcomeMail;
 use App\Models\Cart;
+use App\Models\Order;
 use App\Models\User;
 use App\Models\Wishlist;
 use App\Services\User\UserService;
@@ -158,7 +159,9 @@ class UserController extends Controller
     {
         $userToDelete = User::findOrFail($id);
         $this->authorize('delete', $userToDelete);
-    
+
+        Order::where('user_id', $userToDelete->id)->update(['user_id' => null]);
+
         $userToDelete->delete();
         return response()->json(['message' => 'User deleted successfully']);
     }
