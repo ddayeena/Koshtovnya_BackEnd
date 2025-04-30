@@ -49,10 +49,22 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request)
     {
-        //Check data
+        // Validate request
         $request->validated();
-        //Genereta code
+    
+        // Check if user already exists and hasn't verified yet
+        $existingUser = User::where('email', $request->email)->first();
+    
+        if ($existingUser && $existingUser->verification_code !== null) {
+            // Delete user that didnt finish registration
+            $existingUser->delete();
+        } elseif ($existingUser) {
+            return response()->json(['message' => 'This email is already registered.'], 400);
+        }
+    
+        // Generate 6-digit code
         $verificationCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+    
         // Create new user
         $user = User::create([
             'first_name' => $request->first_name,
@@ -63,10 +75,13 @@ class AuthController extends Controller
             'verification_code' => $verificationCode,
             'verification_expires_at' => Carbon::now()->addMinutes(15),
         ]);
-        //Send email
+    
+        // Send email with code
         Mail::to($user->email)->send(new VerificationCodeMail($verificationCode));
+    
         return response()->json(['message' => 'Code sent to the email']);
     }
+    
 
     public function sendCode(Request $request)
     {
