@@ -25,23 +25,18 @@ class ProductFilterService
         // Create filter
         $filter = app()->make(ProductFilter::class, ['params' => $filters]);
     
-        // Формуємо базовий запит
-        if ($products) {
-            $productQuery = Product::query()->whereIn('id', $products->pluck('id'));
+        if ($products instanceof \Illuminate\Database\Eloquent\Builder) {
+            $productQuery = $products;
         } else {
             $productQuery = Product::query();
         }
     
-        // 💡 Додаємо withTrashed(), якщо є фільтр is_deleted або це адмін
         if ($isAdminPanel || isset($filters['is_deleted'])) {
             $productQuery->withTrashed();
         }
     
-        // 💡 Застосовуємо фільтри
-        $productQuery = Product::filter($filter); // ✅ працює з trait'ом Filterable
-
+        $productQuery = $productQuery->filter($filter);
     
-        // 💡 Додатково для підзв'язків
         $productQuery->with([
             'productDescription' => function ($query) use ($isAdminPanel, $filters) {
                 if ($isAdminPanel || isset($filters['is_deleted'])) {
@@ -52,7 +47,6 @@ class ProductFilterService
             }
         ]);
     
-        // Пагінація
         $products = $productQuery->paginate(15);
     
         // Attach info
@@ -61,6 +55,7 @@ class ProductFilterService
     
         return $products;
     }
+    
     
     //Return filter
     public function getFilter()

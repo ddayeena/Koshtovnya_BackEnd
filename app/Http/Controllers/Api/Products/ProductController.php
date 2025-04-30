@@ -104,14 +104,12 @@ class ProductController extends Controller
     {
         $user = $this->user_service->getUserFromRequest($request);
     
-        $products = Product::whereHas('productDescription', function ($query) use ($id) {
+        $productQuery = Product::whereHas('productDescription', function ($query) use ($id) {
             $query->where('category_id', $id);
-        })
-        ->with('productDescription')
-        ->paginate(15);
-    
-        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user, false, $products);
-    
+        })->with('productDescription');
+        
+        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user, false, $productQuery);
+            
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
     
@@ -121,8 +119,6 @@ class ProductController extends Controller
         return ProductResource::collection($products);
     }
     
-
-
     //display products by name
     public function search(string $name)
     {
