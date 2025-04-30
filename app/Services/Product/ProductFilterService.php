@@ -24,40 +24,44 @@ class ProductFilterService
     {
         // Create filter
         $filter = app()->make(ProductFilter::class, ['params' => $filters]);
-
-        // Формуємо базовий запит із фільтрацією
+    
+        // Формуємо базовий запит
         if ($products) {
-            $productQuery = Product::filter($filter)
-                ->whereIn('id', $products->pluck('id'));
+            $productQuery = Product::query()->whereIn('id', $products->pluck('id'));
         } else {
-            $productQuery = Product::filter($filter);
+            $productQuery = Product::query();
         }
-
-        if (!$isAdminPanel) {
-            $productQuery->whereNull('deleted_at');
-        } else {
+    
+        // 💡 Додаємо withTrashed(), якщо є фільтр is_deleted або це адмін
+        if ($isAdminPanel || isset($filters['is_deleted'])) {
             $productQuery->withTrashed();
         }
+    
+        // 💡 Застосовуємо фільтри
+        $productQuery = Product::filter($filter); // ✅ працює з trait'ом Filterable
 
+    
+        // 💡 Додатково для підзв'язків
         $productQuery->with([
-            'productDescription' => function ($query) use ($isAdminPanel) {
-                if (!$isAdminPanel) {
-                    $query->whereNull('deleted_at');
-                } else {
+            'productDescription' => function ($query) use ($isAdminPanel, $filters) {
+                if ($isAdminPanel || isset($filters['is_deleted'])) {
                     $query->withTrashed();
+                } else {
+                    $query->whereNull('deleted_at');
                 }
             }
         ]);
-
+    
+        // Пагінація
         $products = $productQuery->paginate(15);
-
-        // Attach information about cart and wishlist
+    
+        // Attach info
         $products = $this->productService->attachWishlistInfo($products, $user);
         $products = $this->productService->attachCartInfo($products, $user);
-
+    
         return $products;
     }
-
+    
     //Return filter
     public function getFilter()
     {

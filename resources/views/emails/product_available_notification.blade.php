@@ -140,8 +140,8 @@
 
 
         <div class="footer">
-            <a href="https://koshtovnya-front-end-33rd.vercel.app/homepage" style="color: blue; text-decoration: underline;">
-                Перейти на сайт
+            <a href="https://koshtovnya-front-end-33rd.vercel.app/productpage/{{$product->id}}" style="color: blue; text-decoration: underline;">
+                Перейти до покупки
             </a>
         </div>
     </div>
