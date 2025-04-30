@@ -20,9 +20,9 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'price' => $this->price,
             'image_url' => $this->image_url,
-'bead_producer_name' => $this->productDescription && $this->productDescription->beadProducer
-    ? $this->productDescription->beadProducer->name
-    : null,
+            'bead_producer_name' => $this->productDescription && $this->productDescription->beadProducer
+                ? $this->productDescription->beadProducer->name
+                : null,
 
             'is_in_wishlist' => $this->is_in_wishlist ?? false,
             'is_in_cart' => $this->is_in_cart ?? false,

@@ -15,7 +15,7 @@ class NotificationController extends Controller
         Product::findOrFail($request->product_id);
         
         //Check if the notification already exists
-        $existingNotification = $request->user()->notifications()->where('product_id', $request->product_id)->first();
+        $existingNotification = $request->user()->notifications()->where('product_id', $request->product_id)->whereNull('notified_at')->first();
         if ($existingNotification) {
             return response()->json(['message' => 'You are already subscribed for notifications for this product.'], 400);
         }
