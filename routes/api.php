@@ -81,6 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [OrderController::class, 'userOrders']); // Get user's orders
         Route::get('/{id}', [OrderController::class, 'show']); // Get order`s products
         Route::post('/', [OrderController::class, 'store']); // Add order
+        Route::post('/{id}/cancel', [OrderController::class, 'cancel']); // Cancel order
     });
 
     Route::get('/delivery-types', [DeliveryTypeController::class, 'index']); // Get delivery options
