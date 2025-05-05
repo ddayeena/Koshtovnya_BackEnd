@@ -144,32 +144,8 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){
 
 Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function(){
     Route::patch('/admin/site-settings', [SiteSettingController::class, 'update']); // Update site settings
+    Route::post('/admin/categories', [CategoryController::class, 'store']); // Add new category
+    Route::delete('/admin/categories/{id}', [CategoryController::class, 'destroy']); // Delete category
+    Route::patch('/admin/categories/{id}', [CategoryController::class, 'update']); // Update category
 });
 
-
-Route::get('/run-migrations', function () {
-    try {
-        Artisan::call('migrate', ['--force' => true]);
-        return '✅ Міграції успішно виконані!';
-    } catch (\Exception $e) {
-        return '❌ Помилка: ' . $e->getMessage();
-    }
-});
-
-Route::get('/run-seeders', function () {
-    try {
-        Artisan::call('db:seed', ['--force' => true]);
-        return '✅ Сідери успішно виконані!';
-    } catch (\Exception $e) {
-        return '❌ Помилка: ' . $e->getMessage();
-    }
-});
-
-Route::get('/migrate-fresh', function () {
-    try {
-        Artisan::call('migrate:fresh', ['--force' => true]);
-        return '✅ База даних очищена та міграції виконані заново!';
-    } catch (\Exception $e) {
-        return '❌ Помилка: ' . $e->getMessage();
-    }
-});
