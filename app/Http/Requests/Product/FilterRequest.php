@@ -42,6 +42,9 @@ class FilterRequest extends FormRequest
             'category' => 'nullable|array',
             'category.*' => 'exists:categories,name',
 
+            'rating' => 'nullable|array',
+            'rating.*' => 'in:1,2,3,4,5',
+
             'is_deleted' => 'nullable|array',
             'is_deleted.*' => 'nullable|in:0,1'
         ];

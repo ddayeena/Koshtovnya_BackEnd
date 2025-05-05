@@ -9,6 +9,7 @@ use App\Models\Color;
 use App\Models\Product;
 use App\Models\ProductDescription;
 use App\Models\ProductVariant;
+use App\Models\Review;
 
 class ProductFilterService
 {
@@ -68,6 +69,7 @@ class ProductFilterService
             'Виробник бісеру' => $this->getBeadProducerFilter(),
             'Вага' => $this->getWeightFilter(),
             'Ціна' => $this->getPriceFilter(),
+            'Рейтинг' => $this->getRatingFilter(),
             'Категорія' => $this->getCategory(),
             'Статус' => $this->getDeletedFilter()
         ];
@@ -146,6 +148,16 @@ class ProductFilterService
     private function getCategory()
     {
         return Category::withCount('productDescriptions')->pluck('name');
+    }
+
+    private function getRatingFilter(){
+        return [
+            ['name' => '1', 'count' => Review::where('rating', '1')->count()],
+            ['name' => '2', 'count' => Review::where('rating', '2')->count()],
+            ['name' => '3', 'count' => Review::where('rating', '3')->count()],
+            ['name' => '4', 'count' => Review::where('rating', '4')->count()],
+            ['name' => '5', 'count' => Review::where('rating', '5')->count()],
+        ];
     }
 
     // Deleted products filter

@@ -17,6 +17,7 @@ class ProductFilter extends AbstractFilter
     const PRICE_FROM = 'price_from';
     const PRICE_TO = 'price_to';
     const CATEGORY = 'category';
+    const RATING = 'rating';
     const IS_DELETED = 'is_deleted';
 
     public function getCallbacks(): array
@@ -33,6 +34,7 @@ class ProductFilter extends AbstractFilter
             self::PRICE_FROM => 'priceFrom',
             self::PRICE_TO => 'priceTo',
             self::CATEGORY => 'category',
+            self::RATING => 'rating',
             self::IS_DELETED => 'isDeleted'
         ];
     }
@@ -99,6 +101,30 @@ class ProductFilter extends AbstractFilter
             });
         });
     }
+
+    public function rating(Builder $builder, $values)
+    {
+        $builder->where(function ($query) use ($values) {
+            foreach ($values as $value) {
+                $min = (float) $value;
+                $max = $min + 1;
+    
+                $query->orWhereRaw('(
+                    SELECT AVG(rating)
+                    FROM reviews
+                    WHERE reviews.product_id = products.id AND deleted_at IS NULL
+                ) >= ?', [$min])
+                ->whereRaw('(
+                    SELECT AVG(rating)
+                    FROM reviews
+                    WHERE reviews.product_id = products.id AND deleted_at IS NULL
+                ) < ?', [$max]);
+            }
+        });
+    }
+    
+    
+    
 
     public function beadProducer(Builder $builder, $value)
     {
