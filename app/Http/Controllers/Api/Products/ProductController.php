@@ -41,21 +41,21 @@ class ProductController extends Controller
     public function index(FilterRequest $request)
     {
         $user = $this->user_service->getUserFromRequest($request);
-        
+
         $products = $this->product_filter_service->getFilteredProducts(
             $request->validated(),
             $user,
             $request->isAdminPanel
         );
-    
+
         // Завантажуємо рейтинг і кількість відгуків для кожного товару
         $products->load(['productDescription'])
-                 ->loadCount('reviews')
-                 ->loadAvg('reviews', 'rating');
-    
+            ->loadCount('reviews')
+            ->loadAvg('reviews', 'rating');
+
         return ProductResource::collection($products);
     }
-    
+
 
     //get filter fields
     public function filter()
@@ -103,22 +103,22 @@ class ProductController extends Controller
     public function productsByCategory(FilterRequest $request, int $id)
     {
         $user = $this->user_service->getUserFromRequest($request);
-    
+
         $productQuery = Product::whereHas('productDescription', function ($query) use ($id) {
             $query->where('category_id', $id);
         })->with('productDescription');
-        
+
         $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user, false, $productQuery);
-            
+
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
-    
+
         $products->loadCount('reviews')
-                 ->loadAvg('reviews', 'rating');
-    
+            ->loadAvg('reviews', 'rating');
+
         return ProductResource::collection($products);
     }
-    
+
     //display products by name
     public function search(string $name)
     {
@@ -179,22 +179,44 @@ class ProductController extends Controller
     {
         $user = $this->user_service->getUserFromRequest($request);
         $product = Product::withTrashed()->find($id);
-        
+
         if ($product->trashed()) {
-            if($request->isAdminPanel)return $this->showTrashed($id);
-            else return response()->json(['message' => 'Product not found'], 404);
+            if ($request->isAdminPanel) {
+                return $this->showTrashed($id);
+            } else {
+                return response()->json(['message' => 'Product not found'], 404);
+            }
         }
 
         $product = $this->product_service->attachUserProductStatus($product, $user);
+
+        // Середній рейтинг і кількість відгуків
         $product->productDescription->rating = (float)Review::where('product_id', $id)->avg('rating');
         $product->productDescription->review_count = Review::where('product_id', $id)->count();
+
+        // Додаткове поле overall_rating (розгорнута статистика)
+        $reviews = Review::where('product_id', $id)->whereNull('deleted_at');
+
+        $breakdown = $reviews
+            ->select('rating', DB::raw('count(*) as count'))
+            ->groupBy('rating')
+            ->pluck('count', 'rating')
+            ->toArray();
+
+        $fullBreakdown = [];
+        foreach (range(1, 5) as $i) {
+            $fullBreakdown[(string)$i] = $breakdown[$i] ?? 0;
+        }
+
+        $product->productDescription->ratings_breakdown = $fullBreakdown;
+
 
         if ($request->isAdminPanel) {
             return AdminProductDescriptionResource::make($product->productDescription);
         }
         return ProductDescriptionResource::make($product->productDescription);
-
     }
+
 
     public function showTrashed(string $id)
     {
@@ -223,17 +245,17 @@ class ProductController extends Controller
             ->select('colors.color_name')
             ->get();
 
-            $fittings = DB::table('fitting_product')
+        $fittings = DB::table('fitting_product')
             ->join('fittings', 'fitting_product.fitting_id', '=', 'fittings.id')
-            ->join('materials', 'fitting_product.material_id', '=', 'materials.id') 
+            ->join('materials', 'fitting_product.material_id', '=', 'materials.id')
             ->where('fitting_product.product_id', $id)
-            ->whereNotNull('fitting_product.deleted_at') 
+            ->whereNotNull('fitting_product.deleted_at')
             ->select('fittings.name as fitting', 'materials.name as material', 'fitting_product.quantity')
             ->get();
 
-            $averageRating = (float) $product->reviews->avg('rating');
-            $reviewCount = $product->reviews->count();
-            
+        $averageRating = (float) $product->reviews->avg('rating');
+        $reviewCount = $product->reviews->count();
+
         return response()->json([
             'data' => [
                 'id' => $product->id,
@@ -267,7 +289,7 @@ class ProductController extends Controller
         ]);
     }
 
-    
+
     /**
      * Update the specified resource in storage.
      */

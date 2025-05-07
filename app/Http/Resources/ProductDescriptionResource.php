@@ -33,6 +33,8 @@ class ProductDescriptionResource extends JsonResource
             'notify_when_available' => $this->notify_when_available ?? false,
             'rating' => $this->rating,
             'review_count' => $this->review_count,
+            'ratings_breakdown' => (object)($this->ratings_breakdown ?? []),
+
         ];
     }
 

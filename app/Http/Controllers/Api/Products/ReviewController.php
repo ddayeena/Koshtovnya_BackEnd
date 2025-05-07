@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Review;
 use App\Services\Product\ReviewService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReviewController extends Controller
 {
@@ -51,4 +52,5 @@ class ReviewController extends Controller
             'review' => $review,
         ]);
     }    
+
 }

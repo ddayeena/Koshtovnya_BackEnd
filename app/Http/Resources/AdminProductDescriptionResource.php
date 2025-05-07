@@ -31,6 +31,7 @@ class AdminProductDescriptionResource extends JsonResource
             'bead_producer_name' => optional($this->beadProducer)->origin_country,
             'rating' => $this->rating ?? 0,
             'review_count' => $this->review_count ?? 0,
+            'ratings_breakdown' => (object)($this->ratings_breakdown ?? []),
         ];
     }
 
@@ -55,15 +56,14 @@ class AdminProductDescriptionResource extends JsonResource
         return $this->product->fittings
             ->map(function ($fitting) {
                 $material = Material::find($fitting->pivot->material_id);
-    
+
                 return [
-                    'fitting' => $fitting->name,  
+                    'fitting' => $fitting->name,
                     'quantity' => $fitting->pivot->quantity,
-                    'material' => $material ? $material->name : null,  
+                    'material' => $material ? $material->name : null,
                 ];
             })
-            ->unique() 
-            ->values(); 
+            ->unique()
+            ->values();
     }
-    
 }
