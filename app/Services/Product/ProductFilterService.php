@@ -150,15 +150,41 @@ class ProductFilterService
         return Category::withCount('productDescriptions')->pluck('name');
     }
 
-    private function getRatingFilter(){
-        return [
-            ['name' => '1', 'count' => Review::where('rating', '1')->count()],
-            ['name' => '2', 'count' => Review::where('rating', '2')->count()],
-            ['name' => '3', 'count' => Review::where('rating', '3')->count()],
-            ['name' => '4', 'count' => Review::where('rating', '4')->count()],
-            ['name' => '5', 'count' => Review::where('rating', '5')->count()],
+    private function getRatingFilter()
+    {
+        $products = \App\Models\Product::withAvg(['reviews as avg_rating' => function ($q) {
+            $q->whereNull('deleted_at');
+        }], 'rating')->get();
+    
+        $buckets = [
+            '1' => 0,
+            '2' => 0,
+            '3' => 0,
+            '4' => 0,
+            '5' => 0,
         ];
+    
+        foreach ($products as $product) {
+            $rating = $product->avg_rating;
+    
+            if ($rating >= 1 && $rating < 2) {
+                $buckets['1']++;
+            } elseif ($rating >= 2 && $rating < 3) {
+                $buckets['2']++;
+            } elseif ($rating >= 3 && $rating < 4) {
+                $buckets['3']++;
+            } elseif ($rating >= 4 && $rating < 5) {
+                $buckets['4']++;
+            } elseif ($rating == 5) {
+                $buckets['5']++;
+            }
+        }
+    
+        return collect($buckets)->map(function ($count, $name) {
+            return ['name' => $name, 'count' => $count];
+        })->values()->all();
     }
+    
 
     // Deleted products filter
     private function getDeletedFilter()

@@ -124,8 +124,6 @@ class ProductFilter extends AbstractFilter
     }
     
     
-    
-
     public function beadProducer(Builder $builder, $value)
     {
         $builder->whereHas('productDescription', function ($query) use ($value) {
