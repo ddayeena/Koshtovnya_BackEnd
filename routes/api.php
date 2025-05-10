@@ -103,7 +103,7 @@ Route::get('/products', [ProductController::class, 'index'])->defaults('isAdminP
 Route::get('/product-filter', [ProductController::class, 'filter']);  //Get  product filter
 Route::get('/products/{id}', [ProductController::class, 'show'])->defaults('isAdminPanel', false);; // Get a specific product
 Route::get('/products/{id}/reviews', [ReviewController::class, 'index']); // Get reviews for a product
-Route::get('/products/{id}/rating', [ReviewController::class, 'rating']); // Get overall rating for a product
+Route::get('/reviews/top-latest', [ReviewController::class, 'topLatest']); // Get last reviews
 Route::get('/products/search/{name}', [ProductController::class, 'search']); // Search products
 Route::get('/popular-products', [ProductController::class, 'popular']); // Get popular products
 Route::get('/new-arrivals', [ProductController::class, 'newArrivals']); // Get new arrivals

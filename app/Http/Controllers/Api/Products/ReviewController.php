@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Products;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ReviewResource;
+use App\Http\Resources\TopLatestReviewResource;
 use App\Models\Product;
 use App\Models\Review;
 use App\Services\Product\ReviewService;
@@ -52,5 +53,15 @@ class ReviewController extends Controller
             'review' => $review,
         ]);
     }    
+
+    public function topLatest()
+    {
+        $reviews = Review::whereIn('rating',[4,5])
+        ->latest()
+        ->take(10)
+        ->get();
+
+        return TopLatestReviewResource::collection($reviews);
+    }
 
 }
