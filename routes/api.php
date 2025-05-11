@@ -10,7 +10,9 @@ use App\Http\Controllers\Api\Products\NotificationController;
 use App\Http\Controllers\Api\Products\ProductController;
 use App\Http\Controllers\Api\Products\ReviewController;
 use App\Http\Controllers\Api\Products\ReviewReplyController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SiteSettingController;
+use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\Users\AuthController;
 use App\Http\Controllers\Api\Users\CartController;
 use App\Http\Controllers\Api\Users\UserAddressController;
@@ -129,13 +131,15 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(func
     Route::post('/admin/products/{id}/restore', [ProductController::class,'restore']); // Restore deleted product
     Route::get('/admin/products', [ProductController::class, 'index'])->defaults('isAdminPanel', true); // Get all products
     Route::get('/admin/products/{id}', [ProductController::class, 'show'])->defaults('isAdminPanel', true);; // Get a specific product
-
+    Route::get('/admin/product-filter', [ProductController::class, 'filter']);
+    
     Route::get('/admin/users/{id}/orders',[OrderController::class, 'adminOrders']); //Get user`s orders
     Route::get('/admin/orders/{id}',[OrderController::class, 'show'])->defaults('isAdminPanel', true); //Get user`s orders details
     Route::get('/admin/orders',[OrderController::class, 'index']);//Get all orders
     Route::patch('/admin/orders/{id}',[OrderController::class,'update']); //Change status of order
 
-    Route::get('/admin/product-filter', [ProductController::class, 'filter']);
+    Route::get('/admin/stats/summary', [StatsController::class, 'getSummary']);
+
 });
 
 Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){
