@@ -4,22 +4,29 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Models\ProductVariant;
 
 class WishlistProductResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
+        // Отримаємо розмір і продукт з pivot (тобто з product_wishlist)
+        $productId = $this->id;
+        $size = $this->pivot->size ?? null;
+
+        // Знайдемо відповідний варіант товару
+        $variant = ProductVariant::where('product_id', $productId)
+            ->where('size', $size)
+            ->where('quantity', '>', 0)
+            ->first();
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'price' => $this->price,
             'image_url' => $this->image_url,
             'is_in_cart' => $this->is_in_cart ?? false,
+            'is_available' => $variant !== null, // true якщо знайшли з кількістю > 0
         ];
     }
 }
