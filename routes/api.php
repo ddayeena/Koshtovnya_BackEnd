@@ -138,7 +138,7 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(func
     Route::get('/admin/orders',[OrderController::class, 'index']);//Get all orders
     Route::patch('/admin/orders/{id}',[OrderController::class,'update']); //Change status of order
 
-    Route::get('/admin/stats/summary', [StatsController::class, 'getSummary']);
+    Route::get('/admin/stats/summary', [StatsController::class, 'getSummary']); //Get summary
 
 });
 

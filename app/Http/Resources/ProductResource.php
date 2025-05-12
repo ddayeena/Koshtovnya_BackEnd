@@ -29,6 +29,23 @@ class ProductResource extends JsonResource
             'is_deleted' => $this->deleted_at !== null,
             'rating' => (float) ($this->reviews_avg_rating ?? 0),
             'review_count' => $this->reviews_count ?? 0,
+            'variants' => $this->productVariants(),
         ];
+    }
+    
+    /**
+     * Get product variants
+     */
+    private function productVariants()
+    {
+        return $this->productVariants
+            ->sortBy('size') //Sort by size
+            ->map(function ($variant) {
+                return [
+                    'size' => $variant->size,
+                    'quantity' => $variant->quantity,
+                    'is_available' => $variant->quantity > 0,
+                ];
+            })->values();
     }
 }
