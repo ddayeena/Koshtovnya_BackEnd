@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ProductResource extends JsonResource
+class ProductStatsResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -23,28 +23,9 @@ class ProductResource extends JsonResource
                 ? $this->productDescription->beadProducer->name
                 : null,
 
-            'is_in_wishlist' => $this->is_in_wishlist ?? false,
-            'is_in_cart' => $this->is_in_cart ?? false,
             'is_deleted' => $this->deleted_at !== null,
             'rating' => (float) ($this->reviews_avg_rating ?? 0),
             'review_count' => $this->reviews_count ?? 0,
-            'variants' => $this->productVariants(),
         ];
-    }
-    
-    /**
-     * Get product variants
-     */
-    private function productVariants()
-    {
-        return $this->productVariants
-            ->sortBy('size') //Sort by size
-            ->map(function ($variant) {
-                return [
-                    'size' => $variant->size,
-                    'quantity' => $variant->quantity,
-                    'is_available' => $variant->quantity > 0,
-                ];
-            })->values();
     }
 }

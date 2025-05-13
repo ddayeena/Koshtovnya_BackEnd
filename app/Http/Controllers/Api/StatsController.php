@@ -3,16 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UpdateSiteSettingsRequest;
 use App\Http\Resources\Order\OrderListResource;
-use App\Http\Resources\SiteSettingResource;
+use App\Http\Resources\ProductResource;
+use App\Http\Resources\ProductStatsResource;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
-use App\Models\SiteSetting;
 use App\Models\User;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -217,5 +215,59 @@ class StatsController extends Controller
             ->take(5)
             ->get();
         return OrderListResource::collection($orders);
+    }
+
+    public function popularProducts(Request $request)
+    {
+        $data = $request->validate([
+            'start_date' => 'nullable|date|before_or_equal:end_date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'period' => 'nullable|in:day,week,month,year',
+        ]);
+
+        if (!empty($data['start_date']) && !empty($data['end_date'])) {
+            $start = Carbon::parse($data['start_date'])->startOfDay();
+            $end = Carbon::parse($data['end_date'])->endOfDay();
+        } elseif (!empty($data['period'])) {
+            $now = Carbon::now();
+
+            switch ($data['period']) {
+                case 'day':
+                    $start = $now->copy()->subDay();
+                    break;
+                case 'week':
+                    $start = $now->copy()->subWeek();
+                    break;
+                case 'month':
+                    $start = $now->copy()->subMonth();
+                    break;
+                case 'year':
+                    $start = $now->copy()->subYear();
+                    break;
+            }
+
+            $end = $now;
+        } else {
+            return response()->json(['message' => 'Вкажіть або період, або початкову і кінцеву дату.'], 422);
+        }
+
+        // Популярні товари за період (кількість замовлень у вказаному діапазоні)
+        $products = Product::with('productDescription')
+        ->withCount(['orders as orders_count' => function ($query) use ($start, $end) {
+            $query->whereBetween('orders.created_at', [$start, $end]);
+        }])
+        ->having('orders_count', '>', 0) 
+        ->orderBy('orders_count', 'desc')
+        ->take(6)
+        ->get();
+    
+    
+        $products->loadCount('reviews')
+            ->loadAvg('reviews', 'rating');
+        return response()->json([
+            'start' => $start->toDateTimeString(),
+            'end' => $end->toDateTimeString(),
+            'products' => ProductStatsResource::collection($products),
+        ]);
     }
 }
