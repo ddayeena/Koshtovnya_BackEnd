@@ -48,7 +48,7 @@ class ProductFilterService
             }
         ]);
     
-        $products = $productQuery->paginate(15);
+        $products = $productQuery->paginate(16);
     
         // Attach info
         $products = $this->productService->attachWishlistInfo($products, $user);
