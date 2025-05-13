@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateSiteSettingsRequest;
+use App\Http\Resources\Order\OrderListResource;
 use App\Http\Resources\SiteSettingResource;
 use App\Models\Order;
 use App\Models\Product;
@@ -87,10 +88,10 @@ class StatsController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'period' => 'nullable|in:day,week,month,year',
         ]);
-    
+
         $now = Carbon::now();
         $period = $data['period'] ?? null;
-    
+
         if (!empty($data['start_date']) && !empty($data['end_date'])) {
             $start = Carbon::parse($data['start_date'])->startOfDay();
             $end = Carbon::parse($data['end_date'])->endOfDay();
@@ -98,7 +99,7 @@ class StatsController extends Controller
             switch ($period) {
                 case 'day':
                     $start = $now->copy()->subHours(23)->startOfHour();
-                    $end = $now->copy()->endOfHour();                                    
+                    $end = $now->copy()->endOfHour();
                     break;
                 case 'week':
                     $start = $now->copy()->subDays(6)->startOfDay();
@@ -118,14 +119,14 @@ class StatsController extends Controller
         } else {
             return response()->json(['message' => 'Вкажіть або період, або дату початку і кінця.'], 422);
         }
-    
+
         $diffInHours = $start->diffInHours($end);
         $diffInDays = $start->diffInDays($end);
         $type = '';
-    
+
         $labels = [];
         $values = [];
-    
+
         if ($diffInHours <= 24) {
             // Групування по годинах з урахуванням дати
             $type = 'hour';
@@ -135,25 +136,24 @@ class StatsController extends Controller
                 $values[] = 0;
                 $hour->addHour();
             }
-        
+
             $orders = DB::table('orders')
                 ->selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d %H:00:00") as hour_label, COUNT(*) as total')
                 ->whereBetween('created_at', [$start, $end])
                 ->groupBy('hour_label')
                 ->get();
-        
+
             $labelIndexMap = array_flip($labels);
-        
+
             foreach ($orders as $order) {
                 if (isset($labelIndexMap[$order->hour_label])) {
                     $values[$labelIndexMap[$order->hour_label]] = (int)$order->total;
                 }
             }
-        
+
             // Перетворимо мітки назад у формат H:i для відображення на графіку
             $labels = array_map(fn($l) => Carbon::parse($l)->format('H:i'), $labels);
-        }
-         elseif ($diffInDays <= 90) {
+        } elseif ($diffInDays <= 90) {
             // Групування по днях
             $type = 'day';
             $date = $start->copy();
@@ -162,13 +162,13 @@ class StatsController extends Controller
                 $values[] = 0;
                 $date->addDay();
             }
-    
+
             $orders = DB::table('orders')
                 ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
                 ->whereBetween('created_at', [$start, $end])
                 ->groupBy('date')
                 ->get();
-    
+
             foreach ($orders as $order) {
                 $orderDate = Carbon::parse($order->date)->startOfDay();
                 $index = $start->diffInDays($orderDate);
@@ -185,13 +185,13 @@ class StatsController extends Controller
                 $values[] = 0;
                 $date->addMonth();
             }
-    
+
             $orders = DB::table('orders')
                 ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as total')
                 ->whereBetween('created_at', [$start, $end])
                 ->groupBy('month')
                 ->get();
-    
+
             foreach ($orders as $order) {
                 $date = Carbon::createFromFormat('Y-m', $order->month)->startOfMonth();
                 $index = $start->copy()->startOfMonth()->diffInMonths($date);
@@ -200,7 +200,7 @@ class StatsController extends Controller
                 }
             }
         }
-    
+
         return response()->json([
             'labels' => $labels,
             'values' => $values,
@@ -209,6 +209,13 @@ class StatsController extends Controller
             'type' => $type,
         ]);
     }
-    
-    
+
+    public function latestOrders()
+    {
+        $orders = Order::where('status', 'В очікуванні')
+            ->latest()
+            ->take(5)
+            ->get();
+        return OrderListResource::collection($orders);
+    }
 }
