@@ -52,6 +52,14 @@ class GoogleAuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
-        return redirect()->away("https://koshtovnya-front-end-33rd.vercel.app/login?token={$token}");
+        $userData = [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'role' => $user->role
+        ];
+    
+        return redirect()->away("https://koshtovnya-front-end-33rd.vercel.app/login?token={$token}&user=" . urlencode(json_encode($userData)));
     }
 }   
