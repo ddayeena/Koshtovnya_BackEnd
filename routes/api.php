@@ -49,7 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [UserController::class, 'show']);
     Route::patch('/change-password', [UserController::class, 'changePassword']); //Change password
-    Route::patch('/user/{id}', [UserController::class, 'update']);//Update user data
+    Route::patch('/user/{id}', [UserController::class, 'update']); //Update user data
 
     // User Address Routes
     Route::get('/user-address', [UserAddressController::class, 'show']); // Get users delivery address
@@ -122,21 +122,22 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(func
     Route::get('/admin/profile', [UserController::class, 'show']);
     Route::get('/admin/users', [UserController::class, 'index']); //Get all users
     Route::get('/admin/users/search/{name}', [UserController::class, 'search']); // Search users
-    Route::patch('/admin/user/{id}', [UserController::class, 'update']);//Update user data
+    Route::patch('/admin/user/{id}', [UserController::class, 'update']); //Update user data
 
+    Route::get('admin/products/search/{name}', [ProductController::class, 'search']); // Search products
     Route::post('/admin/products', [ProductController::class, 'store']); // Store product
     Route::get('/admin/products/form-data', [ProductController::class, 'formData']); // form data for storing product
-    Route::delete('/admin/products/{id}', [ProductController::class,'destroy']); // Soft Delete Product
-    Route::patch('/admin/products/{id}', [ProductController::class,'update']); //Update Product
-    Route::post('/admin/products/{id}/restore', [ProductController::class,'restore']); // Restore deleted product
+    Route::delete('/admin/products/{id}', [ProductController::class, 'destroy']); // Soft Delete Product
+    Route::patch('/admin/products/{id}', [ProductController::class, 'update']); //Update Product
+    Route::post('/admin/products/{id}/restore', [ProductController::class, 'restore']); // Restore deleted product
     Route::get('/admin/products', [ProductController::class, 'index'])->defaults('isAdminPanel', true); // Get all products
     Route::get('/admin/products/{id}', [ProductController::class, 'show'])->defaults('isAdminPanel', true);; // Get a specific product
     Route::get('/admin/product-filter', [ProductController::class, 'filter']);
-    
-    Route::get('/admin/users/{id}/orders',[OrderController::class, 'adminOrders']); //Get user`s orders
-    Route::get('/admin/orders/{id}',[OrderController::class, 'show'])->defaults('isAdminPanel', true); //Get user`s orders details
-    Route::get('/admin/orders',[OrderController::class, 'index']);//Get all orders
-    Route::patch('/admin/orders/{id}',[OrderController::class,'update']); //Change status of order
+
+    Route::get('/admin/users/{id}/orders', [OrderController::class, 'adminOrders']); //Get user`s orders
+    Route::get('/admin/orders/{id}', [OrderController::class, 'show'])->defaults('isAdminPanel', true); //Get user`s orders details
+    Route::get('/admin/orders', [OrderController::class, 'index']); //Get all orders
+    Route::patch('/admin/orders/{id}', [OrderController::class, 'update']); //Change status of order
 
     Route::get('/admin/stats/summary', [StatsController::class, 'getSummary']); //Get summary
     Route::get('/admin/stats/order-dynamics', [StatsController::class, 'orderDynamics']); //Get order dynamics
@@ -146,12 +147,12 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(func
 
 });
 
-Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function(){
+Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->group(function () {
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy']); //Delete user
     Route::post('/admin/user', [UserController::class, 'store']);   // Add user
 });
 
-Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function(){
+Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::patch('/admin/site-settings', [SiteSettingController::class, 'update']); // Update site settings
     Route::post('/admin/categories', [CategoryController::class, 'store']); // Add new category
     Route::delete('/admin/categories/{id}', [CategoryController::class, 'destroy']); // Delete category
