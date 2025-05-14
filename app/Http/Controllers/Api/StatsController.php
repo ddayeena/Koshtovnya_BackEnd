@@ -253,15 +253,15 @@ class StatsController extends Controller
 
         // Популярні товари за період (кількість замовлень у вказаному діапазоні)
         $products = Product::with('productDescription')
-        ->withCount(['orders as orders_count' => function ($query) use ($start, $end) {
-            $query->whereBetween('orders.created_at', [$start, $end]);
-        }])
-        ->having('orders_count', '>', 0) 
-        ->orderBy('orders_count', 'desc')
-        ->take(6)
-        ->get();
-    
-    
+            ->withCount(['orders as orders_count' => function ($query) use ($start, $end) {
+                $query->whereBetween('orders.created_at', [$start, $end]);
+            }])
+            ->having('orders_count', '>', 0)
+            ->orderBy('orders_count', 'desc')
+            ->take(6)
+            ->get();
+
+
         $products->loadCount('reviews')
             ->loadAvg('reviews', 'rating');
         return response()->json([
@@ -270,4 +270,114 @@ class StatsController extends Controller
             'products' => ProductStatsResource::collection($products),
         ]);
     }
+
+    public function income(Request $request)
+    {
+        // Валідація параметрів
+        $data = $request->validate([
+            'start_date' => 'nullable|date|before_or_equal:end_date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'period' => 'nullable|in:day,week,month,year',
+        ]);
+    
+        // Визначення діапазону дат
+        if (!empty($data['start_date']) && !empty($data['end_date'])) {
+            $start = Carbon::parse($data['start_date'])->startOfDay();
+            $end = Carbon::parse($data['end_date'])->endOfDay();
+        } elseif (!empty($data['period'])) {
+            $now = Carbon::now();
+    
+            switch ($data['period']) {
+                case 'day':
+                    $start = $now->copy()->subDay();
+                    $end = $now;
+                    break;
+                case 'week':
+                    $start = $now->copy()->subWeek();
+                    $end = $now;
+                    break;
+                case 'month':
+                    $start = $now->copy()->subMonth();
+                    $end = $now;
+                    break;
+                case 'year':
+                    $start = $now->copy()->subYear();
+                    $end = $now;
+                    break;
+            }
+        } else {
+            return response()->json(['message' => 'Вкажіть або період, або початкову і кінцеву дату.'], 422);
+        }
+    
+        // Отримання замовлень за вказаний період
+        $orders = Order::whereHas('payment', function ($q) {
+            $q->where('status', 'Оплачено');
+        })
+        ->with([
+            'products.productDescription.beadProducer',
+            'products.fittings',
+            'payment'
+        ])
+        ->whereBetween('created_at', [$start, $end])  // Фільтруємо за датою
+        ->orderByDesc('created_at')
+        ->take(10)
+        ->get();
+    
+        // Перетворення даних на необхідний формат
+        $data = $orders->map(function ($order) {
+            $totalExpenses = 0;
+            $totalAmount = $order->total_amount;
+    
+            // Для обчислення загальних витрат по всіх товарах
+            foreach ($order->products as $product) {
+                $productQuantity = $product->pivot->quantity;
+    
+                // 💠 Вартість бісеру
+                $weight = $product->productDescription->weight ?? 0;
+                $costPerGram = $product->productDescription->beadProducer->cost_per_gram ?? 0;
+                $beadCost = $weight * $costPerGram * $productQuantity;
+    
+                // 🛠️ Вартість фурнітури
+                $fittingCost = 0;
+                foreach ($product->fittings as $fitting) {
+                    $fittingQuantity = $fitting->pivot->quantity ?? 0;
+                    $costPerUnit = $fitting->cost_per_unit ?? 0;
+                    $fittingCost += $fittingQuantity * $costPerUnit;
+                }
+    
+                $totalExpenses += ($beadCost + $fittingCost);
+            }
+    
+            // Розрахунок чистого прибутку
+            $netIncome = $totalAmount - $totalExpenses;
+    
+            return [
+                'id' => $order->id,
+                'date' => $order->created_at->toDateString(),
+                'revenue' => 'Продаж товару',
+                'transaction_number' => $order->payment->transaction_number,
+                'total_amount' => (int)$totalAmount,
+                'expenses' => round($totalExpenses, 2),
+                'net_income' => round($netIncome, 2),
+            ];
+        });
+    
+        // Підрахунок загального прибутку, витрат і чистого прибутку
+        $totalIncome = $data->sum('total_amount');
+        $totalExpenses = $data->sum('expenses');
+        $totalNetIncome = $data->sum('net_income');
+    
+        return response()->json([
+            'data' => $data,
+            'summary' => [
+                'total_income' => round($totalIncome, 2),
+                'total_expenses' => round($totalExpenses, 2),
+                'total_net_income' => round($totalNetIncome, 2),
+            ],
+            'start' => $start->toDateTimeString(),
+            'end' => $end->toDateTimeString(),
+        ]);
+    }
+    
+    
 }

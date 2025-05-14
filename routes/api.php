@@ -142,6 +142,7 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin,manager'])->group(func
     Route::get('/admin/stats/order-dynamics', [StatsController::class, 'orderDynamics']); //Get order dynamics
     Route::get('/admin/stats/latest-orders', [StatsController::class, 'latestOrders']); //Get latest orders
     Route::get('/admin/stats/popular-products', [StatsController::class, 'popularProducts']); //Get popular products
+    Route::get('/admin/stats/income', [StatsController::class, 'income']); //Get income
 
 });
 
