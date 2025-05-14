@@ -30,26 +30,25 @@ class GoogleAuthController extends Controller
         $firstName = $nameParts[0] ?? null;
         $lastName = $nameParts[1] ?? null;
 
-        //Create or update user
-        $user = User::updateOrCreate(
-            ['google_id' => $googleUser->id],
-            [
+        $user = User::where('google_id', $googleUser->id)->first();
+
+        if (!$user) {
+            $user = User::create([
+                'google_id' => $googleUser->id,
                 'first_name' => $firstName,
                 'last_name' => $lastName,
-
                 'email' => $googleUser->email,
                 'password' => bcrypt(Str::random(8))
-            ]
-        );
-
-        Auth::login($user);
-
-        // Create cart and wishlist for user
-        Wishlist::create(['user_id' => $user->id]);
-        Cart::create(['user_id' => $user->id]);
-
-        //Send welcome email to the new user
-        Mail::to($user->email)->send(new WelcomeMail($user));
+            ]);
+        
+            // Створюємо cart і wishlist тільки для нових користувачів
+            Wishlist::create(['user_id' => $user->id]);
+            Cart::create(['user_id' => $user->id]);
+        
+            Mail::to($user->email)->send(new WelcomeMail($user));
+        }
+        
+        Auth::login($user);        
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
