@@ -58,11 +58,11 @@ class ProductController extends Controller
 
 
     //get filter fields
-    public function filter()
+    public function filter(Request $request)
     {
-        return  $this->product_filter_service->getFilter();
+        $categoryId = $request->query('category_id'); 
+        return $this->product_filter_service->getFilter($categoryId);
     }
-
     //display popular products
     public function popular(Request $request)
     {

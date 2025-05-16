@@ -25,19 +25,19 @@ class ProductFilterService
     {
         // Create filter
         $filter = app()->make(ProductFilter::class, ['params' => $filters]);
-    
+
         if ($products instanceof \Illuminate\Database\Eloquent\Builder) {
             $productQuery = $products;
         } else {
             $productQuery = Product::query();
         }
-    
+
         if ($isAdminPanel || isset($filters['is_deleted'])) {
             $productQuery->withTrashed();
         }
-    
+
         $productQuery = $productQuery->filter($filter);
-    
+
         $productQuery->with([
             'productDescription' => function ($query) use ($isAdminPanel, $filters) {
                 if ($isAdminPanel || isset($filters['is_deleted'])) {
@@ -47,56 +47,73 @@ class ProductFilterService
                 }
             }
         ]);
-    
+
         $products = $productQuery->paginate(16);
-    
+
         // Attach info
         $products = $this->productService->attachWishlistInfo($products, $user);
         $products = $this->productService->attachCartInfo($products, $user);
-    
+
         return $products;
     }
-    
-    
+
+
     //Return filter
-    public function getFilter()
+    public function getFilter($categoryId = null)
     {
         return [
-            'Доступність' => $this->getAvailabilityFilter(),
-            'Розмір' => $this->getSizeFilter(),
-            'Колір' => $this->getColorFilter(),
-            'Тип бісеру' => $this->getTypeOfBeadFilter(),
-            'Виробник бісеру' => $this->getBeadProducerFilter(),
-            'Вага' => $this->getWeightFilter(),
-            'Ціна' => $this->getPriceFilter(),
-            'Рейтинг' => $this->getRatingFilter(),
+            'Доступність' => $this->getAvailabilityFilter($categoryId),
+            'Розмір' => $this->getSizeFilter($categoryId),
+            'Колір' => $this->getColorFilter($categoryId),
+            'Тип бісеру' => $this->getTypeOfBeadFilter($categoryId),
+            'Виробник бісеру' => $this->getBeadProducerFilter($categoryId),
+            'Вага' => $this->getWeightFilter($categoryId),
+            'Ціна' => $this->getPriceFilter($categoryId),
+            'Рейтинг' => $this->getRatingFilter($categoryId),
             'Категорія' => $this->getCategory(),
-            'Статус' => $this->getDeletedFilter()
+            'Статус' => $this->getDeletedFilter($categoryId)
         ];
     }
+
 
     // Availabilty filter
-    private function getAvailabilityFilter()
+    private function getAvailabilityFilter($categoryId = null)
     {
-        return [
-            ['name' => 'Немає в наявності', 'count' => Product::whereDoesntHave('productVariants', function ($query) {
-                $query->where('quantity', '>', 0);
-            })->count()],
+        $availableQuery = Product::whereHas('productVariants', function ($query) {
+            $query->where('quantity', '>', 0);
+        });
 
-            ['name' => 'В наявності', 'count' => Product::whereHas('productVariants', function ($query) {
-                $query->where('quantity', '>', 0);
-            })->count()],
+        $notAvailableQuery = Product::whereDoesntHave('productVariants', function ($query) {
+            $query->where('quantity', '>', 0);
+        });
+
+        if ($categoryId) {
+            $availableQuery->whereHas('productDescription', fn($q) => $q->where('category_id', $categoryId));
+            $notAvailableQuery->whereHas('productDescription', fn($q) => $q->where('category_id', $categoryId));
+        }
+
+        return [
+            ['name' => 'Немає в наявності', 'count' => $notAvailableQuery->count()],
+            ['name' => 'В наявності', 'count' => $availableQuery->count()],
         ];
     }
+
 
     // Size filter
-    private function getSizeFilter()
+    private function getSizeFilter($categoryId = null)
     {
+        $query = ProductVariant::query();
+
+        if ($categoryId) {
+            $query->whereHas('product.productDescription', fn($q) => $q->where('category_id', $categoryId));
+        }
+
         return [
-            'min' => ProductVariant::min('size'),
-            'max' => ProductVariant::max('size'),
+            'min' => $query->min('size'),
+            'max' => $query->max('size'),
         ];
     }
+
 
     // Color filter
     private function getColorFilter()
@@ -105,44 +122,70 @@ class ProductFilterService
     }
 
     // Type of bead filter
-    private function getTypeOfBeadFilter()
+    private function getTypeOfBeadFilter($categoryId = null)
     {
+        $query = ProductDescription::query();
+
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
         return [
-            ['name' => 'Матовий', 'count' => ProductDescription::where('type_of_bead', 'Матовий')->count()],
-            ['name' => 'Прозорий', 'count' => ProductDescription::where('type_of_bead', 'Прозорий')->count()],
+            ['name' => 'Матовий', 'count' => (clone $query)->where('type_of_bead', 'Матовий')->count()],
+            ['name' => 'Прозорий', 'count' => (clone $query)->where('type_of_bead', 'Прозорий')->count()],
         ];
     }
+
 
     // Bead producer filter
-    private function getBeadProducerFilter()
+    private function getBeadProducerFilter($categoryId = null)
     {
-        return BeadProducer::withCount('productDescriptions')
-            ->get()
-            ->map(function ($producer) {
-                return [
-                    'origin_country' => $producer->origin_country,
-                    'count' => $producer->product_descriptions_count,
-                ];
-            });
+        $query = BeadProducer::withCount(['productDescriptions' => function ($q) use ($categoryId) {
+            if ($categoryId) {
+                $q->where('category_id', $categoryId);
+            }
+        }]);
+
+        return $query->get()->map(function ($producer) {
+            return [
+                'origin_country' => $producer->origin_country,
+                'count' => $producer->product_descriptions_count,
+            ];
+        });
     }
+
 
     // Weight filter
-    private function getWeightFilter()
+    private function getWeightFilter($categoryId = null)
     {
+        $query = ProductDescription::query();
+
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
         return [
-            'min' => ProductDescription::min('weight'),
-            'max' => ProductDescription::max('weight'),
+            'min' => $query->min('weight'),
+            'max' => $query->max('weight'),
         ];
     }
 
+
     //Price filter
-    private function getPriceFilter()
+    private function getPriceFilter($categoryId = null)
     {
+        $query = Product::query();
+
+        if ($categoryId) {
+            $query->whereHas('productDescription', fn($q) => $q->where('category_id', $categoryId));
+        }
+
         return [
-            'min' => Product::min('price'),
-            'max' => Product::max('price'),
+            'min' => $query->min('price'),
+            'max' => $query->max('price'),
         ];
     }
+
 
     //Category filter
     private function getCategory()
@@ -150,12 +193,16 @@ class ProductFilterService
         return Category::withCount('productDescriptions')->pluck('name');
     }
 
-    private function getRatingFilter()
+    private function getRatingFilter($categoryId = null)
     {
-        $products = \App\Models\Product::withAvg(['reviews as avg_rating' => function ($q) {
-            $q->whereNull('deleted_at');
-        }], 'rating')->get();
-    
+        $productsQuery = Product::withAvg(['reviews as avg_rating' => fn($q) => $q->whereNull('deleted_at')], 'rating');
+
+        if ($categoryId) {
+            $productsQuery->whereHas('productDescription', fn($q) => $q->where('category_id', $categoryId));
+        }
+
+        $products = $productsQuery->get();
+
         $buckets = [
             '1' => 0,
             '2' => 0,
@@ -163,41 +210,36 @@ class ProductFilterService
             '4' => 0,
             '5' => 0,
         ];
-    
+
         foreach ($products as $product) {
             $rating = $product->avg_rating;
-    
-            if ($rating >= 1 && $rating < 2) {
-                $buckets['1']++;
-            } elseif ($rating >= 2 && $rating < 3) {
-                $buckets['2']++;
-            } elseif ($rating >= 3 && $rating < 4) {
-                $buckets['3']++;
-            } elseif ($rating >= 4 && $rating < 5) {
-                $buckets['4']++;
-            } elseif ($rating == 5) {
-                $buckets['5']++;
-            }
+
+            if ($rating >= 1 && $rating < 2) $buckets['1']++;
+            elseif ($rating >= 2 && $rating < 3) $buckets['2']++;
+            elseif ($rating >= 3 && $rating < 4) $buckets['3']++;
+            elseif ($rating >= 4 && $rating < 5) $buckets['4']++;
+            elseif ($rating == 5) $buckets['5']++;
         }
-    
-        return collect($buckets)->map(function ($count, $name) {
-            return ['name' => $name, 'count' => $count];
-        })->values()->all();
+
+        return collect($buckets)->map(fn($count, $name) => ['name' => $name, 'count' => $count])->values()->all();
     }
-    
+
+
 
     // Deleted products filter
-    private function getDeletedFilter()
+    private function getDeletedFilter($categoryId = null)
     {
+        $deletedQuery = Product::onlyTrashed();
+        $activeQuery = Product::whereNull('deleted_at');
+    
+        if ($categoryId) {
+            $deletedQuery->whereHas('productDescription', fn($q) => $q->where('category_id', $categoryId));
+            $activeQuery->whereHas('productDescription', fn($q) => $q->where('category_id', $categoryId));
+        }
+    
         return [
-            [
-                'name' => 'Видалено',
-                'count' => Product::onlyTrashed()->count(), 
-            ],
-            [
-                'name' => 'Не видалено',
-                'count' => Product::whereNull('deleted_at')->count(), 
-            ],
+            ['name' => 'Видалено', 'count' => $deletedQuery->count()],
+            ['name' => 'Не видалено', 'count' => $activeQuery->count()],
         ];
     }
     
