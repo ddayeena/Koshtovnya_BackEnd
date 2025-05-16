@@ -50,13 +50,7 @@ class CartController extends Controller
                 $size = $product->productVariants->first()->size;
             }
         }
-        $variant = $product->productVariants->where('size', $size)->first();
-        //Change quantity of product 
-        if ($variant) {
-            $variant->quantity -= $quantity;
-            $variant->save();
-        }
-
+        
         $cart = $request->user()->cart()->firstOrCreate([]);
 
         //Add product to the cart
