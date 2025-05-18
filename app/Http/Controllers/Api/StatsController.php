@@ -52,8 +52,7 @@ class StatsController extends Controller
             return response()->json(['message' => 'Вкажіть або період, або початкову і кінцеву дату.'], 422);
         }
 
-        $orders_count = Order::where('status', 'Доставлено')
-            ->whereBetween('updated_at', [$start, $end])
+        $orders_count = Order::whereBetween('updated_at', [$start, $end])
             ->count();
 
         $sold_products_count = DB::table('order_product')
@@ -332,12 +331,12 @@ class StatsController extends Controller
             foreach ($order->products as $product) {
                 $productQuantity = $product->pivot->quantity;
     
-                // 💠 Вартість бісеру
+                // Вартість бісеру
                 $weight = $product->productDescription->weight ?? 0;
                 $costPerGram = $product->productDescription->beadProducer->cost_per_gram ?? 0;
                 $beadCost = $weight * $costPerGram * $productQuantity;
     
-                // 🛠️ Вартість фурнітури
+                // Вартість фурнітури
                 $fittingCost = 0;
                 foreach ($product->fittings as $fitting) {
                     $fittingQuantity = $fitting->pivot->quantity ?? 0;
