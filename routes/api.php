@@ -36,7 +36,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']); //Login user
 Route::post('/register', [AuthController::class, 'register']); //Register user
-Route::post('/verify-code', [UserController::class, 'verify']); //Verify  code for email
+Route::post('/verify', [UserController::class, 'verify']); //Verify  code for email
 Route::post('/resend-code', [AuthController::class, 'sendCode']); //Resend code for email
 
 Route::post('/send-code', [AuthController::class, 'sendCode']); // Send code for reset password
