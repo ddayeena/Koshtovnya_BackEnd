@@ -57,7 +57,6 @@ class StatsController extends Controller
 
         $sold_products_count = DB::table('order_product')
             ->join('orders', 'order_product.order_id', '=', 'orders.id')
-            ->where('orders.status', 'Доставлено')
             ->whereBetween('orders.updated_at', [$start, $end])
             ->sum('order_product.quantity');
 
