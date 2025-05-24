@@ -28,8 +28,9 @@ class ProductResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'price' => static::$currency === 'usd'
-                ? round($this->price / static::$rate, 2)
-                : $this->price,
+                ? number_format($this->price / static::$rate, 2, '.', '')
+                : number_format($this->price, 2, '.', ''),
+
             'currency' => static::$currency,
             'image_url' => $this->image_url,
             'bead_producer_name' => $this->productDescription && $this->productDescription->beadProducer

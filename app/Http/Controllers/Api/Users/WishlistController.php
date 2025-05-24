@@ -5,16 +5,19 @@ namespace App\Http\Controllers\Api\Users;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\WishlistProductResource;
 use App\Models\Product;
+use App\Services\ExchangeRateService;
 use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
 
 class WishlistController extends Controller
 {
     private $product_service;
+    private $exchange_rate_service;
 
-    public function __construct(ProductService $product_service)
+    public function __construct(ProductService $product_service, ExchangeRateService $exchange_rate_service)
     {
         $this->product_service = $product_service;
+        $this->exchange_rate_service = $exchange_rate_service;
     }
 
     /**
@@ -50,6 +53,9 @@ class WishlistController extends Controller
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
         $products = $this->product_service->attachCartInfo($wishlist->products, $request->user());
 
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+        WishlistProductResource::setCurrency($currency, $rate);
+        
         return response()->json([
             'message' => 'Wishlist products retrieved successfully.',
             'products' => WishlistProductResource::collection($products),

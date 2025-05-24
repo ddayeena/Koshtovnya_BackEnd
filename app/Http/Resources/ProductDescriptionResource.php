@@ -28,7 +28,7 @@ class ProductDescriptionResource extends JsonResource
         return [
             'id' => optional($this->product)->id,
             'name' => optional($this->product)->name,
-            'price' => round(optional($this->product)->price / self::$rate, 2),
+            'price' => number_format(optional($this->product)->price / self::$rate, 2, '.', ''),
             'currency' => self::$currency,
             'image_url' => optional($this->product)->image_url,
             'country_of_manufacture' => $this->country_of_manufacture,

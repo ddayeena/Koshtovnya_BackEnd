@@ -60,9 +60,6 @@ class ProductController extends Controller
             ->loadCount('reviews')
             ->loadAvg('reviews', 'rating');
 
-        $currency = $request->input('currency', 'uah');
-        $rate = 1;
-
         ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
         ProductResource::setCurrency($currency, $rate);
 
@@ -142,9 +139,12 @@ class ProductController extends Controller
     }
 
     //display products by name
-    public function search(string $name)
+    public function search(Request $request, string $name)
     {
         $products = Product::where('name', 'LIKE', "%{$name}%")->get();
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+        ProductResource::setCurrency($currency, $rate);
+
         return ProductResource::collection($products);
     }
 

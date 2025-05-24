@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\OrderRequest;
 use App\Http\Resources\Delivery\DeliveryResource;
 use App\Http\Resources\Order\OrderListResource;
+use App\Http\Resources\Order\OrderProductResource;
 use App\Http\Resources\Order\OrderResource;
 use App\Mail\OrderCancelledMail;
 use App\Mail\OrderDeliveredMail;
 use App\Mail\OrderShippedMail;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\ExchangeRateService;
 use App\Services\Order\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,10 +22,13 @@ use Illuminate\Support\Facades\Mail;
 class OrderController extends Controller
 {
     protected $orderService;
+    private $exchange_rate_service;
 
-    public function __construct(OrderService $orderService)
+
+    public function __construct(OrderService $orderService, ExchangeRateService $exchange_rate_service)
     {
         $this->orderService = $orderService;
+        $this->exchange_rate_service = $exchange_rate_service;
     }
     /**
      * Display a listing of the resource.
@@ -64,17 +69,22 @@ class OrderController extends Controller
         //Get orders for authenticated user
         $orders = $request->user()->orders()->with('products')->get();
 
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+        OrderResource::setCurrency($currency, $rate);
+        OrderProductResource::setCurrency($currency, $rate);
         return response()->json([
             'message' => 'Orders retrieved successfully.',
             'orders' => OrderResource::collection($orders)
         ]);
     }
-    public function adminOrders(Int $id)
+    public function adminOrders(Request $request, Int $id)
     {
         //Get orders
         $user = User::findOrFail($id);
         $orders = $user->orders()->with('products')->get();
 
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+        OrderResource::setCurrency($currency, $rate);
         return response()->json([
             'message' => 'Orders retrieved successfully.',
             'orders' => OrderResource::collection($orders)

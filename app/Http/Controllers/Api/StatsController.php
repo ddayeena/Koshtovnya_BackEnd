@@ -10,12 +10,20 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\User;
+use App\Services\ExchangeRateService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class StatsController extends Controller
 {
+    private $exchange_rate_service;
+
+    public function __construct(ExchangeRateService $exchange_rate_service)
+    {
+        $this->exchange_rate_service = $exchange_rate_service;
+    }
+
     public function getSummary(Request $request)
     {
         $data = $request->validate([
@@ -262,6 +270,10 @@ class StatsController extends Controller
 
         $products->loadCount('reviews')
             ->loadAvg('reviews', 'rating');
+
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+        ProductStatsResource::setCurrency($currency, $rate);
+
         return response()->json([
             'start' => $start->toDateTimeString(),
             'end' => $end->toDateTimeString(),
@@ -271,20 +283,23 @@ class StatsController extends Controller
 
     public function income(Request $request)
     {
+        // 1. Отримати валюту і курс
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+
         // Валідація параметрів
         $data = $request->validate([
             'start_date' => 'nullable|date|before_or_equal:end_date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'period' => 'nullable|in:day,week,month,year',
         ]);
-    
+
         // Визначення діапазону дат
         if (!empty($data['start_date']) && !empty($data['end_date'])) {
             $start = Carbon::parse($data['start_date'])->startOfDay();
             $end = Carbon::parse($data['end_date'])->endOfDay();
         } elseif (!empty($data['period'])) {
             $now = Carbon::now();
-    
+
             switch ($data['period']) {
                 case 'day':
                     $start = $now->copy()->subDay();
@@ -306,65 +321,59 @@ class StatsController extends Controller
         } else {
             return response()->json(['message' => 'Вкажіть або період, або початкову і кінцеву дату.'], 422);
         }
-    
-        // Отримання замовлень за вказаний період
-        $orders = Order::whereHas('payment', function ($q) {
-            $q->where('status', 'Оплачено');
-        })
-        ->with([
-            'products.productDescription.beadProducer',
-            'products.fittings',
-            'payment'
-        ])
-        ->whereBetween('created_at', [$start, $end])  // Фільтруємо за датою
-        ->orderByDesc('created_at')
-        ->take(10)
-        ->get();
-    
-        // Перетворення даних на необхідний формат
-        $data = $orders->map(function ($order) {
+
+        // Отримання замовлень
+        $orders = Order::whereHas('payment', fn($q) => $q->where('status', 'Оплачено'))
+            ->with([
+                'products.productDescription.beadProducer',
+                'products.fittings',
+                'payment'
+            ])
+            ->whereBetween('created_at', [$start, $end])
+            ->orderByDesc('created_at')
+            ->take(10)
+            ->get();
+
+        // Перетворення замовлень
+        $data = $orders->map(function ($order) use ($currency, $rate) {
             $totalExpenses = 0;
             $totalAmount = $order->total_amount;
-    
-            // Для обчислення загальних витрат по всіх товарах
+
             foreach ($order->products as $product) {
                 $productQuantity = $product->pivot->quantity;
-    
-                // Вартість бісеру
+
                 $weight = $product->productDescription->weight ?? 0;
                 $costPerGram = $product->productDescription->beadProducer->cost_per_gram ?? 0;
                 $beadCost = $weight * $costPerGram * $productQuantity;
-    
-                // Вартість фурнітури
+
                 $fittingCost = 0;
                 foreach ($product->fittings as $fitting) {
                     $fittingQuantity = $fitting->pivot->quantity ?? 0;
                     $costPerUnit = $fitting->cost_per_unit ?? 0;
                     $fittingCost += $fittingQuantity * $costPerUnit;
                 }
-    
+
                 $totalExpenses += ($beadCost + $fittingCost);
             }
-    
-            // Розрахунок чистого прибутку
+
             $netIncome = $totalAmount - $totalExpenses;
-    
+
             return [
                 'id' => $order->id,
                 'date' => $order->created_at->toDateString(),
                 'revenue' => 'Продаж товару',
                 'transaction_number' => $order->payment->transaction_number,
-                'total_amount' => (int)$totalAmount,
-                'expenses' => round($totalExpenses, 2),
-                'net_income' => round($netIncome, 2),
+                'total_amount' => round($totalAmount / $rate, 2),
+                'expenses' => round($totalExpenses / $rate, 2),
+                'net_income' => round($netIncome / $rate, 2),
             ];
         });
-    
-        // Підрахунок загального прибутку, витрат і чистого прибутку
+
+        // Підрахунок загальних значень
         $totalIncome = $data->sum('total_amount');
         $totalExpenses = $data->sum('expenses');
         $totalNetIncome = $data->sum('net_income');
-    
+
         return response()->json([
             'data' => $data,
             'summary' => [
@@ -372,10 +381,9 @@ class StatsController extends Controller
                 'total_expenses' => round($totalExpenses, 2),
                 'total_net_income' => round($totalNetIncome, 2),
             ],
+            'currency' => $currency,
             'start' => $start->toDateTimeString(),
             'end' => $end->toDateTimeString(),
         ]);
     }
-    
-    
 }

@@ -9,16 +9,20 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Wishlist;
 use App\Services\Cart\CartService;
+use App\Services\ExchangeRateService;
 use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
     private $cart_service;
+    private $exchange_rate_service;
 
-    public function __construct(CartService $cart_service)
+
+    public function __construct(CartService $cart_service,  ExchangeRateService $exchange_rate_service)
     {
         $this->cart_service = $cart_service;
+        $this->exchange_rate_service = $exchange_rate_service;
     }
 
     /**
@@ -74,6 +78,9 @@ class CartController extends Controller
         //Get wishlist for authenticated user
         $cart = $request->user()->cart()->firstOrCreate([]);
         $products = $cart->products;
+        
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+        CartProductResource::setCurrency($currency, $rate);
 
         return response()->json([
             'message' => 'Cart products retrieved successfully.',
