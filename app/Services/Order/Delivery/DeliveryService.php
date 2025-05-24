@@ -3,6 +3,8 @@
 namespace App\Services\Order\Delivery;
 
 use App\Models\ProductDescription;
+use App\Services\ExchangeRateService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class DeliveryService
@@ -10,15 +12,17 @@ class DeliveryService
     private string $apiKey;
     private string $cityCender;
     private NovaPoshtaService $novaPoshtaService; 
+    private $exchange_rate_service;
 
-    public function __construct(NovaPoshtaService $novaPoshtaService)
+    public function __construct(NovaPoshtaService $novaPoshtaService, ExchangeRateService $exchange_rate_service)
     {
         $this->novaPoshtaService = $novaPoshtaService;
+        $this->exchange_rate_service = $exchange_rate_service;
         $this->apiKey = env('NOVAPOSHTA_API_KEY');
         $this->cityCender = env('NOVAPOSHTA_CITY_SENDER');
     }
 
-    public function calculateCost(string $cityRecipient, array $productIds, string $serviceType): array
+    public function calculateCost(string $cityRecipient, array $productIds, string $serviceType, Request $request): array
     {
         $products = ProductDescription::whereIn('id', $productIds)->get();
 
@@ -40,12 +44,15 @@ class DeliveryService
         ]);
         $result = $response->json();
 
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+
         //Return data
         if (isset($result['success']) && $result['success']) {
             return [
                 'success' => true,
                 'data' => [
-                    'cost' => $result['data'][0]['Cost'],
+                    'cost' => round($result['data'][0]['Cost'] / $rate, 2),
+                    'currency' => $currency,
                 ],
             ];
         }

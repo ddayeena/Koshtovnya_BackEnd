@@ -110,7 +110,8 @@ class NovaPoshtaController extends Controller
         $result = $this->deliveryService->calculateCost(
             $validated['CityRecipient'],
             $validated['product_ids'],
-            $validated['ServiceType']
+            $validated['ServiceType'],
+            $request
         );
 
         //Return data

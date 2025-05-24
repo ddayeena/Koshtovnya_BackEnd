@@ -9,34 +9,46 @@ use App\Mail\OrderDetailsMail;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Services\ExchangeRateService;
 use App\Services\Order\Payment\LiqPayService;
 use Illuminate\Support\Facades\Mail;
 
 class PaymentController extends Controller
 {
     protected $liqPayService;
+    private $exchange_rate_service;
 
-    public function __construct(LiqPayService $liqPayService)
+
+    public function __construct(LiqPayService $liqPayService , ExchangeRateService $exchange_rate_service)
     {
         $this->liqPayService = $liqPayService;
+        $this->exchange_rate_service = $exchange_rate_service;
     }
 
     public function createPayment(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'order_id' => 'required|numeric|min:1',
             'description' => 'required|string',
+            'currency' => 'in:usd,uah'
         ]);
     
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+    
+        if ($currency === 'usd') {
+            $validated['amount'] = round($validated['amount'] * $rate, 2);
+        }
+    
         $form = $this->liqPayService->createPayment(
-            $request->amount,
-            $request->order_id,
-            $request->description
+            $validated['amount'],
+            $validated['order_id'],
+            $validated['description']
         );
     
         return response()->json(['form' => $form]);
     }
+    
     public function callback(Request $request)
     {
         Log::info('LiqPay Callback received', $request->all());  

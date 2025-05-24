@@ -32,6 +32,7 @@ class OrderRequest extends FormRequest
             'payment_method' => 'required|in:Післяоплата,Оплата картою,Передоплата',
             'delivery_cost' => 'required|numeric|min:0',
             'cart_cost' => 'required|numeric|min:0',
+            'currency' => 'in:usd,uah'
         ];
     }
 }

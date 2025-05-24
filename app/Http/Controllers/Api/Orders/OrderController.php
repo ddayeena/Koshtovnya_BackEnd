@@ -97,6 +97,11 @@ class OrderController extends Controller
     {
         $data = $request->validated();
 
+        $currencyData = $this->exchange_rate_service->resolveCurrencyData($request); 
+        
+        $data['currency'] = $currencyData['currency'];
+        $data['rate'] = $currencyData['rate'];
+
         try {
             // Process order
             $result = $this->orderService->processOrder($data, $request->user());
