@@ -13,12 +13,23 @@ class ProductDescriptionResource extends JsonResource
      *
      * @return array<string, mixed>
      */
+
+    protected static $currency = 'uah';
+    protected static $rate = 1;
+
+    public static function setCurrency(string $currency, float $rate): void
+    {
+        self::$currency = $currency;
+        self::$rate = $rate;
+    }
+
     public function toArray(Request $request): array
     {
         return [
             'id' => optional($this->product)->id,
             'name' => optional($this->product)->name,
-            'price' => optional($this->product)->price,
+            'price' => round(optional($this->product)->price / self::$rate, 2),
+            'currency' => self::$currency,
             'image_url' => optional($this->product)->image_url,
             'country_of_manufacture' => $this->country_of_manufacture,
             'material' => 'Бісер',
@@ -65,5 +76,4 @@ class ProductDescriptionResource extends JsonResource
             ->unique() // Видаляє повторювані значення
             ->values(); // Перевпорядковує індекси колекції
     }
-    
 }

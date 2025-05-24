@@ -46,7 +46,9 @@ class FilterRequest extends FormRequest
             'rating.*' => 'in:1,2,3,4,5',
 
             'is_deleted' => 'nullable|array',
-            'is_deleted.*' => 'nullable|in:0,1'
+            'is_deleted.*' => 'nullable|in:0,1',
+
+            'currency' => 'in:usd,uah'
         ];
     }
 }

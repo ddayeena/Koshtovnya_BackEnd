@@ -16,6 +16,7 @@ use App\Models\Fitting;
 use App\Models\Material;
 use App\Models\Product;
 use App\Models\Review;
+use App\Services\ExchangeRateService;
 use App\Services\Product\ProductFilterService;
 use App\Services\Product\ProductService;
 use App\Services\User\UserService;
@@ -27,12 +28,18 @@ class ProductController extends Controller
     private $product_service;
     private $user_service;
     private $product_filter_service;
+    private $exchange_rate_service;
 
-    public function __construct(ProductService $product_service, UserService $user_service, ProductFilterService $product_filter_service)
-    {
+    public function __construct(
+        ProductService $product_service,
+        UserService $user_service,
+        ProductFilterService $product_filter_service,
+        ExchangeRateService $exchange_rate_service
+    ) {
         $this->product_service = $product_service;
         $this->user_service = $user_service;
         $this->product_filter_service = $product_filter_service;
+        $this->exchange_rate_service = $exchange_rate_service;
     }
 
     /**
@@ -53,6 +60,12 @@ class ProductController extends Controller
             ->loadCount('reviews')
             ->loadAvg('reviews', 'rating');
 
+        $currency = $request->input('currency', 'uah');
+        $rate = 1;
+
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+        ProductResource::setCurrency($currency, $rate);
+
         return ProductResource::collection($products);
     }
 
@@ -60,7 +73,7 @@ class ProductController extends Controller
     //get filter fields
     public function filter(Request $request)
     {
-        $categoryId = $request->query('category_id'); 
+        $categoryId = $request->query('category_id');
         return $this->product_filter_service->getFilter($categoryId);
     }
     //display popular products
@@ -79,6 +92,9 @@ class ProductController extends Controller
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
 
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+        ProductResource::setCurrency($currency, $rate);
+
         return ProductResource::collection($products);
     }
 
@@ -95,6 +111,9 @@ class ProductController extends Controller
             ->loadAvg('reviews', 'rating');
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
+
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+        ProductResource::setCurrency($currency, $rate);
 
         return ProductResource::collection($products);
     }
@@ -115,6 +134,9 @@ class ProductController extends Controller
 
         $products->loadCount('reviews')
             ->loadAvg('reviews', 'rating');
+
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+        ProductResource::setCurrency($currency, $rate);
 
         return ProductResource::collection($products);
     }
@@ -182,7 +204,7 @@ class ProductController extends Controller
 
         if ($product->trashed()) {
             if ($request->isAdminPanel) {
-                return $this->showTrashed($id);
+                return $this->showTrashed($id, $request);
             } else {
                 return response()->json(['message' => 'Product not found'], 404);
             }
@@ -210,15 +232,18 @@ class ProductController extends Controller
 
         $product->productDescription->ratings_breakdown = $fullBreakdown;
 
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
 
         if ($request->isAdminPanel) {
+            AdminProductDescriptionResource::setCurrency($currency, $rate);
             return AdminProductDescriptionResource::make($product->productDescription);
         }
+        ProductDescriptionResource::setCurrency($currency, $rate);
         return ProductDescriptionResource::make($product->productDescription);
     }
 
 
-    public function showTrashed(string $id)
+    public function showTrashed(string $id, Request $request)
     {
         $product = Product::withTrashed()
             ->with([
@@ -256,12 +281,15 @@ class ProductController extends Controller
         $averageRating = (float) $product->reviews->avg('rating');
         $reviewCount = $product->reviews->count();
 
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+
         return response()->json([
             'data' => [
                 'id' => $product->id,
                 'name' => $product->name,
                 'category' => $product->productDescription->category->name,
-                'price' => $product->price,
+                'price' => round($product->price / $rate, 2),
+                'currency' => $currency,
                 'image_url' => $product->image_url,
                 'country_of_manufacture' =>  $product->productDescription->country_of_manufacture,
                 'material' => 'Бісер',
