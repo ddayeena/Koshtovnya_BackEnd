@@ -10,14 +10,18 @@ use App\Models\Product;
 use App\Models\ProductDescription;
 use App\Models\ProductVariant;
 use App\Models\Review;
+use App\Services\ExchangeRateService;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductFilterService
 {
     private $productService;
+    private $exchange_rate_service;
 
-    public function __construct(ProductService $productService)
+    public function __construct(ProductService $productService, ExchangeRateService $exchange_rate_service)
     {
         $this->productService = $productService;
+        $this->exchange_rate_service = $exchange_rate_service;
     }
 
     //Return filtered products
@@ -26,7 +30,7 @@ class ProductFilterService
         // Create filter
         $filter = app()->make(ProductFilter::class, ['params' => $filters]);
 
-        if ($products instanceof \Illuminate\Database\Eloquent\Builder) {
+        if ($products instanceof Builder) {
             $productQuery = $products;
         } else {
             $productQuery = Product::query();
@@ -59,7 +63,7 @@ class ProductFilterService
 
 
     //Return filter
-    public function getFilter($categoryId = null)
+    public function getFilter($categoryId = null, $currency = 'uah')
     {
         return [
             'Доступність' => $this->getAvailabilityFilter($categoryId),
@@ -68,7 +72,7 @@ class ProductFilterService
             'Тип бісеру' => $this->getTypeOfBeadFilter($categoryId),
             'Виробник бісеру' => $this->getBeadProducerFilter($categoryId),
             'Вага' => $this->getWeightFilter($categoryId),
-            'Ціна' => $this->getPriceFilter($categoryId),
+            'Ціна' => $this->getPriceFilter($categoryId, $currency),
             'Рейтинг' => $this->getRatingFilter($categoryId),
             'Категорія' => $this->getCategory(),
             'Статус' => $this->getDeletedFilter($categoryId)
@@ -172,19 +176,30 @@ class ProductFilterService
 
 
     //Price filter
-    private function getPriceFilter($categoryId = null)
+    private function getPriceFilter($categoryId = null, $currency = 'uah')
     {
         $query = Product::query();
-
+    
         if ($categoryId) {
             $query->whereHas('productDescription', fn($q) => $q->where('category_id', $categoryId));
         }
-
+    
+        $min = $query->min('price');
+        $max = $query->max('price');
+    
+        if ($currency === 'usd') {
+            $rate = $this->exchange_rate_service->getUsdRate(); 
+            $min = round($min / $rate, 2);
+            $max = round($max / $rate, 2);
+        }
+    
         return [
-            'min' => $query->min('price'),
-            'max' => $query->max('price'),
+            'min' => (string)$min,
+            'max' => (string)$max,
+            'currency' => $currency,
         ];
     }
+    
 
 
     //Category filter

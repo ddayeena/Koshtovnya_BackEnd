@@ -48,31 +48,46 @@ class ProductController extends Controller
     public function index(FilterRequest $request)
     {
         $user = $this->user_service->getUserFromRequest($request);
-
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+    
+        $filters = $request->validated();
+    
+        if ($currency === 'usd') {
+            if (isset($filters['price_from'])) {
+                $filters['price_from'] = round($filters['price_from'] * $rate, 2);
+            }
+    
+            if (isset($filters['price_to'])) {
+                $filters['price_to'] = round($filters['price_to'] * $rate, 2);
+            }
+        }
+    
         $products = $this->product_filter_service->getFilteredProducts(
-            $request->validated(),
+            $filters,
             $user,
             $request->isAdminPanel
         );
-
-        // Завантажуємо рейтинг і кількість відгуків для кожного товару
+    
         $products->load(['productDescription'])
             ->loadCount('reviews')
             ->loadAvg('reviews', 'rating');
-
-        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+    
         ProductResource::setCurrency($currency, $rate);
-
+    
         return ProductResource::collection($products);
     }
+    
 
 
     //get filter fields
     public function filter(Request $request)
     {
         $categoryId = $request->query('category_id');
-        return $this->product_filter_service->getFilter($categoryId);
+        $currency = $request->query('currency', 'uah');
+
+        return $this->product_filter_service->getFilter($categoryId, $currency);
     }
+
     //display popular products
     public function popular(Request $request)
     {
@@ -119,24 +134,40 @@ class ProductController extends Controller
     public function productsByCategory(FilterRequest $request, int $id)
     {
         $user = $this->user_service->getUserFromRequest($request);
-
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+    
+        $filters = $request->validated();
+        if ($currency === 'usd') {
+            if (isset($filters['price_from'])) {
+                $filters['price_from'] = $filters['price_from'] * $rate;
+            }
+            if (isset($filters['price_to'])) {
+                $filters['price_to'] = $filters['price_to'] * $rate;
+            }
+        }
+    
         $productQuery = Product::whereHas('productDescription', function ($query) use ($id) {
             $query->where('category_id', $id);
         })->with('productDescription');
-
-        $products = $this->product_filter_service->getFilteredProducts($request->validated(), $user, false, $productQuery);
-
+    
+        $products = $this->product_filter_service->getFilteredProducts(
+            $filters,
+            $user,
+            false,
+            $productQuery
+        );
+    
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
-
+    
         $products->loadCount('reviews')
             ->loadAvg('reviews', 'rating');
-
-        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+    
         ProductResource::setCurrency($currency, $rate);
-
+    
         return ProductResource::collection($products);
     }
+    
 
     //display products by name
     public function search(Request $request, string $name)
