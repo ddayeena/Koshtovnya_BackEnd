@@ -8,6 +8,7 @@ use App\Http\Requests\User\UpdateRequest;
 use App\Http\Resources\UserProfileResource;
 use App\Http\Resources\UserResource;
 use App\Mail\AdminInvitation;
+use App\Mail\BanMail;
 use App\Mail\UserInvitation;
 use App\Mail\WelcomeMail;
 use App\Models\Cart;
@@ -30,38 +31,38 @@ class UserController extends Controller
     {
         $query = User::query();
         $role = $request->get('role');
-    
+
         //Get role
         if ($role === 'employee') {
             $query->whereIn('role', ['admin', 'superadmin', 'manager']);
         } elseif (in_array($role, ['admin', 'manager', 'superadmin', 'user'])) {
             $query->where('role', $role);
         }
-    
+
         $this->authorize('viewAny', [User::class, $role]);
-    
+
         //Sort
         $query = $userService->applySorting($query, $role, $request->get('sort_by'), $request->get('sort_order', 'asc'));
-    
+
         return UserResource::collection($query->paginate(10));
     }
-        
+
     //search users 
     public function search(Request $request, string $name)
     {
-        if($request->role === 'employee' && $request->user()->role === 'manager'){
+        if ($request->role === 'employee' && $request->user()->role === 'manager') {
             return response()->json(['message' => 'Access denied'], 403);
         }
         // Search users
         $query = User::where(function ($query) use ($name) {
-            $query->where('id', $name)  
-                ->orWhere('first_name', 'LIKE', "%{$name}%")  
-                ->orWhere('second_name', 'LIKE', "%{$name}%")  
+            $query->where('id', $name)
+                ->orWhere('first_name', 'LIKE', "%{$name}%")
+                ->orWhere('second_name', 'LIKE', "%{$name}%")
                 ->orWhere('last_name', 'LIKE', "%{$name}%")
-                ->orWhere('phone_number', 'LIKE', "%{$name}%")  
-                ->orWhere('email', 'LIKE', "%{$name}%"); 
+                ->orWhere('phone_number', 'LIKE', "%{$name}%")
+                ->orWhere('email', 'LIKE', "%{$name}%");
         });
-        
+
 
         //Filter by type
         if ($request->has('role')) {
@@ -126,18 +127,18 @@ class UserController extends Controller
         $authUser = $request->user();
         $user = User::findOrFail($id);
         $newRole = $request->input('role');
-    
+
         if (!$authUser->can('update', [$user, $newRole])) {
             return response()->json(['message' => 'Access denied'], 403);
         }
-    
+
         if ($request->has('role')) {
             $user->role = $newRole;
         }
-    
+
         return $this->performUpdate($user, $request);
     }
-    
+
     private function performUpdate(User $user, UpdateRequest $request)
     {
         $data = array_filter($request->validated(), function ($value) {
@@ -223,5 +224,34 @@ class UserController extends Controller
             'token' => $token,
             'user' => $user,
         ], 201);
+    }
+
+    public function ban(string $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->access = 0;
+        $user->is_permanently_banned = 1; 
+        $user->save();
+
+        $user->tokens()->delete();
+
+        Mail::to($user->email)->send(new BanMail($user));
+
+        return response()->json(['message' => 'User is banned.']);
+    }
+
+    public function unban(string $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->access = 1;
+        $user->banned_until = null;
+        $user->is_permanently_banned = false;
+        $user->was_banned_before = true;
+
+        $user->save();
+
+        return response()->json(['message' => 'User is unbanned.']);
     }
 }

@@ -157,6 +157,8 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::post('/admin/categories', [CategoryController::class, 'store']); // Add new category
     Route::delete('/admin/categories/{id}', [CategoryController::class, 'destroy']); // Delete category
     Route::patch('/admin/categories/{id}', [CategoryController::class, 'update']); // Update category
+    Route::post('/admin/users/{id}/ban', [UserController::class, 'ban']);
+    Route::post('/admin/users/{id}/unban', [UserController::class, 'unban']);
 });
 
 Route::get('/run-migrations', function () {
