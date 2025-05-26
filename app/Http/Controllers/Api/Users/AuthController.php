@@ -36,6 +36,10 @@ class AuthController extends Controller
             return response()->json(['message' => 'Please verify your email address first.'], 403);
         }
 
+        if(!$user->access){
+            return response()->json(['message' => 'You are banned from using this website.'],403);
+        }
+
         // Create a token if the email is verified
         $token = $user->createToken('auth_token')->plainTextToken;
 

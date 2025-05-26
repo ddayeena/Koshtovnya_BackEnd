@@ -47,6 +47,10 @@ class GoogleAuthController extends Controller
         
             Mail::to($user->email)->send(new WelcomeMail($user));
         }
+
+        if (!$user->access) {
+            return redirect()->away("https://koshtovnya-front-end-33rd.vercel.app/login?error=" . urlencode("Your account has been banned."));
+        }
         
         Auth::login($user);        
 
