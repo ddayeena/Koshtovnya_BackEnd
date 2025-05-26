@@ -36,6 +36,12 @@ class AuthController extends Controller
             return response()->json(['message' => 'Please verify your email address first.'], 403);
         }
 
+        if (!$user->is_permanently_banned && $user->banned_until && now()->greaterThanOrEqualTo($user->banned_until)) {
+            $user->banned_until = null;
+            $user->access = 1;
+            $user->save();
+        }
+
         if(!$user->access){
             return response()->json(['message' => 'You are banned from using this website.'],403);
         }

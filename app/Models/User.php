@@ -55,6 +55,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'banned_until' => 'datetime',
     ];
 
     public function wishlist()
