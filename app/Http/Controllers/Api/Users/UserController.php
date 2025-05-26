@@ -238,6 +238,10 @@ class UserController extends Controller
 
         Mail::to($user->email)->send(new BanMail($user));
 
+        if($user->role !== 'user'){
+            $user->role = 'user';
+        }
+
         return response()->json(['message' => 'User is banned.']);
     }
 
