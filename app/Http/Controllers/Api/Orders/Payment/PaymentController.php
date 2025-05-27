@@ -34,17 +34,13 @@ class PaymentController extends Controller
             'currency' => 'in:usd,uah'
         ]);
     
-        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
-    
-        if ($currency === 'usd') {
-            $validated['amount'] = round($validated['amount'] * $rate, 2);
-        }
-    
         $form = $this->liqPayService->createPayment(
             $validated['amount'],
             $validated['order_id'],
-            $validated['description']
+            $validated['description'],
+            $validated['currency'],
         );
+        
     
         return response()->json(['form' => $form]);
     }

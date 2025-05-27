@@ -33,8 +33,8 @@ class OrderService
             // Якщо валюта usd — конвертуємо в гривні
             if ($currency === 'usd') {
                 $rate = $data['rate']; 
-                $data['delivery_cost'] = round($data['delivery_cost'] * $rate, 2);
-                $data['cart_cost'] = round($data['cart_cost'] * $rate, 2);
+                $data['delivery_cost'] = round($data['delivery_cost'] * $rate);
+                $data['cart_cost'] = round($data['cart_cost'] * $rate);
                 
             }
             
