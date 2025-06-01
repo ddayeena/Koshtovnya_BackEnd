@@ -23,6 +23,7 @@ class UserResource extends JsonResource
             "phone_number" => $this->phone_number,
             "role" => $this->role,
             'date' => $this->created_at->translatedFormat('d.m.Y'),
+            'is_banned'=>$this->access === 0,
             'order_id' => optional($this->orders->last())->id
         ];            
     }
