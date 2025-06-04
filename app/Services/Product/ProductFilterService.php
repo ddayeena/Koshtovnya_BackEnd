@@ -63,7 +63,7 @@ class ProductFilterService
 
 
     //Return filter
-    public function getFilter($categoryId = null, $currency = 'uah')
+    public function getFilter($categoryId = null, $currency = 'uah', $locale = 'uk')
     {
         return [
             'Доступність' => $this->getAvailabilityFilter($categoryId),
@@ -74,7 +74,7 @@ class ProductFilterService
             'Вага' => $this->getWeightFilter($categoryId),
             'Ціна' => $this->getPriceFilter($categoryId, $currency),
             'Рейтинг' => $this->getRatingFilter($categoryId),
-            'Категорія' => $this->getCategory(),
+            'Категорія' => $this->getCategory($locale),
             'Статус' => $this->getDeletedFilter($categoryId)
         ];
     }
@@ -203,10 +203,19 @@ class ProductFilterService
 
 
     //Category filter
-    private function getCategory()
+    private function getCategory($locale = 'ukr')
     {
-        return Category::withCount('productDescriptions')->pluck('name');
+        return Category::with(['translations' => function ($query) use ($locale) {
+            $query->where('locale', $locale);
+        }])
+        ->withCount('productDescriptions')
+        ->get()
+        ->map(function ($category) use ($locale) {
+            $translation = $category->translations->first();
+            return $translation ? $translation->name : $category->name;
+        });
     }
+    
 
     private function getRatingFilter($categoryId = null)
     {

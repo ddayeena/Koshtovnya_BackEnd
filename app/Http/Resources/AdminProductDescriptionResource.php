@@ -28,7 +28,7 @@ class AdminProductDescriptionResource extends JsonResource
         return [
             'id' => optional($this->product)->id,
             'name' => optional($this->product)->name,
-            'category' => $this->category->name,
+            'category' => $this->category->translated_name,
             'price' => number_format(optional($this->product)->price / self::$rate, 2, '.', ''),
             'currency' => self::$currency,
             'image_url' => optional($this->product)->image_url,

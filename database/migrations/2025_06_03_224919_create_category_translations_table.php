@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('expenses', function (Blueprint $table) {
+        Schema::create('category_translations', function (Blueprint $table) {
             $table->id();
-            $table->string('type_of_expense',100);
-            $table->string('description',100);
-            $table->float('cost');
-            $table->timestamps();
+            $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->enum('locale', ['uk', 'en']);
+            $table->string('name', 100);
+            $table->unique(['category_id', 'locale']); 
         });
+         
     }
 
     /**
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('expenses');
+        Schema::dropIfExists('category_translations');
     }
 };

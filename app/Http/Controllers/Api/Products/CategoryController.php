@@ -15,9 +15,13 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::all();
-        return CategoryResource::collection($categories);
+        $locale = request('lang', app()->getLocale());
+    
+        $categories = Category::with('translations')->get();
+    
+        return CategoryResource::collection($categories)->additional(['locale' => $locale]);
     }
+    
 
     public function destroy(string $id){
         $category = Category::findOrFail($id);
@@ -36,15 +40,27 @@ class CategoryController extends Controller
     {
         $data = $request->validate([
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'name' => 'nullable|string|max:100'
+            'name_uk' => 'nullable|string|max:100',
+            'name_en' => 'nullable|string|max:100'
         ]); 
 
         $category = Category::findOrFail($id);
 
         //Update data
-        if (isset($data['name'])) {
-            $category->name = $data['name'];
+        if (isset($data['name_uk'])) {
+            $category->translations()->updateOrCreate(
+                ['locale' => 'uk'],
+                ['name' => $data['name_uk']]
+            );
         }
+    
+        if (isset($data['name_en'])) {
+            $category->translations()->updateOrCreate(
+                ['locale' => 'en'],
+                ['name' => $data['name_en']]
+            );
+        }
+
         if (isset($data['image'])) {
             //Delete old image
             if ($category->image_public_id) {
@@ -62,7 +78,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'message' => 'Category updated succeefully.',
-            'category' => CategoryResource::make($category)
+            'category' => CategoryResource::make($category->load('translations'))
         ]);
     }
 
@@ -70,22 +86,34 @@ class CategoryController extends Controller
     {
         $data = $request->validate([
             'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'name' => 'required|string|max:100'
+            'name_uk' => 'required|string|max:100',
+            'name_en' => 'required|string|max:100',
         ]);
-
+    
         $imageData = $this->uploadImage($data['image']);
-
+    
         $category = Category::create([
-            'name' => $data['name'],
             'image_url' => $imageData['url'],
             'image_public_id' => $imageData['public_id']
         ]);
-
+    
+        $category->translations()->createMany([
+            [
+                'locale' => 'uk',
+                'name' => $data['name_uk'],
+            ],
+            [
+                'locale' => 'en',
+                'name' => $data['name_en'],
+            ],
+        ]);
+    
         return response()->json([
             'message' => 'Category added successfully.',
-            'category' => $category
+            'category' => $category->load('translations'),
         ]);
     }
+    
 
 
     //Upload image on cloudinary

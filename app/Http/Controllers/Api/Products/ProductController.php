@@ -21,6 +21,7 @@ use App\Services\Product\ProductFilterService;
 use App\Services\Product\ProductService;
 use App\Services\User\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
@@ -84,8 +85,10 @@ class ProductController extends Controller
     {
         $categoryId = $request->query('category_id');
         $currency = $request->query('currency', 'uah');
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
 
-        return $this->product_filter_service->getFilter($categoryId, $currency);
+        return $this->product_filter_service->getFilter($categoryId, $currency, $locale);
     }
 
     //display popular products
@@ -231,6 +234,9 @@ class ProductController extends Controller
     public function show(Request $request, string $id)
     {
         $user = $this->user_service->getUserFromRequest($request);
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $product = Product::withTrashed()->find($id);
 
         if ($product->trashed()) {
@@ -318,7 +324,7 @@ class ProductController extends Controller
             'data' => [
                 'id' => $product->id,
                 'name' => $product->name,
-                'category' => $product->productDescription->category->name,
+                'category' => $product->productDescription->category->translated_name,
                 'price' => round($product->price / $rate, 2),
                 'currency' => $currency,
                 'image_url' => $product->image_url,
