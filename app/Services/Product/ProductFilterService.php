@@ -27,6 +27,7 @@ class ProductFilterService
     //Return filtered products
     public function getFilteredProducts(array $filters, $user, $isAdminPanel, $products = null)
     {
+
         // Create filter
         $filter = app()->make(ProductFilter::class, ['params' => $filters]);
 

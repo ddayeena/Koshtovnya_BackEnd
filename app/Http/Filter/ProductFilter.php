@@ -39,6 +39,15 @@ class ProductFilter extends AbstractFilter
         ];
     }
 
+    public function category(Builder $builder, $value)
+    {
+        $builder->whereHas('productDescription', function ($query) use ($value) {
+            $query->withTrashed()->whereHas('category.translations', function ($query) use ($value) {
+                $query->whereIn('name', (array) $value);
+            });
+        });
+    }
+    
     public function isAvailable(Builder $builder, $value)
     {
         if (in_array(0, (array)$value)) {
@@ -67,8 +76,6 @@ class ProductFilter extends AbstractFilter
             $builder->whereNull('deleted_at');
         }
     }
-    
-    
 
     public function sizeFrom(Builder $builder, $value)
     {
@@ -89,16 +96,6 @@ class ProductFilter extends AbstractFilter
     {
         $builder->whereHas('colors', function ($query) use ($value) {
             $query->where('color_name', $value);
-        });
-    }
-
-
-    public function category(Builder $builder, $value)
-    {
-        $builder->whereHas('productDescription', function ($query) use ($value) {
-            $query->withTrashed()->whereHas('category', function ($query) use ($value) {
-                $query->whereIn('name', (array) $value);
-            });
         });
     }
 

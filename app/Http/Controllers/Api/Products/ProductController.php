@@ -78,8 +78,6 @@ class ProductController extends Controller
         return ProductResource::collection($products);
     }
     
-
-
     //get filter fields
     public function filter(Request $request)
     {

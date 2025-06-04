@@ -40,7 +40,7 @@ class FilterRequest extends FormRequest
             'price_to' => 'nullable|numeric|min:0|gte:price_from',
 
             'category' => 'nullable|array',
-            'category.*' => 'exists:categories,name',
+            'category.*' => 'exists:category_translations,name',
 
             'rating' => 'nullable|array',
             'rating.*' => 'in:1,2,3,4,5',
