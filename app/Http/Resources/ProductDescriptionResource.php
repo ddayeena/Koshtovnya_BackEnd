@@ -37,7 +37,9 @@ class ProductDescriptionResource extends JsonResource
             'type_of_bead' => $this->type_of_bead,
             'weight' => $this->weight,
             'variants' => $this->productVariants(),
-            'colors' => optional($this->product)->colors->pluck('color_name'),
+            'colors' => optional($this->product)->colors->map(function ($color) {
+                return optional($color->translation())->color_name;
+            })->filter()->values(),
             'bead_producer_name' => optional($this->beadProducer)->origin_country,
             'is_in_wishlist' => $this->is_in_wishlist ?? false,
             'is_in_cart' => $this->is_in_cart ?? false,

@@ -201,11 +201,22 @@ class ProductController extends Controller
     }
 
     //Returns data required when creating a product
-    public function formData()
+    public function formData(Request $request)
     {
-        $categories = Category::pluck('name');
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
+        $categories = Category::with(['translations' => function ($query) use ($locale) {
+            $query->where('locale', $locale);
+        }])
+            ->withCount('productDescriptions')
+            ->get()
+            ->map(function ($category) use ($locale) {
+                $translation = $category->translations->first();
+                return $translation ? $translation->name : $category->name;
+            });
         $bead_producers = BeadProducer::pluck('origin_country');
-        $colors = Color::pluck('color_name');
+        $colors = Color::getNamesByLocale($locale);
         $fittings = Fitting::pluck('name');
         $materials = Material::pluck('name');
         $type_of_bead = ['Матовий', 'Прозорий'];
@@ -235,7 +246,10 @@ class ProductController extends Controller
         $locale = request('lang', app()->getLocale());
         App::setLocale($locale);
 
-        $product = Product::withTrashed()->find($id);
+        $product = Product::withTrashed()
+        ->with(['colors.translations']) // завантажує переклади кольорів
+        ->find($id);
+    
 
         if ($product->trashed()) {
             if ($request->isAdminPanel) {

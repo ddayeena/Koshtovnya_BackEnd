@@ -6,6 +6,7 @@ use App\Http\Filter\ProductFilter;
 use App\Models\BeadProducer;
 use App\Models\Category;
 use App\Models\Color;
+use App\Models\ColorTranslation;
 use App\Models\Product;
 use App\Models\ProductDescription;
 use App\Models\ProductVariant;
@@ -69,7 +70,7 @@ class ProductFilterService
         return [
             'Доступність' => $this->getAvailabilityFilter($categoryId),
             'Розмір' => $this->getSizeFilter($categoryId),
-            'Колір' => $this->getColorFilter($categoryId),
+            'Колір' => $this->getColorFilter($categoryId, $locale),
             'Тип бісеру' => $this->getTypeOfBeadFilter($categoryId),
             'Виробник бісеру' => $this->getBeadProducerFilter($categoryId),
             'Вага' => $this->getWeightFilter($categoryId),
@@ -121,9 +122,23 @@ class ProductFilterService
 
 
     // Color filter
-    private function getColorFilter()
+    private function getColorFilter($categoryId, $locale = 'uk')
+    {       
+        return Color::getNamesByLocale($locale);
+    }
+
+    //Category filter
+    private function getCategory($locale = 'uk')
     {
-        return Color::pluck('color_name');
+        return Category::with(['translations' => function ($query) use ($locale) {
+            $query->where('locale', $locale);
+        }])
+            ->withCount('productDescriptions')
+            ->get()
+            ->map(function ($category) use ($locale) {
+                $translation = $category->translations->first();
+                return $translation ? $translation->name : $category->name;
+            });
     }
 
     // Type of bead filter
@@ -180,43 +195,26 @@ class ProductFilterService
     private function getPriceFilter($categoryId = null, $currency = 'uah')
     {
         $query = Product::query();
-    
+
         if ($categoryId) {
             $query->whereHas('productDescription', fn($q) => $q->where('category_id', $categoryId));
         }
-    
+
         $min = $query->min('price');
         $max = $query->max('price');
-    
+
         if ($currency === 'usd') {
-            $rate = $this->exchange_rate_service->getUsdRate(); 
+            $rate = $this->exchange_rate_service->getUsdRate();
             $min = round($min / $rate, 2);
             $max = round($max / $rate, 2);
         }
-    
+
         return [
             'min' => (string)$min,
             'max' => (string)$max,
             'currency' => $currency,
         ];
     }
-    
-
-
-    //Category filter
-    private function getCategory($locale = 'ukr')
-    {
-        return Category::with(['translations' => function ($query) use ($locale) {
-            $query->where('locale', $locale);
-        }])
-        ->withCount('productDescriptions')
-        ->get()
-        ->map(function ($category) use ($locale) {
-            $translation = $category->translations->first();
-            return $translation ? $translation->name : $category->name;
-        });
-    }
-    
 
     private function getRatingFilter($categoryId = null)
     {
@@ -256,16 +254,15 @@ class ProductFilterService
     {
         $deletedQuery = Product::onlyTrashed();
         $activeQuery = Product::whereNull('deleted_at');
-    
+
         if ($categoryId) {
             $deletedQuery->whereHas('productDescription', fn($q) => $q->where('category_id', $categoryId));
             $activeQuery->whereHas('productDescription', fn($q) => $q->where('category_id', $categoryId));
         }
-    
+
         return [
             ['name' => 'Видалено', 'count' => $deletedQuery->count()],
             ['name' => 'Не видалено', 'count' => $activeQuery->count()],
         ];
     }
-    
 }

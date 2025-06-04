@@ -94,7 +94,7 @@ class ProductFilter extends AbstractFilter
 
     public function color(Builder $builder, $value)
     {
-        $builder->whereHas('colors', function ($query) use ($value) {
+        $builder->whereHas('colors.translations', function ($query) use ($value) {
             $query->where('color_name', $value);
         });
     }
