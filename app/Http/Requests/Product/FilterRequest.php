@@ -31,7 +31,7 @@ class FilterRequest extends FormRequest
             'type_of_bead' => 'nullable|array',
 
             'bead_producer' => 'nullable|array',
-            'bead_producer.*' => 'exists:bead_producers,origin_country',
+            'bead_producer.*' => 'exists:bead_producer_translations,origin_country',
 
             'weight_from' => 'nullable|numeric|min:0',
             'weight_to' => 'nullable|numeric|min:0|gte:weight_from',

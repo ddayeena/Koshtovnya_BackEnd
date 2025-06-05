@@ -48,36 +48,39 @@ class ProductController extends Controller
      */
     public function index(FilterRequest $request)
     {
+
         $user = $this->user_service->getUserFromRequest($request);
         ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
-    
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $filters = $request->validated();
-    
+
         if ($currency === 'usd') {
             if (isset($filters['price_from'])) {
                 $filters['price_from'] = round($filters['price_from'] * $rate, 2);
             }
-    
+
             if (isset($filters['price_to'])) {
                 $filters['price_to'] = round($filters['price_to'] * $rate, 2);
             }
         }
-    
+
         $products = $this->product_filter_service->getFilteredProducts(
             $filters,
             $user,
             $request->isAdminPanel
         );
-    
+
         $products->load(['productDescription'])
             ->loadCount('reviews')
             ->loadAvg('reviews', 'rating');
-    
+
         ProductResource::setCurrency($currency, $rate);
-    
+
         return ProductResource::collection($products);
     }
-    
+
     //get filter fields
     public function filter(Request $request)
     {
@@ -93,6 +96,9 @@ class ProductController extends Controller
     public function popular(Request $request)
     {
         $user = $this->user_service->getUserFromRequest($request);
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $products = Product::with('productDescription')
             ->withCount('orders')
             ->orderBy('orders_count', 'desc')
@@ -114,6 +120,9 @@ class ProductController extends Controller
     public function newArrivals(Request $request)
     {
         $user = $this->user_service->getUserFromRequest($request);
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $products = Product::with('productDescription')
             ->withCount('orders')
             ->orderBy('created_at', 'desc')
@@ -136,7 +145,10 @@ class ProductController extends Controller
     {
         $user = $this->user_service->getUserFromRequest($request);
         ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
-    
+
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $filters = $request->validated();
         if ($currency === 'usd') {
             if (isset($filters['price_from'])) {
@@ -146,33 +158,36 @@ class ProductController extends Controller
                 $filters['price_to'] = $filters['price_to'] * $rate;
             }
         }
-    
+
         $productQuery = Product::whereHas('productDescription', function ($query) use ($id) {
             $query->where('category_id', $id);
         })->with('productDescription');
-    
+
         $products = $this->product_filter_service->getFilteredProducts(
             $filters,
             $user,
             false,
             $productQuery
         );
-    
+
         $products = $this->product_service->attachWishlistInfo($products, $user);
         $products = $this->product_service->attachCartInfo($products, $user);
-    
+
         $products->loadCount('reviews')
             ->loadAvg('reviews', 'rating');
-    
+
         ProductResource::setCurrency($currency, $rate);
-    
+
         return ProductResource::collection($products);
     }
-    
+
 
     //display products by name
     public function search(Request $request, string $name)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $products = Product::where('name', 'LIKE', "%{$name}%")->get();
         ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
         ProductResource::setCurrency($currency, $rate);
@@ -215,7 +230,10 @@ class ProductController extends Controller
                 $translation = $category->translations->first();
                 return $translation ? $translation->name : $category->name;
             });
-        $bead_producers = BeadProducer::pluck('origin_country');
+        $bead_producers = BeadProducer::with('translations')->get()->map(function ($producer) use ($locale) {
+            $translation = $producer->translation($locale);
+            return $translation ? $translation->origin_country : $producer->origin_country;
+        });
         $colors = Color::getNamesByLocale($locale);
         $fittings = Fitting::pluck('name');
         $materials = Material::pluck('name');
@@ -247,9 +265,9 @@ class ProductController extends Controller
         App::setLocale($locale);
 
         $product = Product::withTrashed()
-        ->with(['colors.translations']) // завантажує переклади кольорів
-        ->find($id);
-    
+            ->with(['colors.translations']) // завантажує переклади кольорів
+            ->find($id);
+
 
         if ($product->trashed()) {
             if ($request->isAdminPanel) {
@@ -294,6 +312,8 @@ class ProductController extends Controller
 
     public function showTrashed(string $id, Request $request)
     {
+        $locale = request('lang', app()->getLocale());
+
         $product = Product::withTrashed()
             ->with([
                 'productDescription' => function ($query) {
@@ -314,10 +334,14 @@ class ProductController extends Controller
 
         $colors = DB::table('color_product')
             ->join('colors', 'color_product.color_id', '=', 'colors.id')
+            ->join('color_translations', function ($join) use ($locale) {
+                $join->on('colors.id', '=', 'color_translations.color_id')
+                    ->where('color_translations.locale', '=', $locale);
+            })
             ->where('color_product.product_id', $id)
-            ->whereNotNull('color_product.deleted_at')
-            ->select('colors.color_name')
-            ->get();
+            ->whereNotNull('color_product.deleted_at') // саме видалені
+            ->select('color_translations.color_name')
+            ->pluck('color_name');
 
         $fittings = DB::table('fitting_product')
             ->join('fittings', 'fitting_product.fitting_id', '=', 'fittings.id')
@@ -358,7 +382,7 @@ class ProductController extends Controller
                         'is_available' => $variant->quantity > 0,
                     ];
                 }),
-                'colors' => $colors->pluck("color_name"),
+                'colors' => $colors,
                 'bead_producer_name' => $product->productDescription->beadProducer->origin_country,
                 'rating' =>  $averageRating,
                 'review_count' =>  $reviewCount,

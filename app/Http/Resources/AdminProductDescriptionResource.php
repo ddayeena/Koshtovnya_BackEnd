@@ -41,7 +41,8 @@ class AdminProductDescriptionResource extends JsonResource
             'colors' => optional($this->product)->colors->map(function ($color) {
                 return optional($color->translation())->color_name;
             })->filter()->values(),
-            'bead_producer_name' => optional($this->beadProducer)->origin_country,
+            'bead_producer_name' => optional($this->beadProducer)->translation()?->origin_country
+                      ?? optional($this->beadProducer)->origin_country,
             'rating' => $this->rating ?? 0,
             'review_count' => $this->review_count ?? 0,
             'ratings_breakdown' => (object)($this->ratings_breakdown ?? []),

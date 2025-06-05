@@ -47,6 +47,15 @@ class ProductFilter extends AbstractFilter
             });
         });
     }
+
+    public function beadProducer(Builder $builder, $value)
+    {
+        $builder->whereHas('productDescription', function ($query) use ($value) {
+            $query->withTrashed()->whereHas('beadProducer.translations', function ($query) use ($value) {
+                $query->whereIn('origin_country', (array) $value);
+            });
+        });
+    }
     
     public function isAvailable(Builder $builder, $value)
     {
@@ -117,16 +126,6 @@ class ProductFilter extends AbstractFilter
                     WHERE reviews.product_id = products.id AND deleted_at IS NULL
                 ) < ?', [$max]);
             }
-        });
-    }
-    
-    
-    public function beadProducer(Builder $builder, $value)
-    {
-        $builder->whereHas('productDescription', function ($query) use ($value) {
-            $query->withTrashed()->whereHas('beadProducer', function ($query) use ($value) {
-                $query->whereIn('origin_country', (array) $value);
-            });
         });
     }
     

@@ -160,20 +160,24 @@ class ProductFilterService
     // Bead producer filter
     private function getBeadProducerFilter($categoryId = null)
     {
-        $query = BeadProducer::withCount(['productDescriptions' => function ($q) use ($categoryId) {
-            if ($categoryId) {
-                $q->where('category_id', $categoryId);
-            }
-        }]);
-
-        return $query->get()->map(function ($producer) {
+        $locale = request('lang', app()->getLocale());
+    
+        $query = BeadProducer::with(['translations'])
+            ->withCount(['productDescriptions' => function ($q) use ($categoryId) {
+                if ($categoryId) {
+                    $q->where('category_id', $categoryId);
+                }
+            }]);
+    
+        return $query->get()->map(function ($producer) use ($locale) {
+            $translation = $producer->translation($locale);
+    
             return [
-                'origin_country' => $producer->origin_country,
+                'origin_country' => $translation ? $translation->origin_country : $producer->origin_country,
                 'count' => $producer->product_descriptions_count,
             ];
         });
     }
-
 
     // Weight filter
     private function getWeightFilter($categoryId = null)

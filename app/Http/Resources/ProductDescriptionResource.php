@@ -40,7 +40,8 @@ class ProductDescriptionResource extends JsonResource
             'colors' => optional($this->product)->colors->map(function ($color) {
                 return optional($color->translation())->color_name;
             })->filter()->values(),
-            'bead_producer_name' => optional($this->beadProducer)->origin_country,
+            'bead_producer_name' => optional($this->beadProducer)->translation()?->origin_country
+                      ?? optional($this->beadProducer)->origin_country,
             'is_in_wishlist' => $this->is_in_wishlist ?? false,
             'is_in_cart' => $this->is_in_cart ?? false,
             'notify_when_available' => $this->notify_when_available ?? false,
