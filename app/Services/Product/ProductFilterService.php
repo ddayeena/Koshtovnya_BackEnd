@@ -68,46 +68,17 @@ class ProductFilterService
     //Return filter
     public function getFilter($categoryId = null, $currency = 'uah', $locale = 'uk')
     {
-        $translations = [
-            'uk' => [
-                'availability' => 'Доступність',
-                'size' => 'Розмір',
-                'color' => 'Колір',
-                'type_of_bead' => 'Тип бісеру',
-                'bead_producer' => 'Виробник бісеру',
-                'weight' => 'Вага',
-                'price' => 'Ціна',
-                'rating' => 'Рейтинг',
-                'category' => 'Категорія',
-                'status' => 'Статус',
-            ],
-            'en' => [
-                'availability' => 'Availability',
-                'size' => 'Size',
-                'color' => 'Color',
-                'type_of_bead' => 'Type of Bead',
-                'bead_producer' => 'Bead Producer',
-                'weight' => 'Weight',
-                'price' => 'Price',
-                'rating' => 'Rating',
-                'category' => 'Category',
-                'status' => 'Status',
-            ]
-        ];
-
-        $currentTranslations = $translations[$locale] ?? $translations['uk'];
-
         return [
-            $currentTranslations['availability'] => $this->getAvailabilityFilter($categoryId),
-            $currentTranslations['size'] => $this->getSizeFilter($categoryId),
-            $currentTranslations['color'] => $this->getColorFilter($categoryId, $locale),
-            $currentTranslations['type_of_bead'] => $this->getTypeOfBeadFilter($categoryId),
-            $currentTranslations['bead_producer'] => $this->getBeadProducerFilter($categoryId, $locale),
-            $currentTranslations['weight'] => $this->getWeightFilter($categoryId),
-            $currentTranslations['price'] => $this->getPriceFilter($categoryId, $currency),
-            $currentTranslations['rating'] => $this->getRatingFilter($categoryId),
-            $currentTranslations['category'] => $this->getCategory($locale),
-            $currentTranslations['status'] => $this->getDeletedFilter($categoryId)
+            'Доступність' => $this->getAvailabilityFilter($categoryId),
+            'Розмір' => $this->getSizeFilter($categoryId),
+            'Колір' => $this->getColorFilter($categoryId, $locale),
+            'Тип бісеру' => $this->getTypeOfBeadFilter($categoryId),
+            'Виробник бісеру' => $this->getBeadProducerFilter($categoryId),
+            'Вага' => $this->getWeightFilter($categoryId),
+            'Ціна' => $this->getPriceFilter($categoryId, $currency),
+            'Рейтинг' => $this->getRatingFilter($categoryId),
+            'Категорія' => $this->getCategory($locale),
+            'Статус' => $this->getDeletedFilter($categoryId)
         ];
     }
 
@@ -120,17 +91,17 @@ class ProductFilterService
             $query->where('category_id', $categoryId);
         }
         $locale = request('lang', app()->getLocale());
-        if($locale === 'uk')
-        return [
-            ['name' => 'Матовий', 'count' => (clone $query)->where('type_of_bead', 'Матовий')->count()],
-            ['name' => 'Прозорий', 'count' => (clone $query)->where('type_of_bead', 'Прозорий')->count()],
-        ];
+        if ($locale === 'uk')
+            return [
+                ['name' => 'Матовий', 'count' => (clone $query)->where('type_of_bead', 'Матовий')->count()],
+                ['name' => 'Прозорий', 'count' => (clone $query)->where('type_of_bead', 'Прозорий')->count()],
+            ];
 
         else
-        return [
-            ['name' => 'Matte', 'count' => (clone $query)->where('type_of_bead', 'Матовий')->count()],
-            ['name' => 'Transparent', 'count' => (clone $query)->where('type_of_bead', 'Прозорий')->count()],
-        ];
+            return [
+                ['name' => 'Matte', 'count' => (clone $query)->where('type_of_bead', 'Матовий')->count()],
+                ['name' => 'Transparent', 'count' => (clone $query)->where('type_of_bead', 'Прозорий')->count()],
+            ];
     }
 
     // Availabilty filter
