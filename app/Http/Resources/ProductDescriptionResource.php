@@ -27,7 +27,7 @@ class ProductDescriptionResource extends JsonResource
     {
         return [
             'id' => optional($this->product)->id,
-            'name' => optional($this->product)->name,
+            'name' => app()->getLocale() === 'en' ? $this->product->name_en : $this->product->name_uk,
             'price' => number_format(optional($this->product)->price / self::$rate, 2, '.', ''),
             'currency' => self::$currency,
             'image_url' => optional($this->product)->image_url,

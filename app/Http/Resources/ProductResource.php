@@ -26,15 +26,16 @@ class ProductResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'name' => $this->name,
+            'name' => app()->getLocale() === 'en' ? $this->name_en : $this->name_uk,
             'price' => static::$currency === 'usd'
                 ? number_format($this->price / static::$rate, 2, '.', '')
                 : number_format($this->price, 2, '.', ''),
 
             'currency' => static::$currency,
             'image_url' => $this->image_url,
-            'bead_producer_name' => optional($this->productDescription->beadProducer)->translation()?->name
-                      ?? optional($this->productDescription->beadProducer)->name,
+            'bead_producer_name' => optional($this->productDescription?->beadProducer)?->translation()?->name
+                ?? optional($this->productDescription?->beadProducer)?->name,
+
 
             'is_in_wishlist' => $this->is_in_wishlist ?? false,
             'is_in_cart' => $this->is_in_cart ?? false,

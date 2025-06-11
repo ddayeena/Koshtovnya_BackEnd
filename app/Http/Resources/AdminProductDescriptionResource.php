@@ -27,7 +27,7 @@ class AdminProductDescriptionResource extends JsonResource
     {
         return [
             'id' => optional($this->product)->id,
-            'name' => optional($this->product)->name,
+            'name' => app()->getLocale() === 'en' ? $this->product->name_en : $this->product->name_uk,
             'category' => $this->category->translated_name,
             'price' => number_format(optional($this->product)->price / self::$rate, 2, '.', ''),
             'currency' => self::$currency,
@@ -42,7 +42,7 @@ class AdminProductDescriptionResource extends JsonResource
                 return optional($color->translation())->color_name;
             })->filter()->values(),
             'bead_producer_name' => optional($this->beadProducer)->translation()?->origin_country
-                      ?? optional($this->beadProducer)->origin_country,
+                ?? optional($this->beadProducer)->origin_country,
             'rating' => $this->rating ?? 0,
             'review_count' => $this->review_count ?? 0,
             'ratings_breakdown' => (object)($this->ratings_breakdown ?? []),
