@@ -70,6 +70,9 @@ class OrderController extends Controller
 
     public function userOrders(Request $request)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+        
         //Get orders for authenticated user
         $orders = $request->user()->orders()->with('products')->get();
 

@@ -27,7 +27,7 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'order_date' => $this->created_at->translatedFormat('d F Y, H:i'),
-            'status' => $this->status,
+            'status' => __('orders.status.' . $this->status),
             'amount' => static::$currency === 'usd'
                 ? number_format($this->total_amount / static::$rate, 2, '.', '')
                 : number_format($this->total_amount, 2, '.', ''),

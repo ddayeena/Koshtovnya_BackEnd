@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Services\ExchangeRateService;
 use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
 class WishlistController extends Controller
 {
@@ -49,6 +50,9 @@ class WishlistController extends Controller
      */
     public function show(Request $request)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         //Get wishlist for authenticated user
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
         $products = $this->product_service->attachCartInfo($wishlist->products, $request->user());

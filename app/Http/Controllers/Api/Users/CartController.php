@@ -12,6 +12,7 @@ use App\Services\Cart\CartService;
 use App\Services\ExchangeRateService;
 use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
 class CartController extends Controller
 {
@@ -75,6 +76,9 @@ class CartController extends Controller
      */
     public function show(Request $request)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         //Get wishlist for authenticated user
         $cart = $request->user()->cart()->firstOrCreate([]);
         $products = $cart->products;
