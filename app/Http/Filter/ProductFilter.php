@@ -39,6 +39,22 @@ class ProductFilter extends AbstractFilter
         ];
     }
 
+    public function typeOfBead(Builder $builder, $value)
+    {
+        $map = [
+            'Matte' => 'Матовий',
+            'Transparent' => 'Прозорий',
+        ];
+    
+        $normalizedValues = array_map(function ($item) use ($map) {
+            return $map[$item] ?? $item;
+        }, (array) $value);
+    
+        $builder->whereHas('productDescription', function ($query) use ($normalizedValues) {
+            $query->withTrashed()->whereIn('type_of_bead', $normalizedValues);
+        });
+    }   
+
     public function category(Builder $builder, $value)
     {
         $builder->whereHas('productDescription', function ($query) use ($value) {
@@ -127,15 +143,7 @@ class ProductFilter extends AbstractFilter
                 ) < ?', [$max]);
             }
         });
-    }
-    
-    public function typeOfBead(Builder $builder, $value)
-    {
-        $builder->whereHas('productDescription', function ($query) use ($value) {
-            $query->withTrashed()->whereIn('type_of_bead', (array) $value);
-        });
-    }
-    
+    } 
 
     public function weightFrom(Builder $builder, $value)
     {

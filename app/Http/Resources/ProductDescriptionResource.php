@@ -31,17 +31,17 @@ class ProductDescriptionResource extends JsonResource
             'price' => number_format(optional($this->product)->price / self::$rate, 2, '.', ''),
             'currency' => self::$currency,
             'image_url' => optional($this->product)->image_url,
-            'country_of_manufacture' => $this->country_of_manufacture,
-            'material' => 'Бісер',
+            'country_of_manufacture' => __('product.country_of_manufacture'),
+            'material' => __('product.bead'),
             'type_of_fitting' => $this->getMaterialNames(),
-            'type_of_bead' => $this->type_of_bead,
+            'type_of_bead' => __('product.type_of_bead.' . $this->type_of_bead),
             'weight' => $this->weight,
             'variants' => $this->productVariants(),
             'colors' => optional($this->product)->colors->map(function ($color) {
                 return optional($color->translation())->color_name;
             })->filter()->values(),
             'bead_producer_name' => optional($this->beadProducer)->translation()?->origin_country
-                      ?? optional($this->beadProducer)->origin_country,
+                ?? optional($this->beadProducer)->origin_country,
             'is_in_wishlist' => $this->is_in_wishlist ?? false,
             'is_in_cart' => $this->is_in_cart ?? false,
             'notify_when_available' => $this->notify_when_available ?? false,

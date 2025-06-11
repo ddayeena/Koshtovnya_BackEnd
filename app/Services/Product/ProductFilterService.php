@@ -29,7 +29,6 @@ class ProductFilterService
     //Return filtered products
     public function getFilteredProducts(array $filters, $user, $isAdminPanel, $products = null)
     {
-
         // Create filter
         $filter = app()->make(ProductFilter::class, ['params' => $filters]);
 
@@ -86,23 +85,26 @@ class ProductFilterService
     private function getTypeOfBeadFilter($categoryId = null, $locale = 'uk')
     {
         $query = ProductDescription::query();
-
+    
         if ($categoryId) {
             $query->where('category_id', $categoryId);
         }
-        $locale = request('lang', app()->getLocale());
-        if ($locale === 'uk')
-            return [
-                ['name' => 'Матовий', 'count' => (clone $query)->where('type_of_bead', 'Матовий')->count()],
-                ['name' => 'Прозорий', 'count' => (clone $query)->where('type_of_bead', 'Прозорий')->count()],
+    
+        $types = ['Матовий', 'Прозорий'];
+        $result = [];
+    
+        foreach ($types as $type) {
+            $translated = __('product.type_of_bead.' . $type);
+            $count = (clone $query)->where('type_of_bead', $type)->count();
+            $result[] = [
+                'name' => $translated,
+                'count' => $count
             ];
-
-        else
-            return [
-                ['name' => 'Matte', 'count' => (clone $query)->where('type_of_bead', 'Матовий')->count()],
-                ['name' => 'Transparent', 'count' => (clone $query)->where('type_of_bead', 'Прозорий')->count()],
-            ];
+        }
+    
+        return $result;
     }
+    
 
     // Availabilty filter
     private function getAvailabilityFilter($categoryId = null)

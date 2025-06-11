@@ -237,8 +237,8 @@ class ProductController extends Controller
         $colors = Color::getNamesByLocale($locale);
         $fittings = Fitting::pluck('name');
         $materials = Material::pluck('name');
-        $type_of_bead = ['Матовий', 'Прозорий'];
-        $countries_of_manufacture = ['Україна'];
+        $type_of_bead = $locale === 'uk' ? ['Матовий', 'Прозорий'] : ['Matte','Transparent'];
+        $countries_of_manufacture = $locale === 'uk' ? ['Україна'] : ['Ukraine'];
 
 
         return response()->json([
