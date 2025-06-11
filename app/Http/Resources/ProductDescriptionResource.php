@@ -67,16 +67,18 @@ class ProductDescriptionResource extends JsonResource
                 ];
             })->values();
     }
-
     private function getMaterialNames()
     {
         return $this->product->fittings
             ->map(function ($fitting) {
-                return $fitting->pivot->material_id
-                    ? optional(Material::find($fitting->pivot->material_id))->name
-                    : 'No Material';
+                $materialName = optional(Material::find($fitting->pivot->material_id))->name;
+    
+                return $materialName
+                    ? __('materials.' . $materialName)
+                    : __('materials.no_material');
             })
-            ->unique() // Видаляє повторювані значення
-            ->values(); // Перевпорядковує індекси колекції
+            ->unique()
+            ->values();
     }
+    
 }

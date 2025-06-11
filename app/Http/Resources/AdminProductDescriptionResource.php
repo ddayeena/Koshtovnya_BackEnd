@@ -32,10 +32,10 @@ class AdminProductDescriptionResource extends JsonResource
             'price' => number_format(optional($this->product)->price / self::$rate, 2, '.', ''),
             'currency' => self::$currency,
             'image_url' => optional($this->product)->image_url,
-            'country_of_manufacture' => $this->country_of_manufacture,
-            'material' => 'Бісер',
+            'country_of_manufacture' => __('product.country_of_manufacture'),
+            'material' => __('product.bead'),
             'type_of_fitting' => $this->getFittings(),
-            'type_of_bead' => $this->type_of_bead,
+            'type_of_bead' => __('product.type_of_bead.' . $this->type_of_bead),
             'weight' => $this->weight,
             'variants' => $this->productVariants(),
             'colors' => optional($this->product)->colors->map(function ($color) {
@@ -70,14 +70,17 @@ class AdminProductDescriptionResource extends JsonResource
         return $this->product->fittings
             ->map(function ($fitting) {
                 $material = Material::find($fitting->pivot->material_id);
-
+                $translatedFitting = __('fittings.' . $fitting->name); 
+                $translatedMaterial = $material ? __('materials.' . $material->name) : null;
+    
                 return [
-                    'fitting' => $fitting->name,
+                    'fitting' => $translatedFitting,
                     'quantity' => $fitting->pivot->quantity,
-                    'material' => $material ? $material->name : null,
+                    'material' => $translatedMaterial,
                 ];
             })
             ->unique()
             ->values();
     }
+    
 }

@@ -235,10 +235,17 @@ class ProductController extends Controller
             return $translation ? $translation->origin_country : $producer->origin_country;
         });
         $colors = Color::getNamesByLocale($locale);
-        $fittings = Fitting::pluck('name');
-        $materials = Material::pluck('name');
-        $type_of_bead = $locale === 'uk' ? ['Матовий', 'Прозорий'] : ['Matte','Transparent'];
-        $countries_of_manufacture = $locale === 'uk' ? ['Україна'] : ['Ukraine'];
+        $fittings = Fitting::pluck('name')->map(fn($name) => __('fittings.' . $name));
+        $materials = Material::pluck('name')->map(fn($name) => __('materials.' . $name));        
+        $type_of_bead = [
+            __('product.type_of_bead.Матовий'),
+            __('product.type_of_bead.Прозорий'),
+        ];
+        
+        $countries_of_manufacture = [
+            __('product.country_of_manufacture'),
+        ];
+        
 
 
         return response()->json([
@@ -364,16 +371,16 @@ class ProductController extends Controller
                 'price' => round($product->price / $rate, 2),
                 'currency' => $currency,
                 'image_url' => $product->image_url,
-                'country_of_manufacture' =>  $product->productDescription->country_of_manufacture,
-                'material' => 'Бісер',
+                'country_of_manufacture' => __('product.country_of_manufacture'),
+                'material' => __('product.bead'),
                 'type_of_fitting' => $fittings->map(function ($fitting) {
                     return [
-                        'fitting_name' => $fitting->fitting,
+                        'fitting_name' => __('fittings.' . $fitting->fitting),
                         'quantity' => $fitting->quantity,
-                        'material_name' => $fitting->material,
+                        'material_name' => __('materials.' . $fitting->material),
                     ];
                 }),
-                'type_of_bead' =>  $product->productDescription->type_of_bead,
+                'type_of_bead' => __('product.type_of_bead.' . $product->productDescription->type_of_bead),
                 'weight' =>  $product->productDescription->weight,
                 'variants' => $product->productVariants->map(function ($variant) {
                     return [
@@ -383,7 +390,8 @@ class ProductController extends Controller
                     ];
                 }),
                 'colors' => $colors,
-                'bead_producer_name' => $product->productDescription->beadProducer->origin_country,
+                'bead_producer_name' => optional($product->productDescription->beadProducer)->translation()?->origin_country
+                    ?? optional($product->productDescription->beadProducer)->origin_country,
                 'rating' =>  $averageRating,
                 'review_count' =>  $reviewCount,
             ]
