@@ -33,9 +33,8 @@ class ProductStatsResource extends JsonResource
 
             'currency' => static::$currency,
             'image_url' => $this->image_url,
-            'bead_producer_name' => $this->productDescription && $this->productDescription->beadProducer
-                ? $this->productDescription->beadProducer->name
-                : null,
+            'bead_producer_name' => optional($this->productDescription?->beadProducer)?->translation()?->name
+                ?? optional($this->productDescription?->beadProducer)?->name,
 
             'is_deleted' => $this->deleted_at !== null,
             'rating' => (float) ($this->reviews_avg_rating ?? 0),

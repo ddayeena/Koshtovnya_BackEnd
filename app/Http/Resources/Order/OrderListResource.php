@@ -17,9 +17,9 @@ class OrderListResource extends JsonResource
         return [
             'id' => $this->id,
             'order_date' => $this->created_at->translatedFormat('d.m.Y'),
-            'status' => $this->status,
+            'status' => __('orders.status.' . $this->status),
             'phone_number' => $this->phone_number,
-            'products'=> $this->products->pluck('name')
+            'products'=> app()->getLocale() === 'en' ? $this->products->pluck('name_en') : $this->products->pluck('name_uk')
         ];
     }
 }

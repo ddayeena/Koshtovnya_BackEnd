@@ -187,13 +187,17 @@ class ProductController extends Controller
     {
         $locale = request('lang', app()->getLocale());
         App::setLocale($locale);
-
-        $products = Product::where('name', 'LIKE', "%{$name}%")->get();
+    
+        $products = Product::where(function ($query) use ($name) {
+            $query->where('name_uk', 'LIKE', "%{$name}%")
+                  ->orWhere('name_en', 'LIKE', "%{$name}%");
+        })->get();
+    
         ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
         ProductResource::setCurrency($currency, $rate);
-
+    
         return ProductResource::collection($products);
-    }
+    }    
 
     /**
      * Store a newly created resource in storage.
@@ -236,16 +240,16 @@ class ProductController extends Controller
         });
         $colors = Color::getNamesByLocale($locale);
         $fittings = Fitting::pluck('name')->map(fn($name) => __('fittings.' . $name));
-        $materials = Material::pluck('name')->map(fn($name) => __('materials.' . $name));        
+        $materials = Material::pluck('name')->map(fn($name) => __('materials.' . $name));
         $type_of_bead = [
             __('product.type_of_bead.Матовий'),
             __('product.type_of_bead.Прозорий'),
         ];
-        
+
         $countries_of_manufacture = [
             __('product.country_of_manufacture'),
         ];
-        
+
 
 
         return response()->json([
@@ -366,7 +370,7 @@ class ProductController extends Controller
         return response()->json([
             'data' => [
                 'id' => $product->id,
-                'name' => $product->name,
+                'name' => app()->getLocale() === 'en' ? $product->name_en : $product->name_uk,
                 'category' => $product->productDescription->category->translated_name,
                 'price' => round($product->price / $rate, 2),
                 'currency' => $currency,

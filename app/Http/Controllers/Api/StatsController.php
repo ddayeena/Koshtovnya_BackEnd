@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\ExchangeRateService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 
 class StatsController extends Controller
@@ -87,6 +88,9 @@ class StatsController extends Controller
 
     public function orderDynamics(Request $request)
     {
+        $locale = request('lang', app()->getLocale());
+        Carbon::setLocale($locale); 
+        
         $data = $request->validate([
             'start_date' => 'nullable|date|before_or_equal:end_date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -216,6 +220,9 @@ class StatsController extends Controller
 
     public function latestOrders()
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $orders = Order::where('status', 'В очікуванні')
             ->latest()
             ->take(5)
@@ -225,6 +232,9 @@ class StatsController extends Controller
 
     public function popularProducts(Request $request)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $data = $request->validate([
             'start_date' => 'nullable|date|before_or_equal:end_date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -361,7 +371,7 @@ class StatsController extends Controller
             return [
                 'id' => $order->id,
                 'date' => $order->created_at->toDateString(),
-                'revenue' => 'Продаж товару',
+                'revenue' =>  app()->getLocale() === 'en' ? 'Sale of goods' : 'Продаж товару',
                 'transaction_number' => $order->payment->transaction_number,
                 'total_amount' => round($totalAmount / $rate, 2),
                 'expenses' => round($totalExpenses / $rate, 2),

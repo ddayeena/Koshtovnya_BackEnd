@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\ExchangeRateService;
 use App\Services\Order\OrderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -35,6 +36,9 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $query = Order::query();
 
         $sortBy = $request->get('sort_by');
