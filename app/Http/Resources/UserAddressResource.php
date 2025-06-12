@@ -20,7 +20,7 @@ class UserAddressResource extends JsonResource
             'phone_number' => optional($this->user)->phone_number,
             'delivery_type' => optional($this->deliveryType)->type,
             'city' => $this->city,
-            'delivery_name' => optional($this->deliveryType)->name,
+            'delivery_name' => __('delivery_types.' . optional($this->deliveryType)->name),
             'Ref' => $this->city_ref,
             'delivery_address' => $this->delivery_address,
         ];

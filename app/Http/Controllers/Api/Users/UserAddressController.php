@@ -8,8 +8,10 @@ use App\Http\Resources\UserAddressResource;
 use App\Models\DeliveryType;
 use App\Models\User;
 use App\Models\UserAddress;
+use App\Services\Order\Delivery\DeliveryNameTranslator;
 use App\Services\Order\Delivery\NovaPoshtaService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
 class UserAddressController extends Controller
 {
@@ -33,6 +35,8 @@ class UserAddressController extends Controller
         $data = $request->validated();
 
         //Get delivery_type_id
+        $data['delivery_name'] = DeliveryNameTranslator::toUkr($data['delivery_name']);
+
         $delivery_type_id = DeliveryType::where('name', $data['delivery_name'])->value('id');
         if (!$delivery_type_id) {
             return response()->json(['message' => 'Delivery type not found'], 404);
@@ -60,6 +64,9 @@ class UserAddressController extends Controller
      */
     public function show(Request $request)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $userAddress = $request->user()->userAddress;
 
         if (!$userAddress) {
@@ -99,6 +106,8 @@ class UserAddressController extends Controller
             ->firstOrFail();
 
         //Get delivery_type_id
+        $data['delivery_name'] = DeliveryNameTranslator::toUkr($data['delivery_name']);
+
         $delivery_type_id = DeliveryType::where('name', $data['delivery_name'])->value('id');
         if (!$delivery_type_id) {
             return response()->json(['message' => 'Delivery type not found'], 404);

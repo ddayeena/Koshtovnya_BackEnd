@@ -9,6 +9,7 @@ use App\Models\DeliveryType;
 use App\Models\Payment;
 use App\Models\ProductVariant;
 use App\Models\UserAddress;
+use App\Services\Order\Delivery\DeliveryNameTranslator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -32,14 +33,12 @@ class OrderService
 
             // Якщо валюта usd — конвертуємо в гривні
             if ($currency === 'usd') {
-                $rate = $data['rate']; 
+                $rate = $data['rate'];
                 $data['delivery_cost'] = round($data['delivery_cost'] * $rate);
                 $data['cart_cost'] = round($data['cart_cost'] * $rate);
-                
             }
-            
+
             $totalAmount = $data['delivery_cost'] + $data['cart_cost'];
-            
 
             //Create order
             $order = $this->createOrder($data, $user, $totalAmount);
@@ -51,11 +50,14 @@ class OrderService
             $cart->products()->detach();
 
             //Create delivery
+            $data['delivery_name'] = DeliveryNameTranslator::toUkr($data['delivery_name']);
+
             $deliveryTypeId = DeliveryType::where('name', $data['delivery_name'])->value('id');
             if (!$deliveryTypeId) {
                 throw new \Exception('Delivery type not found');
             }
             $delivery = $this->createDelivery($order, $data, $deliveryTypeId);
+
 
             //Create payment
             $payment = $this->createPayment($order, $data, $totalAmount);
@@ -65,8 +67,8 @@ class OrderService
 
             //Update products quantity in stock
             $this->updateProductStock($order);
-            if($payment->payment_method === 'Післяоплата')
-            Mail::to($order->user->email)->send(new OrderDetailsMail($order, $delivery, $payment));
+            if ($payment->payment_method === 'Післяоплата')
+                Mail::to($order->user->email)->send(new OrderDetailsMail($order, $delivery, $payment));
 
             return compact('order', 'delivery');
         });

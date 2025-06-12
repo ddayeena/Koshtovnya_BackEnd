@@ -48,7 +48,6 @@ class ProductDescriptionResource extends JsonResource
             'rating' => $this->rating,
             'review_count' => $this->review_count,
             'ratings_breakdown' => (object)($this->ratings_breakdown ?? []),
-
         ];
     }
 

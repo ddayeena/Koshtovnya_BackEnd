@@ -30,20 +30,16 @@ class ProductResource extends JsonResource
             'price' => static::$currency === 'usd'
                 ? number_format($this->price / static::$rate, 2, '.', '')
                 : number_format($this->price, 2, '.', ''),
-
             'currency' => static::$currency,
             'image_url' => $this->image_url,
             'bead_producer_name' => optional($this->productDescription?->beadProducer)?->translation()?->name
                 ?? optional($this->productDescription?->beadProducer)?->name,
-
-
             'is_in_wishlist' => $this->is_in_wishlist ?? false,
             'is_in_cart' => $this->is_in_cart ?? false,
             'is_deleted' => $this->deleted_at !== null,
             'rating' => (float) ($this->reviews_avg_rating ?? 0),
             'review_count' => $this->reviews_count ?? 0,
             'variants' => $this->productVariants(),
-
         ];
     }
 

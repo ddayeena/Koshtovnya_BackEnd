@@ -16,7 +16,7 @@ class DeliveryTypeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
+            'name' => __('delivery_types.' . $this->name),
             'delivery_type' => $this->type
         ];
     }

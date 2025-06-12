@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,6 +15,9 @@ class ReviewReplyResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $locale = $request->get('lang', app()->getLocale());
+        Carbon::setLocale($locale);
+
         return [
             'id' => $this->id,
             'admin_first_name' => optional($this->admin)->first_name,

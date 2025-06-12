@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Orders\Delivery;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Delivery\DeliveryTypeResource;
 use App\Models\DeliveryType;
+use Illuminate\Support\Facades\App;
 
 class DeliveryTypeController extends Controller
 {
@@ -13,6 +14,9 @@ class DeliveryTypeController extends Controller
      */
     public function index()
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         //Get delivery types
         $pickup = DeliveryType::where('type','pickup')->get();
         $courier = DeliveryType::where('type', 'courier')->get();
