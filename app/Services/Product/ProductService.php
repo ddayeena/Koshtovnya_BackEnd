@@ -321,6 +321,39 @@ class ProductService
         return null;
     }
 
+    //Метод де можна видалити фурнітуру, якщо передати ту, яка вже є
+    // private function updateFittings(Product $product, array $data)
+    // {
+    //     if (!isset($data['fittings'])) return;
+    
+    //     $locale = App::getLocale();
+    
+    //     // Отримуємо словники перекладу, якщо мова англійська
+    //     $fittingTranslations = $locale === 'en' ? collect(__('fittings'))->flip() : collect();
+    //     $materialTranslations = $locale === 'en' ? collect(__('materials'))->flip() : collect();
+    
+    //     foreach ($data['fittings'] as $fitting) {
+    //         $fittingName = $locale === 'en' ? ($fittingTranslations[$fitting['fitting']] ?? $fitting['fitting']) : $fitting['fitting'];
+    //         $materialName = $locale === 'en' ? ($materialTranslations[$fitting['material']] ?? $fitting['material']) : $fitting['material'];
+    
+    //         $fittingModel = Fitting::where('name', $fittingName)->first();
+    //         $materialModel = Material::where('name', $materialName)->first();
+    
+    //         if ($fittingModel && $materialModel) {
+    //             DB::table('fitting_product')->updateOrInsert(
+    //                 [
+    //                     'product_id' => $product->id,
+    //                     'fitting_id' => $fittingModel->id,
+    //                     'material_id' => $materialModel->id
+    //                 ],
+    //                 [
+    //                     'quantity' => $fitting['quantity'] ?? 0
+    //                 ]
+    //             );
+    //         }
+    //     }
+    // }
+
     private function updateFittings(Product $product, array $data)
     {
         if (!isset($data['fittings'])) return;
@@ -339,35 +372,19 @@ class ProductService
             $materialModel = Material::where('name', $materialName)->first();
     
             if ($fittingModel && $materialModel) {
-                // Перевіряємо, чи існує вже такий запис
-                $exists = DB::table('fitting_product')->where([
-                    ['product_id', $product->id],
-                    ['fitting_id', $fittingModel->id],
-                    ['material_id', $materialModel->id],
-                ])->exists();
-    
-                if ($exists) {
-                    // Якщо існує — видаляємо
-                    DB::table('fitting_product')->where([
-                        ['product_id', $product->id],
-                        ['fitting_id', $fittingModel->id],
-                        ['material_id', $materialModel->id],
-                    ])->delete();
-                } else {
-                    // Якщо не існує — додаємо
-                    DB::table('fitting_product')->insert([
+                DB::table('fitting_product')->updateOrInsert(
+                    [
                         'product_id' => $product->id,
                         'fitting_id' => $fittingModel->id,
-                        'material_id' => $materialModel->id,
-                        'quantity' => $fitting['quantity'] ?? 0,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
+                        'material_id' => $materialModel->id
+                    ],
+                    [
+                        'quantity' => $fitting['quantity'] ?? 0
+                    ]
+                );
             }
         }
     }
-    
     private function updateSizes(Product $product, array $data)
     {
         if (!isset($data['sizes'])) return;
@@ -400,34 +417,59 @@ class ProductService
         }
     }
 
+    //Метод, де якщо колір такий вже є, то він видаляється
+    // private function updateColors(Product $product, array $data)
+    // {
+    //     if (!isset($data['colors'])) return;
+    
+    //     $locale = App::getLocale();
+    
+    //     foreach ($data['colors'] as $colorName) {
+    //         // Знаходимо color_id по назві та локалі
+    //         $colorId = ColorTranslation::where('color_name', $colorName)
+    //             ->where('locale', $locale)
+    //             ->value('color_id');
+    
+    //         if (!$colorId) {
+    //             continue; // Якщо такого кольору немає — пропускаємо
+    //         }
+    
+    //         // Перевіряємо, чи вже існує зв'язок
+    //         $exists = $product->colors()->where('colors.id', $colorId)->exists();
+    
+    //         if ($exists) {
+    //             // Якщо є — видаляємо
+    //             $product->colors()->detach($colorId);
+    //         } else {
+    //             // Якщо немає — додаємо
+    //             $product->colors()->attach($colorId);
+    //         }
+    //     }
+    // }
+    
+
     private function updateColors(Product $product, array $data)
     {
         if (!isset($data['colors'])) return;
     
         $locale = App::getLocale();
     
-        foreach ($data['colors'] as $colorName) {
-            // Знаходимо color_id по назві та локалі
-            $colorId = ColorTranslation::where('color_name', $colorName)
-                ->where('locale', $locale)
-                ->value('color_id');
+        // Отримуємо існуючі кольори продукту
+        $existingColors = $product->colors()->pluck('colors.id')->toArray();
     
-            if (!$colorId) {
-                continue; // Якщо такого кольору немає — пропускаємо
-            }
+        // Отримуємо id кольорів по отриманих назвах
+        $newColors = ColorTranslation::whereIn('color_name', $data['colors'])
+            ->where('locale', $locale)
+            ->pluck('color_id')
+            ->toArray();
     
-            // Перевіряємо, чи вже існує зв'язок
-            $exists = $product->colors()->where('colors.id', $colorId)->exists();
+        // Порівнюємо, що потрібно додати або видалити
+        $colorsToDelete = array_diff($existingColors, $newColors);
+        $colorsToAdd = array_diff($newColors, $existingColors);
     
-            if ($exists) {
-                // Якщо є — видаляємо
-                $product->colors()->detach($colorId);
-            } else {
-                // Якщо немає — додаємо
-                $product->colors()->attach($colorId);
-            }
-        }
+        // Оновлюємо зв'язки
+        $product->colors()->detach($colorsToDelete);
+        $product->colors()->attach($colorsToAdd);
     }
-    
     
 }
