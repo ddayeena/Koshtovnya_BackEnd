@@ -7,8 +7,11 @@ use App\Http\Resources\AdminProductDescriptionResource;
 use App\Http\Resources\ProductDescriptionResource;
 use App\Mail\ProductAvailableNotification;
 use App\Models\BeadProducer;
+use App\Models\BeadProducerTranslation;
 use App\Models\Category;
+use App\Models\CategoryTranslation;
 use App\Models\Color;
+use App\Models\ColorTranslation;
 use App\Models\Fitting;
 use App\Models\Material;
 use App\Models\Notification;
@@ -17,6 +20,7 @@ use App\Models\ProductDescription;
 use App\Models\ProductVariant;
 use App\Models\User;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -61,17 +65,17 @@ class ProductService
     //Attach 
     public function attachUserProductStatus($product, $user)
     {
-        $product->productDescription->is_in_wishlist = $user 
-        ? $user->wishlist->products()->where('product_id', $product->id)->exists()
-        : false;
+        $product->productDescription->is_in_wishlist = $user
+            ? $user->wishlist->products()->where('product_id', $product->id)->exists()
+            : false;
 
-        $product->productDescription->is_in_cart = $user 
-        ? $user->cart->products()->where('product_id', $product->id)->exists()
-        : false;
-        
-        $product->productDescription->notify_when_available = $user 
-        ? $user->notifications()->where('product_id', $product->id)->exists()
-        : false;
+        $product->productDescription->is_in_cart = $user
+            ? $user->cart->products()->where('product_id', $product->id)->exists()
+            : false;
+
+        $product->productDescription->notify_when_available = $user
+            ? $user->notifications()->where('product_id', $product->id)->exists()
+            : false;
 
         return $product;
     }
@@ -113,9 +117,22 @@ class ProductService
 
     private function createProductDescription($data)
     {
-        //Get ids
-        $beadProducerId = BeadProducer::where('origin_country', $data['bead_producer'])->value('id');
-        $categoryId = Category::where('name', $data['category'])->value('id');
+        $locale = App::getLocale();
+
+        if ($locale === 'en') {
+            $data['country_of_manufacture'] = 'Україна';
+            $data['type_of_bead'] = $data['type_of_bead'] === 'Transparent' ? 'Прозорий' : 'Матовий';
+        }
+
+        // Пошук id виробника та категорії за українською назвою
+        $beadProducerId = BeadProducerTranslation::where('origin_country', $data['bead_producer'])
+            ->where('locale', $locale)
+            ->value('bead_producer_id');
+
+        $categoryId = CategoryTranslation::where('name', $data['category'])
+            ->where('locale', $locale)
+            ->value('category_id');
+
 
         return ProductDescription::create([
             'bead_producer_id' => $beadProducerId,
@@ -126,10 +143,12 @@ class ProductService
         ]);
     }
 
+
     private function createProductRecord($data, $descriptionId, $imageData)
     {
         return Product::create([
-            'name' => $data['name'],
+            'name_uk' => $data['name_uk'],
+            'name_en' => $data['name_en'],
             'price' => $data['price'],
             'image_url' => $imageData['url'],
             'image_public_id' => $imageData['public_id'],
@@ -150,17 +169,33 @@ class ProductService
 
     private function attachColors($colors, $product)
     {
-        $colorIds = Color::whereIn('color_name', $colors)->pluck('id')->toArray();
+        $locale = App::getLocale();
+
+        $colorIds = ColorTranslation::whereIn('color_name', $colors)
+            ->where('locale', $locale)
+            ->pluck('color_id')
+            ->toArray();
+
         $product->colors()->attach($colorIds);
     }
 
     private function attachFittings($fittings, $product)
     {
+        $locale = App::getLocale();
+
+        // Отримуємо словники перекладу, якщо мова англійська
+        $fittingTranslations = $locale === 'en' ? collect(__('fittings'))->flip() : collect();
+        $materialTranslations = $locale === 'en' ? collect(__('materials'))->flip() : collect();
+
         $fittingData = [];
+
         foreach ($fittings as $fitting) {
-            $fittingId = Fitting::where('name', $fitting['fitting'])->value('id');
+            $fittingName = $locale === 'en' ? ($fittingTranslations[$fitting['fitting']] ?? $fitting['fitting']) : $fitting['fitting'];
+            $materialName = $locale === 'en' ? ($materialTranslations[$fitting['material']] ?? $fitting['material']) : $fitting['material'];
+
+            $fittingId = Fitting::where('name', $fittingName)->value('id');
             if ($fittingId) {
-                $materialId = Material::where('name', $fitting['material'])->value('id');
+                $materialId = Material::where('name', $materialName)->value('id');
 
                 $fittingData[$fittingId] = [
                     'material_id' => $materialId,
@@ -168,9 +203,9 @@ class ProductService
                 ];
             }
         }
+
         $product->fittings()->attach($fittingData);
     }
-
 
     public function updateProduct(Product $product, array $data)
     {
@@ -182,19 +217,20 @@ class ProductService
             $this->updateSizes($product, $data);
             $this->updateColors($product, $data);
         });
-    
+
         return  AdminProductDescriptionResource::make($product->productDescription);
     }
-    
+
     private function updateBasicFields(Product $product, array $data)
     {
         $product->fill([
-            'name' => $data['name'] ?? $product->name,
+            'name_uk' => $data['name_uk'] ?? $product->name_uk,
+            'name_en' => $data['name_en'] ?? $product->name_en,
             'price' => $data['price'] ?? $product->price,
         ]);
         $product->save();
     }
-    
+
     private function updateImage(Product $product, array $data)
     {
         if (isset($data['image'])) {
@@ -205,57 +241,129 @@ class ProductService
             $product->save();
         }
     }
-    
+
     private function updateProductDescription(Product $product, array $data)
     {
+        $locale = App::getLocale();
+    
         $productDescription = $product->productDescription;
+    
+        // Отримуємо id категорії та виробника
         $data['category_id'] = $this->getCategoryId($data);
         $data['bead_producer_id'] = $this->getBeadProducerId($data);
-        
+    
+        // Якщо локаль англійська - переводимо значення полів
+        if ($locale === 'en') {
+    
+            // Переклад країни
+            if (!empty($data['country_of_manufacture'])) {
+                if ($data['country_of_manufacture'] === 'Ukraine') {
+                    $data['country_of_manufacture'] = 'Україна';
+                } else {
+                    $data['country_of_manufacture'] = $productDescription->country_of_manufacture;
+                }
+            } else {
+                $data['country_of_manufacture'] = $productDescription->country_of_manufacture;
+            }
+    
+            // Переклад типу бісеру
+            if (!empty($data['type_of_bead'])) {
+                if ($data['type_of_bead'] === 'Transparent') {
+                    $data['type_of_bead'] = 'Прозорий';
+                } elseif ($data['type_of_bead'] === 'Matte') {
+                    $data['type_of_bead'] = 'Матовий';
+                } else {
+                    $data['type_of_bead'] = $productDescription->type_of_bead;
+                }
+            } else {
+                $data['type_of_bead'] = $productDescription->type_of_bead;
+            }
+        } else {
+            // Якщо локаль українська — просто підставляємо старі значення, якщо нових нема
+            $data['country_of_manufacture'] = $data['country_of_manufacture'] ?? $productDescription->country_of_manufacture;
+            $data['type_of_bead'] = $data['type_of_bead'] ?? $productDescription->type_of_bead;
+        }
+    
+        // Заповнюємо модель
         $productDescription->fill([
             'bead_producer_id' => $data['bead_producer_id'] ?? $productDescription->bead_producer_id,
             'weight' => $data['weight'] ?? $productDescription->weight,
-            'country_of_manufacture' => $data['country_of_manufacture'] ?? $productDescription->country_of_manufacture,
-            'type_of_bead' => $data['type_of_bead'] ?? $productDescription->type_of_bead,
+            'country_of_manufacture' => $data['country_of_manufacture'],
+            'type_of_bead' => $data['type_of_bead'],
             'category_id' => $data['category_id'] ?? $productDescription->category_id,
         ]);
+    
         $productDescription->save();
     }
     
     private function getCategoryId(array $data)
     {
+        $locale = App::getLocale();
         if (isset($data['category'])) {
-            $category = Category::where('name', $data['category'])->first();
-            return $category ? $category->id : null;
+            $categoryId = CategoryTranslation::where('name', $data['category'])
+            ->where('locale', $locale)
+            ->value('category_id');
+
+            return $categoryId ? $categoryId : null;
         }
         return null;
     }
-    
+
     private function getBeadProducerId(array $data)
     {
+        $locale = App::getLocale();
         if (isset($data['bead_producer'])) {
-            $beadProducer = BeadProducer::where('origin_country', $data['bead_producer'])->first();
-            return $beadProducer ? $beadProducer->id : null;
+            $beadProducerId = BeadProducerTranslation::where('origin_country', $data['bead_producer'])
+            ->where('locale', $locale)
+            ->value('bead_producer_id');
+            return $beadProducerId ? $beadProducerId : null;
         }
         return null;
     }
-    
+
     private function updateFittings(Product $product, array $data)
     {
         if (!isset($data['fittings'])) return;
-        
+    
+        $locale = App::getLocale();
+    
+        // Отримуємо словники перекладу, якщо мова англійська
+        $fittingTranslations = $locale === 'en' ? collect(__('fittings'))->flip() : collect();
+        $materialTranslations = $locale === 'en' ? collect(__('materials'))->flip() : collect();
+    
         foreach ($data['fittings'] as $fitting) {
-            $fittingModel = Fitting::where('name', $fitting['fitting'])->first();
-            $materialModel = Material::where('name', $fitting['material'])->first();
+            $fittingName = $locale === 'en' ? ($fittingTranslations[$fitting['fitting']] ?? $fitting['fitting']) : $fitting['fitting'];
+            $materialName = $locale === 'en' ? ($materialTranslations[$fitting['material']] ?? $fitting['material']) : $fitting['material'];
+    
+            $fittingModel = Fitting::where('name', $fittingName)->first();
+            $materialModel = Material::where('name', $materialName)->first();
     
             if ($fittingModel && $materialModel) {
-                DB::table('fitting_product')->updateOrInsert([
-                    'product_id' => $product->id,
-                    'fitting_id' => $fittingModel->id,
-                    'material_id' => $materialModel->id
-                ], [
-                    'quantity' => $fitting['quantity'] ?? 0
-                ]);
+                // Перевіряємо, чи існує вже такий запис
+                $exists = DB::table('fitting_product')->where([
+                    ['product_id', $product->id],
+                    ['fitting_id', $fittingModel->id],
+                    ['material_id', $materialModel->id],
+                ])->exists();
+    
+                if ($exists) {
+                    // Якщо існує — видаляємо
+                    DB::table('fitting_product')->where([
+                        ['product_id', $product->id],
+                        ['fitting_id', $fittingModel->id],
+                        ['material_id', $materialModel->id],
+                    ])->delete();
+                } else {
+                    // Якщо не існує — додаємо
+                    DB::table('fitting_product')->insert([
+                        'product_id' => $product->id,
+                        'fitting_id' => $fittingModel->id,
+                        'material_id' => $materialModel->id,
+                        'quantity' => $fitting['quantity'] ?? 0,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
         }
     }
@@ -263,7 +371,7 @@ class ProductService
     private function updateSizes(Product $product, array $data)
     {
         if (!isset($data['sizes'])) return;
-        
+
         foreach ($data['sizes'] as $size) {
             $existingVariant = $product->productVariants()->where('size', $size['size'])->first();
             if ($existingVariant) {
@@ -276,13 +384,13 @@ class ProductService
             }
         }
     }
-    
+
     private function notifyUsersAboutAvailability(Product $product)
     {
         $users = Notification::where('product_id', $product->id)
             ->whereNull('notified_at')
             ->get();
-    
+
         foreach ($users as $notification) {
             $user = User::find($notification->user_id);
             if ($user) {
@@ -291,18 +399,35 @@ class ProductService
             }
         }
     }
-    
+
     private function updateColors(Product $product, array $data)
     {
         if (!isset($data['colors'])) return;
-        
-        $existingColors = $product->colors()->pluck('colors.id')->toArray();
-        $newColors = Color::whereIn('color_name', $data['colors'])->pluck('id')->toArray();
-        
-        $colorsToDelete = array_intersect($existingColors, $newColors);
-        $colorsToAdd = array_diff($newColors, $existingColors);
-        
-        $product->colors()->detach($colorsToDelete);
-        $product->colors()->attach($colorsToAdd);
+    
+        $locale = App::getLocale();
+    
+        foreach ($data['colors'] as $colorName) {
+            // Знаходимо color_id по назві та локалі
+            $colorId = ColorTranslation::where('color_name', $colorName)
+                ->where('locale', $locale)
+                ->value('color_id');
+    
+            if (!$colorId) {
+                continue; // Якщо такого кольору немає — пропускаємо
+            }
+    
+            // Перевіряємо, чи вже існує зв'язок
+            $exists = $product->colors()->where('colors.id', $colorId)->exists();
+    
+            if ($exists) {
+                // Якщо є — видаляємо
+                $product->colors()->detach($colorId);
+            } else {
+                // Якщо немає — додаємо
+                $product->colors()->attach($colorId);
+            }
+        }
     }
+    
+    
 }

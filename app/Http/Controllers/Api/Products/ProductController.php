@@ -204,6 +204,9 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+        
         try {
             [$product, $productDescription] = $this->product_service->createProduct($request->validated());
 
@@ -320,7 +323,6 @@ class ProductController extends Controller
         return ProductDescriptionResource::make($product->productDescription);
     }
 
-
     public function showTrashed(string $id, Request $request)
     {
         $locale = request('lang', app()->getLocale());
@@ -408,6 +410,9 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, string $id)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+        
         $product = Product::findOrFail($id);
         $productResource = $this->product_service->updateProduct($product, $request->validated());
 

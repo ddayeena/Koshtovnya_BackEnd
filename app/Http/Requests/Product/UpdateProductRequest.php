@@ -23,12 +23,13 @@ class UpdateProductRequest extends FormRequest
     {
         return [
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'name' => 'nullable|string|max:255',
+            'name_uk' => 'nullable|string|max:255',
+            'name_en' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:100',
             'price' => 'nullable|numeric|min:0',
             'bead_producer' => 'nullable|string|max:50',
             'country_of_manufacture' => 'nullable|string|max:100',
-            'type_of_bead' => 'nullable|in:Матовий,Прозорий',
+            'type_of_bead' => 'nullable|in:Матовий,Прозорий,Transparent,Matte',
             'weight' => 'nullable|numeric|min:0',
             'colors' => 'nullable|array',
             'fittings' => 'nullable|array',

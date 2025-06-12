@@ -23,12 +23,13 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'image' => 'required|image|mimes:jpg,jpeg,png|max:2048', 
-            'name' => 'required|string|max:255',
+            'name_uk' => 'required|string|max:255',
+            'name_en' => 'required|string|max:255',
             'category' => 'required|string|max:100',
             'price' => 'required|numeric|min:0',
             'bead_producer' => 'required|string|max:50',
             'country_of_manufacture' => 'required|string|max:100',
-            'type_of_bead' => 'required|in:Матовий,Прозорий',
+            'type_of_bead' => 'required|in:Матовий,Прозорий,Transparent,Matte',
             'fittings' => 'required|array',
             'fittings.*.fitting' => 'required|string|max:100',
             'fittings.*.quantity' => 'required|numeric|min:0',
