@@ -7,6 +7,7 @@ use App\Http\Resources\Delivery\NovaPoshta\CityResource;
 use App\Http\Resources\Delivery\NovaPoshta\StreetResource;
 use App\Http\Resources\Delivery\NovaPoshta\WarehouseResource;
 use App\Models\Product;
+use App\Services\Order\Delivery\DeliveryNameTranslator;
 use App\Services\Order\Delivery\DeliveryService;
 use App\Services\Order\Delivery\NovaPoshtaService;
 use Illuminate\Http\Request;
@@ -25,7 +26,8 @@ class NovaPoshtaController extends Controller
     public function getCities(Request $request)
     {
         //Get data from request
-        $deliveryType = $request->input('delivery_type');
+        $deliveryType = DeliveryNameTranslator::toUkr($request->input('delivery_type'));
+
         $query = $request->input('city');
         $cities = $this->novaPoshtaService->getCities();
 
@@ -43,7 +45,7 @@ class NovaPoshtaController extends Controller
         //Get data from request
         $cityName = $request->input('city');
         $warehouseName = $request->input('warehouse');
-        $deliveryType = $request->input('delivery_type'); 
+        $deliveryType = DeliveryNameTranslator::toUkr($request->input('delivery_type'));
 
         // Check if a parameter is passed
         if (empty($cityName)) {
