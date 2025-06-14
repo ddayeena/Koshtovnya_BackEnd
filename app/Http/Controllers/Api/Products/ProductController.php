@@ -383,9 +383,9 @@ class ProductController extends Controller
                 'material' => __('product.bead'),
                 'type_of_fitting' => $fittings->map(function ($fitting) {
                     return [
-                        'fitting_name' => __('fittings.' . $fitting->fitting),
+                        'fitting' => __('fittings.' . $fitting->fitting),
                         'quantity' => $fitting->quantity,
-                        'material_name' => __('materials.' . $fitting->material),
+                        'material' => __('materials.' . $fitting->material),
                     ];
                 }),
                 'type_of_bead' => __('product.type_of_bead.' . $product->productDescription->type_of_bead),
