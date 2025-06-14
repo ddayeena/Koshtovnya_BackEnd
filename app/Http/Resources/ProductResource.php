@@ -27,8 +27,8 @@ class ProductResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => app()->getLocale() === 'en' ? $this->name_en : $this->name_uk,
-            'name_uk' =>  $this->product->name_uk,
-            'name_en' => $this->product->name_en,
+            'name_uk' =>  $this->name_uk,
+            'name_en' => $this->name_en,
             'name' => app()->getLocale() === 'en' ? $this->name_en : $this->name_uk,
             'price' => static::$currency === 'usd'
                 ? number_format($this->price / static::$rate, 2, '.', '')
