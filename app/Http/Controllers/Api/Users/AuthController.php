@@ -56,7 +56,6 @@ class AuthController extends Controller
         ]);
     }
 
-
     public function register(RegisterRequest $request)
     {
         // Validate request
@@ -91,7 +90,6 @@ class AuthController extends Controller
     
         return response()->json(['message' => 'Code sent to the email']);
     }
-    
 
     public function sendCode(Request $request)
     {
