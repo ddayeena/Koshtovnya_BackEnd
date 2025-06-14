@@ -373,6 +373,8 @@ class ProductController extends Controller
             'data' => [
                 'id' => $product->id,
                 'name' => app()->getLocale() === 'en' ? $product->name_en : $product->name_uk,
+                'name_uk' =>  $product->name_uk,
+                'name_en' => $product->name_en,
                 'category' => $product->productDescription->category->translated_name,
                 'price' => round($product->price / $rate, 2),
                 'currency' => $currency,

@@ -28,6 +28,8 @@ class AdminProductDescriptionResource extends JsonResource
         return [
             'id' => optional($this->product)->id,
             'name' => app()->getLocale() === 'en' ? $this->product->name_en : $this->product->name_uk,
+            'name_uk' =>  $this->product->name_uk,
+            'name_en' => $this->product->name_en,
             'category' => $this->category->translated_name,
             'price' => number_format(optional($this->product)->price / self::$rate, 2, '.', ''),
             'currency' => self::$currency,
