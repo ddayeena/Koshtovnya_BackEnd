@@ -134,6 +134,8 @@ class OrderController extends Controller
      */
     public function show(string $id, Request $request)
     {
+        ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
+
         if ($request->isAdminPanel) {
             $order = Order::with('products')
                 ->where('id', $id)
@@ -144,6 +146,9 @@ class OrderController extends Controller
                 ->where('user_id', auth()->id())
                 ->firstOrFail();
         }
+        OrderResource::setCurrency($currency, $rate);
+        DeliveryResource::setCurrency($currency, $rate);
+
         return response()->json([
             'data' => [
                 'order' => OrderResource::make($order),
@@ -164,32 +169,41 @@ class OrderController extends Controller
         $data = $request->validate([
             'status' => 'required|in:Відправлено,Доставлено,Скасовано'
         ]);
+    
         if (in_array($order->status, ['Скасовано', 'Доставлено']) && $data['status'] !== $order->status) {
             return response()->json([
                 'message' => 'You cannot change the status after cancelling or delivering order.'
             ], 400);
         }
+    
         // Update status
         $order->update(['status' => $data['status']]);
-        if ($data['status'] === 'Відправлено') {
-            Mail::to($order->user->email)->send(new OrderShippedMail($order));
-        } elseif ($data['status'] === 'Доставлено') {
-            if ($order->payment->payment_method === 'Післяоплата')
-                $order->payment->update([
-                    'status' => 'Оплачено',
-                    'paid_at' => now(),
-                ]);
-
-            Mail::to($order->user->email)->send(new OrderDeliveredMail($order, $order->delivery));
-        }elseif ($data['status'] === 'Скасовано') {
-            Mail::to($order->user->email)->send(new OrderCancelledMail($order));
+    
+        // Перевірка, чи існує email
+        $email = $order->user->email ?? null;
+    
+        if ($email) {
+            if ($data['status'] === 'Відправлено') {
+                Mail::to($email)->send(new OrderShippedMail($order));
+            } elseif ($data['status'] === 'Доставлено') {
+                if ($order->payment->payment_method === 'Післяоплата') {
+                    $order->payment->update([
+                        'status' => 'Оплачено',
+                        'paid_at' => now(),
+                    ]);
+                }
+                Mail::to($email)->send(new OrderDeliveredMail($order, $order->delivery));
+            } elseif ($data['status'] === 'Скасовано') {
+                Mail::to($email)->send(new OrderCancelledMail($order));
+            }
         }
-
+    
         return response()->json([
             'message' => 'Order`s status updated successfully',
             'order' => OrderListResource::make($order)
         ], 200);
     }
+    
 
     public function cancel(string $id)
     {
