@@ -165,10 +165,22 @@ class OrderController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         $order = Order::findOrFail($id);
+    
         $data = $request->validate([
-            'status' => 'required|in:Відправлено,Доставлено,Скасовано'
+            'status' => 'required|in:Відправлено,Доставлено,Скасовано,Canceled,Delivered,Sent'
         ]);
+    
+        $enStatuses = trans('orders.status', [], 'en'); 
+        $translatedStatuses = array_flip($enStatuses); 
+        
+        if (isset($translatedStatuses[$data['status']])) {
+            $data['status'] = $translatedStatuses[$data['status']];
+        }
+        
     
         if (in_array($order->status, ['Скасовано', 'Доставлено']) && $data['status'] !== $order->status) {
             return response()->json([
@@ -176,10 +188,8 @@ class OrderController extends Controller
             ], 400);
         }
     
-        // Update status
         $order->update(['status' => $data['status']]);
     
-        // Перевірка, чи існує email
         $email = $order->user->email ?? null;
     
         if ($email) {
@@ -199,10 +209,11 @@ class OrderController extends Controller
         }
     
         return response()->json([
-            'message' => 'Order`s status updated successfully',
+            'message' => 'Orders status updated successfully',
             'order' => OrderListResource::make($order)
         ], 200);
     }
+    
     
 
     public function cancel(string $id)
