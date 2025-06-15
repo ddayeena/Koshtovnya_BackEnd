@@ -2,7 +2,7 @@
 
 return [
     'status' => [
-        'В очікуванні' => 'Panding',
+        'В очікуванні' => 'Pending',
         'Відправлено' => 'Sent',
         'Доставлено' => 'Delivered',
         'Скасовано' => 'Canceled'
