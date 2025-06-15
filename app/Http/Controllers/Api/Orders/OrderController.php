@@ -72,7 +72,7 @@ class OrderController extends Controller
     {
         $locale = request('lang', app()->getLocale());
         App::setLocale($locale);
-        
+
         //Get orders for authenticated user
         $orders = $request->user()->orders()->with('products')->get();
 
@@ -104,8 +104,8 @@ class OrderController extends Controller
     {
         $data = $request->validated();
 
-        $currencyData = $this->exchange_rate_service->resolveCurrencyData($request); 
-        
+        $currencyData = $this->exchange_rate_service->resolveCurrencyData($request);
+
         $data['currency'] = $currencyData['currency'];
         $data['rate'] = $currencyData['rate'];
 
@@ -134,6 +134,9 @@ class OrderController extends Controller
      */
     public function show(string $id, Request $request)
     {
+        $locale = request('lang', app()->getLocale());
+        App::setLocale($locale);
+
         ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
 
         if ($request->isAdminPanel) {
@@ -147,15 +150,17 @@ class OrderController extends Controller
                 ->firstOrFail();
         }
         OrderResource::setCurrency($currency, $rate);
+        OrderProductResource::setCurrency($currency, $rate);
         DeliveryResource::setCurrency($currency, $rate);
 
         return response()->json([
             'data' => [
                 'order' => OrderResource::make($order),
-                'total_cost' => $order->total_amount,
+                'total_cost' => number_format($order->total_amount / $rate, 2, '.', ''),
+                'currency' => $currency,
                 'delivery' => DeliveryResource::make($order->delivery),
-                'payment_method' => $order->payment->payment_method,
-                'status' => $order->payment->status
+                'payment_method' => __('payment.method.' . $order->payment->payment_method),
+                'status' => __('payment.status.' . $order->payment->status),
             ]
         ], 200);
     }
@@ -169,29 +174,29 @@ class OrderController extends Controller
         App::setLocale($locale);
 
         $order = Order::findOrFail($id);
-    
+
         $data = $request->validate([
             'status' => 'required|in:Відправлено,Доставлено,Скасовано,Canceled,Delivered,Sent'
         ]);
-    
-        $enStatuses = trans('orders.status', [], 'en'); 
-        $translatedStatuses = array_flip($enStatuses); 
-        
+
+        $enStatuses = trans('orders.status', [], 'en');
+        $translatedStatuses = array_flip($enStatuses);
+
         if (isset($translatedStatuses[$data['status']])) {
             $data['status'] = $translatedStatuses[$data['status']];
         }
-        
-    
+
+
         if (in_array($order->status, ['Скасовано', 'Доставлено']) && $data['status'] !== $order->status) {
             return response()->json([
                 'message' => 'You cannot change the status after cancelling or delivering order.'
             ], 400);
         }
-    
+
         $order->update(['status' => $data['status']]);
-    
+
         $email = $order->user->email ?? null;
-    
+
         if ($email) {
             if ($data['status'] === 'Відправлено') {
                 Mail::to($email)->send(new OrderShippedMail($order));
@@ -207,14 +212,14 @@ class OrderController extends Controller
                 Mail::to($email)->send(new OrderCancelledMail($order));
             }
         }
-    
+
         return response()->json([
             'message' => 'Orders status updated successfully',
             'order' => OrderListResource::make($order)
         ], 200);
     }
-    
-    
+
+
 
     public function cancel(string $id)
     {
