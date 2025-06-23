@@ -55,7 +55,11 @@ class WishlistController extends Controller
 
         //Get wishlist for authenticated user
         $wishlist = $request->user()->wishlist()->firstOrCreate([]);
-        $products = $this->product_service->attachCartInfo($wishlist->products, $request->user());
+        $products = $this->product_service->attachCartInfo(
+            $wishlist->products->reverse(), 
+            $request->user()
+        );
+        
 
         ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
         WishlistProductResource::setCurrency($currency, $rate);

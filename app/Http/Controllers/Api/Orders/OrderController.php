@@ -61,6 +61,8 @@ class OrderController extends Controller
 
         if (isset($sortFieldsMap[$sortBy]) && in_array($sortOrder, ['asc', 'desc'])) {
             $query->orderBy($sortFieldsMap[$sortBy], $sortOrder);
+        } else {
+            $query->orderBy('orders.id', 'desc');
         }
 
         $orders = $query->paginate(10);
@@ -74,7 +76,7 @@ class OrderController extends Controller
         App::setLocale($locale);
 
         //Get orders for authenticated user
-        $orders = $request->user()->orders()->with('products')->get();
+        $orders = $request->user()->orders()->with('products')->get()->reverse();
 
         ['currency' => $currency, 'rate' => $rate] = $this->exchange_rate_service->resolveCurrencyData($request);
         OrderResource::setCurrency($currency, $rate);
